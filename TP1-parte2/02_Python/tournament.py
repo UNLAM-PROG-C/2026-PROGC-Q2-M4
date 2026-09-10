@@ -33,11 +33,13 @@ class Tournament:
     Represents a tournament.
     """
     fighters: list[Fighter]
+    fights: list[Fight]
 
     def __init__(self) -> None:
-        self.fighters = random.sample(_FIGHTERS, k=8)
+        selected = random.sample(_FIGHTERS, k=8)
+        self.fighters = [fighter.model_copy(deep=True) for fighter in selected]
+        self.fights = []
         self.status = Tournament_Status.PENDING
-        random.shuffle(self.fighters)
 
     def start(self) -> Fighter:
         if (self.status is Tournament_Status.FINISHED):
