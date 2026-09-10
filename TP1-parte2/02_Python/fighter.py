@@ -59,7 +59,6 @@ class Fighter(BaseModel):
             raise FighterIsNotAliveError("A dead fighter cannot attack.")
         if rival is self:
             raise FighterAutoDamagingError("The fighter cannot attack itself.")
-        random.seed()
 
         if rival.block():
             return False
