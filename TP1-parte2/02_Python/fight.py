@@ -29,12 +29,8 @@ class Fight:
         self.fighters.sort(reverse=True, key=lambda f: (f.velocity, random.random()))
         self.round = round
         self.status = Fight_Status.PENDING
-        
-    def start(self) -> Fighter:
-        if(self.status is Fight_Status.FINISHED):
-            raise FightAlreadyFinishedError("Fight has already finished.") 
 
-        self.status = Fight_Status.PROCESSING
+    def run(self):
         attacker = 0
         defender = 1
         while True:
@@ -44,6 +40,13 @@ class Fight:
                 break
             attacker = 1 if attacker == 0 else 0
             defender = 1 if attacker == 0 else 0
+        
+    def start(self) -> Fighter:
+        if(self.status is Fight_Status.FINISHED):
+            raise FightAlreadyFinishedError("Fight has already finished.") 
+        self.status = Fight_Status.PROCESSING
+        self.run()
+        self.winner.heals()
         self.status = Fight_Status.FINISHED
         return self.winner
 '''

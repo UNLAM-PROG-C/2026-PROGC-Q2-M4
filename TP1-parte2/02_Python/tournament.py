@@ -41,31 +41,24 @@ class Tournament:
         self.fights = []
         self.status = Tournament_Status.PENDING
 
-    def start(self) -> Fighter:
-        if (self.status is Tournament_Status.FINISHED):
-            raise TournamentAlreadyFinishedError("Tournament has already finished.") 
-        self.status = Tournament_Status.PROCESSING
+    def run(self) -> Fighter:
         current_fighters = self.fighters
+        round = 1
         while(current_fighters.__len__() != 1):
             next_round = []
             fighters_len = current_fighters.__len__()
-            match fighters_len:
-                case 8:
-                    round = Round.QUARTERFINALS
-                case 4:
-                    round = Round.SEMIFINALS
-                case 2:
-                    round = Round.FINAL
-                case _:
-                    raise UnboundLocalError("Ronda incorrecta y cantidad de fighters incorrecta.")
-
-            print(round)
             for i in range(0, fighters_len, 2):
-                fight = Fight(current_fighters[i], current_fighters[i+1], round)
-                print(f'{current_fighters[i].name} vs {current_fighters[i+1].name}')
+                fight = Fight(current_fighters[i], current_fighters[i+1], Round(round))
                 winner = fight.start()
+                self.fights.append(fight)
                 next_round.append(winner)
             current_fighters = next_round
-        self.winner = winner
-        self.status = Tournament_Status.FINISHED
+            round+=1
         return winner
+    
+    def start(self):
+        if (self.status is Tournament_Status.FINISHED):
+            raise TournamentAlreadyFinishedError("Tournament has already finished.") 
+        self.status = Tournament_Status.PROCESSING
+        self.winner = self.run()
+        self.status = Tournament_Status.FINISHED
