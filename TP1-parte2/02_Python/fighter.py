@@ -19,6 +19,7 @@ class Fighter(BaseModel):
     """
     name: str
     health: int = Field(ge=80,le=120)
+    __max_health : int
     damage: int = Field(ge=15,le=30, frozen=True)
     defense: int = Field(ge=5,le=15, frozen=True)
     velocity: int = Field(ge=1,le=10, frozen=True)
@@ -31,6 +32,7 @@ class Fighter(BaseModel):
         super().__init__(name=name, health=health, damage=damage,
                           defense=defense, velocity=velocity,
                           critical=critical, blockage=blockage, **kwargs)
+        self.__max_health = health
 
     def is_alive(self) -> bool:
         return self.health > 0
@@ -42,6 +44,9 @@ class Fighter(BaseModel):
     def is_critical(self) -> bool:
         return random.choices([True, False],
                               weights=[self.critical, 1-self.critical], k=1)[0]
+
+    def heals(self):
+        self.health = self.__max_health
 
     def receive_damage(self, damage_points, is_critical):
         final_damage = max(1, damage_points - self.defense)
