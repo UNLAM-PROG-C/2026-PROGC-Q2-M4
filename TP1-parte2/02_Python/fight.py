@@ -49,12 +49,3 @@ class Fight:
         self.winner.heals()
         self.status = Fight_Status.FINISHED
         return self.winner
-'''
-liu_kang = Fighter(name="Liu Kang", health=100, damage=25, defense=15, velocity=2, critical=0.25, blockage=0.25)
-kung_lao = Fighter(name="Kung Lao", health=120, damage=30, defense=10, velocity=5, critical=0.05, blockage=0.05)
-
-fight = Fight(liu_kang, kung_lao)
-
-winner = fight.start()
-print("Winner:", winner.name)
-'''

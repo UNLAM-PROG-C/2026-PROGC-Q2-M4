@@ -10,7 +10,7 @@ class FighterAutoDamagingError(Exception):
     pass
 
 class FighterIsNotAliveError(Exception):
-    """Raised when the fighter wants to attack itself."""
+    """Raised when a dead fighter tries to attack."""
     pass
 
 class Fighter(BaseModel):
