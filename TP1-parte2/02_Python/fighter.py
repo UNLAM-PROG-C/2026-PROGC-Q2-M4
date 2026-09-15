@@ -65,4 +65,12 @@ class Fighter(BaseModel):
         
         rival.receive_damage(self.damage, self.is_critical())
         return True
+    
+    def __hash__(self) -> int:
+        return hash((self.name))
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Fighter):
+            return NotImplemented
+        return (self.name) == (other.name)
 

@@ -28,6 +28,7 @@ class Fight:
         self.fighters = [fighter1, fighter2]
         self.fighters.sort(reverse=True, key=lambda f: (f.velocity, random.random()))
         self.round = round
+        self.total_turns = 0
         self.status = Fight_Status.PENDING
 
     def run(self):
@@ -40,6 +41,7 @@ class Fight:
                 break
             attacker = 1 if attacker == 0 else 0
             defender = 1 if attacker == 0 else 0
+            self.total_turns += 1
         
     def start(self) -> Fighter:
         if(self.status is Fight_Status.FINISHED):

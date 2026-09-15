@@ -3,21 +3,6 @@ from fight import Fight, Round
 from enum import Enum
 import random
 
-_FIGHTERS = [
-    Fighter("Liu Kang", 100, 25, 10, 8, 0.20, 0.15),
-    Fighter("Kung Lao", 95, 26, 8, 9, 0.25, 0.10),
-    Fighter("Johnny Cage", 110, 22, 12, 7, 0.15, 0.20),
-    Fighter("Reptile", 90, 24, 9, 10, 0.20, 0.25),
-    Fighter("Sub-Zero", 105, 23, 14, 6, 0.10, 0.25),
-    Fighter("Shang Tsung", 85, 30, 5, 8, 0.25, 0.05),
-    Fighter("Kitana", 85, 27, 7, 10, 0.20, 0.15),
-    Fighter("Jax", 120, 20, 15, 4, 0.10, 0.25),
-    Fighter("Mileena", 90, 28, 6, 9, 0.25, 0.10),
-    Fighter("Baraka", 115, 29, 8, 5, 0.25, 0.05),
-    Fighter("Scorpion", 100, 26, 11, 7, 0.20, 0.15),
-    Fighter("Raiden", 110, 24, 10, 8, 0.15, 0.20)
-]
-
 class TournamentAlreadyFinishedError(Exception):
     """Raised when the tournament has already finished and wants to be started again."""
     pass
@@ -35,8 +20,8 @@ class Tournament:
     fighters: list[Fighter]
     fights: list[Fight]
 
-    def __init__(self) -> None:
-        selected = random.sample(_FIGHTERS, k=8)
+    def __init__(self, candidates: list[Fighter]) -> None:
+        selected = random.sample(candidates, k=8)
         self.fighters = [fighter.model_copy(deep=True) for fighter in selected]
         self.fights = []
         self.status = Tournament_Status.PENDING
