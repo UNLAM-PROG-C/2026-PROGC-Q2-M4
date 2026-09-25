@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://bwxniwtn2vxfv"]
+
+[ext_resource type="Script" uid="uid://dmb5vae0ilhh7" path="res://Proyectil.gd" id="1_c2ast"]
+[ext_resource type="Texture2D" uid="uid://b24hv0sbptypt" path="res://Imagenes/Proyectil.png" id="2_bf4ll"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pq8lt"]
+radius = 23.0
+
+[node name="Proyectil" type="Area2D" unique_id=747295272 groups=["proyectiles"]]
+script = ExtResource("1_c2ast")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=994996814]
+texture = ExtResource("2_bf4ll")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1265861336]
+shape = SubResource("CircleShape2D_pq8lt")

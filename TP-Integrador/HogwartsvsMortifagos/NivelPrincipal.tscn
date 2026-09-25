@@ -1,0 +1,55 @@
+[gd_scene format=4 uid="uid://cro1qg23bp5oe"]
+
+[ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Imagenes/Pasto.png" id="1_44v15"]
+[ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Imagenes/Pasto2.png" id="2_4osvq"]
+[ext_resource type="Script" uid="uid://dafodhmer1wa1" path="res://tile_map_layer.gd" id="3_4o72b"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
+texture = ExtResource("1_44v15")
+texture_region_size = Vector2i(128, 128)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qhc1f"]
+texture = ExtResource("2_4osvq")
+texture_region_size = Vector2i(128, 128)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_5uq62"]
+tile_size = Vector2i(128, 128)
+sources/0 = SubResource("TileSetAtlasSource_erchu")
+sources/1 = SubResource("TileSetAtlasSource_qhc1f")
+
+[node name="NivelPrincipal" type="Node2D" unique_id=1329430572]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=425120041]
+tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=")
+tile_set = SubResource("TileSet_5uq62")
+script = ExtResource("3_4o72b")
+
+[node name="Spawners" type="Node2D" parent="." unique_id=238388319]
+
+[node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=751368257]
+y_sort_enabled = true
+position = Vector2(1280, 320)
+
+[node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=145353153]
+y_sort_enabled = true
+position = Vector2(1280, 448)
+
+[node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=417263238]
+y_sort_enabled = true
+position = Vector2(1280, 576)
+
+[node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=1913124870]
+y_sort_enabled = true
+position = Vector2(1280, 704)
+
+[node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=1447980090]
+y_sort_enabled = true
+position = Vector2(1280, 832)
+
+[node name="TimerSpawneoMortifagos" type="Timer" parent="." unique_id=2065253925]
+wait_time = 5.0
+autostart = true
+
+[connection signal="timeout" from="TimerSpawneoMortifagos" to="TileMapLayer" method="_on_timer_spawneo_mortifagos_timeout"]

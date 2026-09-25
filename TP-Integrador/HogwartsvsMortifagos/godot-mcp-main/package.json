@@ -1,0 +1,48 @@
+{
+  "name": "godot-mcp",
+  "version": "1.2.0",
+  "description": "MCP server for full Godot IDE integration",
+  "license": "MIT",
+  "author": "Sods2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sods2/godot-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "godot",
+    "game-engine",
+    "model-context-protocol",
+    "editor"
+  ],
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node build/index.js",
+    "test": "vitest run",
+    "test:gd": "bash scripts/run-gdscript-tests.sh",
+    "test:bridge": "node tests/bridge/bridge-harness.mjs",
+    "lint": "eslint src/",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

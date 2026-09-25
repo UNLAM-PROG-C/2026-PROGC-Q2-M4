@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://d0jbmave1p22l"]
+
+[ext_resource type="Script" uid="uid://dqi5vrayi0gcc" path="res://Mago.gd" id="1_anwio"]
+[ext_resource type="Texture2D" uid="uid://c7vaise20xj34" path="res://Imagenes/Harry.png" id="2_40b35"]
+
+[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape2D_bf4ll"]
+custom_solver_bias = 0.285
+points = PackedVector2Array(32, 8, 8, 64, -56, 64, -48, 0, 8, -16, 72, -8)
+
+[node name="Mago" type="Area2D" unique_id=1176930405 groups=["Magos"]]
+script = ExtResource("1_anwio")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1439724701]
+texture = ExtResource("2_40b35")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1400220560]
+position = Vector2(-8, -16)
+shape = SubResource("ConvexPolygonShape2D_bf4ll")
+
+[node name="PuntoDisparo" type="Marker2D" parent="." unique_id=693286635]
+position = Vector2(64, -24)
+
+[node name="TimerDeDisparo" type="Timer" parent="." unique_id=1387907606]
+wait_time = 15.0
+autostart = true
+
+[connection signal="timeout" from="TimerDeDisparo" to="." method="_on_timer_timeout"]

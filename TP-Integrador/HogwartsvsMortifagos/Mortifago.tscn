@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://b1e7va2jmkowd"]
+
+[ext_resource type="Script" uid="uid://dq8nnu4t1rati" path="res://Mortifago.gd" id="1_ll0x8"]
+[ext_resource type="Texture2D" uid="uid://bswpml7x8xjay" path="res://Imagenes/Mortifago.png" id="2_n53v5"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_5uq62"]
+radius = 24.0
+height = 144.0
+
+[node name="Area2D" type="Area2D" unique_id=1119153532]
+script = ExtResource("1_ll0x8")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=964161723]
+texture = ExtResource("2_n53v5")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=409418818]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1814116082]
+shape = SubResource("CapsuleShape2D_5uq62")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
