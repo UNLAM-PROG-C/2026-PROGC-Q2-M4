@@ -1,12 +1,32 @@
+class_name Proyectil
 extends Area2D
 
-var velocidad = 400 # Píxeles por segundo
+## Velocidad de desplazamiento del proyectil en píxeles por segundo.
+@export var velocidad: float = 400.0
+## Puntos de daño que inflige al impactar un enemigo.
+@export var danio: int = 20
 
-func _process(delta):
-	# En Godot, el eje X positivo va hacia la derecha.
-	# Multiplicamos por delta (tiempo entre frames) para que el movimiento sea independiente de los FPS.
+var _impacto_registrado: bool = false
+
+
+func _ready() -> void:
+	add_to_group("hechizos")
+
+
+func _process(delta: float) -> void:
 	position.x += velocidad * delta
-	
-	# Garbage collection manual: Si sale de la pantalla, lo destruimos para liberar memoria
-	if global_position.x > 2000:
+
+
+## Callback de colisión. Aplica daño al enemigo impactado y se destruye.
+func _on_area_entered(area: Area2D) -> void:
+	if _impacto_registrado:
+		return
+	if area.is_in_group("enemigos") and area.has_method("recibir_danio"):
+		_impacto_registrado = true
+		area.call("recibir_danio", danio)
 		queue_free()
+
+
+## Callback del VisibleOnScreenNotifier2D. Se destruye al salir de pantalla.
+func _on_screen_exited() -> void:
+	queue_free()

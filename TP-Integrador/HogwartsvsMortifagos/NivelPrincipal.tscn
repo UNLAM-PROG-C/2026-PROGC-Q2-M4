@@ -2,7 +2,12 @@
 
 [ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Imagenes/Pasto.png" id="1_44v15"]
 [ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Imagenes/Pasto2.png" id="2_4osvq"]
-[ext_resource type="Script" uid="uid://dafodhmer1wa1" path="res://tile_map_layer.gd" id="3_4o72b"]
+[ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://nivel_principal.gd" id="3_script"]
+[ext_resource type="PackedScene" path="res://harry.tscn" id="4_harry"]
+[ext_resource type="PackedScene" path="res://caja_snitch.tscn" id="5_caja"]
+[ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://alumno_slytherin.tscn" id="6_slytherin"]
+[ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
+[ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -19,37 +24,111 @@ tile_size = Vector2i(128, 128)
 sources/0 = SubResource("TileSetAtlasSource_erchu")
 sources/1 = SubResource("TileSetAtlasSource_qhc1f")
 
-[node name="NivelPrincipal" type="Node2D" unique_id=1329430572]
+[node name="NivelPrincipal" type="Node2D" unique_id=1050787483]
+script = ExtResource("3_script")
+escena_harry = ExtResource("4_harry")
+escena_caja_snitch = ExtResource("5_caja")
+escena_alumno_slytherin = ExtResource("6_slytherin")
+escena_snitch = ExtResource("7_snitch")
+escena_dementor = ExtResource("8_dementor")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=425120041]
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=224131285]
 tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_5uq62")
-script = ExtResource("3_4o72b")
 
-[node name="Spawners" type="Node2D" parent="." unique_id=238388319]
+[node name="BloqueoMagico" type="Node2D" parent="." unique_id=1782391045]
 
-[node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=751368257]
-y_sort_enabled = true
+[node name="Fila2" type="ColorRect" parent="BloqueoMagico" unique_id=1782391046]
+offset_left = 256.0
+offset_top = 256.0
+offset_right = 1280.0
+offset_bottom = 384.0
+color = Color(0.1, 0.1, 0.25, 0.6)
+
+[node name="Fila3" type="ColorRect" parent="BloqueoMagico" unique_id=1782391047]
+offset_left = 256.0
+offset_top = 384.0
+offset_right = 1280.0
+offset_bottom = 512.0
+color = Color(0.1, 0.1, 0.25, 0.6)
+
+[node name="Fila5" type="ColorRect" parent="BloqueoMagico" unique_id=1782391048]
+offset_left = 256.0
+offset_top = 640.0
+offset_right = 1280.0
+offset_bottom = 768.0
+color = Color(0.1, 0.1, 0.25, 0.6)
+
+[node name="Fila6" type="ColorRect" parent="BloqueoMagico" unique_id=1782391049]
+offset_left = 256.0
+offset_top = 768.0
+offset_right = 1280.0
+offset_bottom = 896.0
+color = Color(0.1, 0.1, 0.25, 0.6)
+
+[node name="Spawners" type="Node2D" parent="." unique_id=1233715859]
+position = Vector2(8, 0)
+
+[node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1252911193]
 position = Vector2(1280, 320)
 
-[node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=145353153]
-y_sort_enabled = true
+[node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=623987642]
 position = Vector2(1280, 448)
 
-[node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=417263238]
-y_sort_enabled = true
+[node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=636651906]
 position = Vector2(1280, 576)
 
-[node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=1913124870]
-y_sort_enabled = true
+[node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=511596980]
 position = Vector2(1280, 704)
 
-[node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=1447980090]
-y_sort_enabled = true
+[node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=1338716025]
 position = Vector2(1280, 832)
 
-[node name="TimerSpawneoMortifagos" type="Timer" parent="." unique_id=2065253925]
-wait_time = 5.0
+[node name="TimerSpawneoMortifagos" type="Timer" parent="." unique_id=1572878674]
+wait_time = 15.0
 autostart = true
 
-[connection signal="timeout" from="TimerSpawneoMortifagos" to="TileMapLayer" method="_on_timer_spawneo_mortifagos_timeout"]
+[node name="SpawnerDeSnitches" type="Timer" parent="." unique_id=1849204912]
+wait_time = 10.0
+autostart = true
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=454797086]
+
+[node name="LabelSnitches" type="Label" parent="HUD" unique_id=138423222]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 240.0
+offset_bottom = 50.0
+theme_override_font_sizes/font_size = 24
+text = "Snitches: 150"
+
+[node name="BotonHarry" type="Button" parent="HUD" unique_id=426968617]
+offset_left = 250.0
+offset_top = 10.0
+offset_right = 430.0
+offset_bottom = 55.0
+theme_override_font_sizes/font_size = 18
+text = "Harry (100)"
+
+[node name="BotonCajaSnitch" type="Button" parent="HUD" unique_id=610114963]
+offset_left = 440.0
+offset_top = 10.0
+offset_right = 660.0
+offset_bottom = 55.0
+theme_override_font_sizes/font_size = 18
+text = "Caja Snitch (50)"
+
+[node name="LabelEstado" type="Label" parent="HUD" unique_id=360801785]
+visible = false
+offset_left = 760.0
+offset_top = 440.0
+offset_right = 1160.0
+offset_bottom = 540.0
+theme_override_font_sizes/font_size = 48
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="timeout" from="TimerSpawneoMortifagos" to="." method="_on_timer_spawneo_timeout"]
+[connection signal="timeout" from="SpawnerDeSnitches" to="." method="_on_spawner_de_snitches_timeout"]
+[connection signal="pressed" from="HUD/BotonHarry" to="." method="_on_boton_harry_pressed"]
+[connection signal="pressed" from="HUD/BotonCajaSnitch" to="." method="_on_boton_caja_snitch_pressed"]

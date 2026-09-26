@@ -33,5 +33,5 @@ func _on_area_entered(area: Area2D) -> void:
 			queue_free()
 			
 	# Actualizamos la palabra clave que busca el motor
-	elif area.is_in_group("Magos"):
+	elif area.is_in_group("aliados"):
 		mago_objetivo = area

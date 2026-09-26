@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://harry.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c7vaise20xj34" path="res://Imagenes/Harry.png" id="2_texture"]
+[ext_resource type="PackedScene" uid="uid://bwxniwtn2vxfv" path="res://Proyectil.tscn" id="3_proyectil"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(80, 100)
+
+[node name="Harry" type="Area2D" groups=["aliados"]]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1_script")
+escena_proyectil = ExtResource("3_proyectil")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="PuntoDisparo" type="Marker2D" parent="."]
+position = Vector2(64, 0)
+
+[node name="TimerDisparo" type="Timer" parent="."]
+
+[connection signal="timeout" from="TimerDisparo" to="." method="_on_timer_disparo_timeout"]

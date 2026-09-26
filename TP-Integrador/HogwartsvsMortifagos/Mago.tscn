@@ -7,7 +7,7 @@
 custom_solver_bias = 0.285
 points = PackedVector2Array(32, 8, 8, 64, -56, 64, -48, 0, 8, -16, 72, -8)
 
-[node name="Mago" type="Area2D" unique_id=1176930405 groups=["Magos"]]
+[node name="Mago" type="Area2D" unique_id=1176930405 groups=["aliados"]]
 script = ExtResource("1_anwio")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1439724701]
