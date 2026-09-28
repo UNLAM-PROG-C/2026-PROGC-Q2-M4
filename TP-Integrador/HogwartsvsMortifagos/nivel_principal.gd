@@ -237,4 +237,3 @@ func _on_boton_caja_snitch_pressed() -> void:
 func _actualizar_seleccion_visual() -> void:
 	boton_harry.modulate = Color(0.5, 1.0, 0.5) if aliado_seleccionado == "harry" else Color(1.0, 1.0, 1.0)
 	boton_caja_snitch.modulate = Color(0.5, 1.0, 0.5) if aliado_seleccionado == "caja_snitch" else Color(1.0, 1.0, 1.0)
-
