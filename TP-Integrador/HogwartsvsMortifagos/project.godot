@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="GodotHogwartdzvsMaldad"
-run/main_scene="uid://cro1qg23bp5oe"
+run/main_scene="uid://c0vgnide3ben3"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 

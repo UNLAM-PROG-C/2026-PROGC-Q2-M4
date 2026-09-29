@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://cro1qg23bp5oe"]
+[gd_scene format=4 uid="uid://c8yjskdqci0c"]
 
 [ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Imagenes/Pasto.png" id="1_44v15"]
 [ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Imagenes/Pasto2.png" id="2_4osvq"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://alumno_slytherin.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
 [ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
+[ext_resource type="PackedScene" path="res://recordadora.tscn" id="10_recordadora"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -54,77 +55,83 @@ shadow_color = Color(0.235, 0.141, 0.082, 0.25)
 shadow_size = 3
 shadow_offset = Vector2(2, 2)
 
-[node name="NivelPrincipal" type="Node2D" unique_id=1050787483]
+[node name="Nivel2" type="Node2D" unique_id=1917860156]
 script = ExtResource("3_script")
 escena_harry = ExtResource("4_harry")
 escena_caja_snitch = ExtResource("5_caja")
 escena_alumno_slytherin = ExtResource("6_slytherin")
+escena_recordadora = ExtResource("10_recordadora")
 escena_snitch = ExtResource("7_snitch")
 escena_dementor = ExtResource("8_dementor")
+filas_activas = Array[int]([3, 4, 5])
+spawners_activos = Array[NodePath]([NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4")])
+nivel_siguiente_desbloqueo = 3
 
-[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=224131285]
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1951683565]
 tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_5uq62")
 
-[node name="BloqueoMagico" type="Node2D" parent="." unique_id=1782391045]
+[node name="BloqueoMagico" type="Node2D" parent="." unique_id=1038295434]
 
-[node name="Fila2" type="ColorRect" parent="BloqueoMagico" unique_id=1782391046]
+[node name="Fila2" type="ColorRect" parent="BloqueoMagico" unique_id=2053891754]
 offset_left = 256.0
 offset_top = 256.0
 offset_right = 1280.0
 offset_bottom = 384.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Fila3" type="ColorRect" parent="BloqueoMagico" unique_id=1782391047]
+[node name="Fila3" type="ColorRect" parent="BloqueoMagico" unique_id=1807211417]
+visible = false
 offset_left = 256.0
 offset_top = 384.0
 offset_right = 1280.0
 offset_bottom = 512.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Fila5" type="ColorRect" parent="BloqueoMagico" unique_id=1782391048]
+[node name="Fila5" type="ColorRect" parent="BloqueoMagico" unique_id=555105216]
+visible = false
 offset_left = 256.0
 offset_top = 640.0
 offset_right = 1280.0
 offset_bottom = 768.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Fila6" type="ColorRect" parent="BloqueoMagico" unique_id=1782391049]
+[node name="Fila6" type="ColorRect" parent="BloqueoMagico" unique_id=186289501]
 offset_left = 256.0
 offset_top = 768.0
 offset_right = 1280.0
 offset_bottom = 896.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Spawners" type="Node2D" parent="." unique_id=1233715859]
+[node name="Spawners" type="Node2D" parent="." unique_id=1273519751]
 position = Vector2(8, 0)
 
-[node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1252911193]
+[node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1962193308]
 position = Vector2(1280, 320)
 
-[node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=623987642]
+[node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=1311341990]
 position = Vector2(1280, 448)
 
-[node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=636651906]
+[node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=1422415545]
 position = Vector2(1280, 576)
 
-[node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=511596980]
+[node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=1556994656]
 position = Vector2(1280, 704)
 
-[node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=1338716025]
+[node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=902178117]
 position = Vector2(1280, 832)
 
-[node name="TimerSpawneoMortifagos" type="Timer" parent="." unique_id=1572878674]
-wait_time = 15.0
+[node name="TimerSpawneoMortifagos" type="Timer" parent="." unique_id=1162641464]
+wait_time = 8.0
 autostart = true
 
-[node name="SpawnerDeSnitches" type="Timer" parent="." unique_id=1849204912]
+[node name="SpawnerDeSnitches" type="Timer" parent="." unique_id=2049164940]
 wait_time = 10.0
 autostart = true
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=454797086]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1566728793]
 
-[node name="LabelSnitches" type="Label" parent="HUD" unique_id=138423222]
+[node name="LabelSnitches" type="Label" parent="HUD" unique_id=1112626491]
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 240.0
@@ -132,7 +139,7 @@ offset_bottom = 50.0
 theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
 
-[node name="BotonHarry" type="Button" parent="HUD" unique_id=426968617]
+[node name="BotonHarry" type="Button" parent="HUD" unique_id=1005889825]
 offset_left = 250.0
 offset_top = 10.0
 offset_right = 430.0
@@ -140,15 +147,23 @@ offset_bottom = 55.0
 theme_override_font_sizes/font_size = 18
 text = "Harry (100)"
 
-[node name="BotonCajaSnitch" type="Button" parent="HUD" unique_id=610114963]
+[node name="BotonCajaSnitch" type="Button" parent="HUD" unique_id=2122149562]
 offset_left = 440.0
 offset_top = 10.0
-offset_right = 660.0
+offset_right = 620.0
 offset_bottom = 55.0
 theme_override_font_sizes/font_size = 18
 text = "Caja Snitch (50)"
 
-[node name="LabelEstado" type="Label" parent="HUD" unique_id=360801785]
+[node name="BotonRecordadora" type="Button" parent="HUD" unique_id=1303248469]
+offset_left = 630.0
+offset_top = 10.0
+offset_right = 850.0
+offset_bottom = 55.0
+theme_override_font_sizes/font_size = 18
+text = "Recordadora (150)"
+
+[node name="LabelEstado" type="Label" parent="HUD" unique_id=461003767]
 visible = false
 offset_left = 760.0
 offset_top = 440.0
@@ -158,7 +173,7 @@ theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PanelFinNivel" type="Control" parent="HUD" unique_id=987123456]
+[node name="PanelFinNivel" type="Control" parent="HUD" unique_id=376989656]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -167,7 +182,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FondoOscuro" type="ColorRect" parent="HUD/PanelFinNivel"]
+[node name="FondoOscuro" type="ColorRect" parent="HUD/PanelFinNivel" unique_id=603967626]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -176,7 +191,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="CajaModal" type="PanelContainer" parent="HUD/PanelFinNivel"]
+[node name="CajaModal" type="PanelContainer" parent="HUD/PanelFinNivel" unique_id=123981555]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -191,35 +206,35 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
 
-[node name="VBox" type="VBoxContainer" parent="HUD/PanelFinNivel/CajaModal"]
+[node name="VBox" type="VBoxContainer" parent="HUD/PanelFinNivel/CajaModal" unique_id=1658954176]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="LabelTitulo" type="Label" parent="HUD/PanelFinNivel/CajaModal/VBox"]
+[node name="LabelTitulo" type="Label" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=925492386]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 44
 text = "¡VICTORIA!"
 horizontal_alignment = 1
 
-[node name="LabelMensaje" type="Label" parent="HUD/PanelFinNivel/CajaModal/VBox"]
+[node name="LabelMensaje" type="Label" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=1154489533]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.2, 0.15, 1)
 theme_override_font_sizes/font_size = 20
 text = "¡Has defendido el jardín con éxito!"
 horizontal_alignment = 1
 
-[node name="Espaciador" type="Control" parent="HUD/PanelFinNivel/CajaModal/VBox"]
+[node name="Espaciador" type="Control" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=2145730638]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="HBoxBotones" type="HBoxContainer" parent="HUD/PanelFinNivel/CajaModal/VBox"]
+[node name="HBoxBotones" type="HBoxContainer" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=1749682852]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="BotonSiguienteNivel" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones"]
+[node name="BotonSiguienteNivel" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones" unique_id=1007129947]
 custom_minimum_size = Vector2(170, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
@@ -227,7 +242,7 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
 text = "Siguiente Nivel"
 
-[node name="BotonReintentar" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones"]
+[node name="BotonReintentar" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones" unique_id=1747888044]
 custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
@@ -235,7 +250,7 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
 text = "Reintentar"
 
-[node name="BotonVolverMapa" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones"]
+[node name="BotonVolverMapa" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones" unique_id=214647230]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
@@ -247,6 +262,7 @@ text = "Volver al Mapa"
 [connection signal="timeout" from="SpawnerDeSnitches" to="." method="_on_spawner_de_snitches_timeout"]
 [connection signal="pressed" from="HUD/BotonHarry" to="." method="_on_boton_harry_pressed"]
 [connection signal="pressed" from="HUD/BotonCajaSnitch" to="." method="_on_boton_caja_snitch_pressed"]
+[connection signal="pressed" from="HUD/BotonRecordadora" to="." method="_on_boton_recordadora_pressed"]
 [connection signal="pressed" from="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones/BotonSiguienteNivel" to="." method="_on_boton_siguiente_nivel_pressed"]
 [connection signal="pressed" from="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones/BotonReintentar" to="." method="_on_boton_reintentar_pressed"]
 [connection signal="pressed" from="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones/BotonVolverMapa" to="." method="_on_boton_volver_mapa_pressed"]

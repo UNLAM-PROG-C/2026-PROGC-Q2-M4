@@ -8,9 +8,12 @@ signal nivel_seleccionado(numero_nivel: int)
 
 @export_group("Progresión")
 ## Nivel máximo desbloqueado (se sincroniza con GameManager si existe).
-@export var nivel_maximo_desbloqueado: int = 5
+@export var nivel_maximo_desbloqueado: int = 10
+## Progreso persistido en memoria durante la sesión del juego.
+static var progreso_desbloqueado: int = 10
 ## Escena del nivel para cargar al hacer clic en un nivel desbloqueado.
 @export var escena_nivel_principal: PackedScene
+@export var escena_nivel_2: PackedScene
 
 @export_group("Sistema A - Huellas de Camino")
 ## Distancia en píxeles entre cada paso a lo largo del Path2D.
@@ -65,11 +68,13 @@ func _ready() -> void:
 		_configurar_timer_ambiental()
 
 
-## Sincroniza con el GameManager si está registrado como Autoload global.
+## Sincroniza con el GameManager si está registrado como Autoload global o con la variable de sesión.
 func _sincronizar_progresion_global() -> void:
 	var game_manager: Node = get_node_or_null("/root/GameManager")
 	if game_manager != null and "nivel_maximo_desbloqueado" in game_manager:
 		nivel_maximo_desbloqueado = int(game_manager.get("nivel_maximo_desbloqueado"))
+	else:
+		nivel_maximo_desbloqueado = maxi(nivel_maximo_desbloqueado, progreso_desbloqueado)
 	nivel_maximo_desbloqueado = clamp(nivel_maximo_desbloqueado, 1, 10)
 
 
@@ -149,8 +154,14 @@ func _on_boton_nivel_pressed(numero_nivel: int) -> void:
 	nivel_seleccionado.emit(numero_nivel)
 	print("[MenuNiveles] Seleccionado Nivel ", numero_nivel)
 
-	if escena_nivel_principal != null:
+	if numero_nivel == 1 and escena_nivel_principal != null:
 		get_tree().change_scene_to_packed(escena_nivel_principal)
+	elif numero_nivel == 2:
+		if escena_nivel_2 != null:
+			get_tree().change_scene_to_packed(escena_nivel_2)
+		else:
+			print("[MenuNiveles] escena_nivel_2 es null, cargando por ruta")
+			get_tree().change_scene_to_file("res://nivel_2.tscn")
 
 
 # ==============================================================================

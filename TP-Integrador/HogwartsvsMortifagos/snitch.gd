@@ -33,6 +33,20 @@ func _ready() -> void:
 	_start_x = position.x
 
 
+## Configura la Snitch producida por una Caja de Snitch (pop suave hacia arriba y permanece en el suelo para clic).
+func configurar_de_caja(pos_origen: Vector2) -> void:
+	velocidad_caida = 0.0
+	zigzag_amplitud = 0.0
+	escape_distance = 0.0
+	_start_x = pos_origen.x + randf_range(-15.0, 15.0)
+	global_position = pos_origen
+	var salto_y: float = pos_origen.y - 45.0
+	var suelo_y: float = pos_origen.y + 15.0
+	var tween: Tween = create_tween()
+	tween.tween_property(self, "global_position:y", salto_y, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "global_position:y", suelo_y, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+
 func _process(delta: float) -> void:
 	if _fue_recogida:
 		return
@@ -41,15 +55,17 @@ func _process(delta: float) -> void:
 	_tiempo_total += delta
 	_escape_cooldown = max(_escape_cooldown - delta, 0.0)
 
-	# Zigzag horizontal movement
-	position.x = _start_x + sin(_tiempo_total * zigzag_frecuencia) * zigzag_amplitud
+	# Zigzag horizontal movement (solo si tiene amplitud configurada)
+	if zigzag_amplitud > 0.0:
+		position.x = _start_x + sin(_tiempo_total * zigzag_frecuencia) * zigzag_amplitud
 
-	# Vertical falling
-	position.y += velocidad_caida * delta
+	# Vertical falling (solo si tiene velocidad de caída configurada)
+	if velocidad_caida > 0.0:
+		position.y += velocidad_caida * delta
 	_tiempo_restante -= delta
 
-	# Escape when mouse gets close
-	if _escape_cooldown <= 0.0:
+	# Escape when mouse gets close (solo si escape_distance > 0)
+	if escape_distance > 0.0 and _escape_cooldown <= 0.0:
 		var mouse_pos: Vector2 = get_global_mouse_position()
 		if global_position.distance_to(mouse_pos) <= escape_distance:
 			var dir: Vector2 = (global_position - mouse_pos).normalized()

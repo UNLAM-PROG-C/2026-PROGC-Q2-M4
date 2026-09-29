@@ -4,6 +4,7 @@
 [ext_resource type="Shader" uid="uid://yhsfd3dl7nwn" path="res://pergamino.gdshader" id="2_shader"]
 [ext_resource type="PackedScene" uid="uid://cro1qg23bp5oe" path="res://NivelPrincipal.tscn" id="3_nivel1"]
 [ext_resource type="Texture2D" uid="uid://5sbjudpqy5l2" path="res://Imagenes/FondoMenuPrincipal.jpeg" id="4_fondo_mapa"]
+[ext_resource type="PackedScene" path="res://nivel_2.tscn" id="5_nivel2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_pergamino"]
 shader = ExtResource("2_shader")
@@ -37,6 +38,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 escena_nivel_principal = ExtResource("3_nivel1")
+escena_nivel_2 = ExtResource("5_nivel2")
 
 [node name="FondoPergamino" type="ColorRect" parent="." unique_id=421504520]
 material = SubResource("ShaderMaterial_pergamino")
