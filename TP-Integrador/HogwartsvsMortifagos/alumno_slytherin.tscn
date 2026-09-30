@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://cqbyxqa58mwy"]
 
 [ext_resource type="Script" path="res://alumno_slytherin.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://bswpml7x8xjay" path="res://Imagenes/Mortifago.png" id="2_texture"]
+[ext_resource type="Texture2D" uid="uid://cwuskmhw8i4af" path="res://Imagenes/Personajes_Slytherin.png" id="2_texture"]
+[ext_resource type="Texture2D" uid="uid://dh0xk0hpq0hji" path="res://Imagenes/Personajes_Slytherin Lastimado.png" id="3_texture_lastimado"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(48, 80)
@@ -13,9 +14,11 @@ size = Vector2(60, 80)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_script")
+textura_lastimado = ExtResource("3_texture_lastimado")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_texture")
+hframes = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
@@ -28,5 +31,10 @@ collision_mask = 1
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AreaDeteccion"]
 shape = SubResource("RectangleShape2D_detection")
 
+[node name="TimerAnimacion" type="Timer" parent="."]
+wait_time = 0.25
+autostart = true
+
 [connection signal="area_entered" from="AreaDeteccion" to="." method="_on_area_deteccion_area_entered"]
 [connection signal="area_exited" from="AreaDeteccion" to="." method="_on_area_deteccion_area_exited"]
+[connection signal="timeout" from="TimerAnimacion" to="." method="_on_timer_animacion_timeout"]

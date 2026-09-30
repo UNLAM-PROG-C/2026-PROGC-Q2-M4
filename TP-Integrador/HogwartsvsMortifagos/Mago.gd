@@ -16,15 +16,31 @@ func _on_timer_timeout():
 	
 	# Posicionamos el proyectil exactamente donde pusimos nuestro Marker2D
 	nuevo_proyectil.global_position = $PuntoDisparo.global_position
-	# Creamos una función pública que el zombi llamará para hacerle daño
+
+var _tiempo_flash: float = 0.0
+var _cooldown_flash: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if _cooldown_flash > 0.0:
+		_cooldown_flash -= delta
+		
+	if _tiempo_flash > 0.0:
+		_tiempo_flash -= delta
+		if _tiempo_flash <= 0.0:
+			$Sprite2D.modulate = Color(1.0, 1.0, 1.0)
+
+
+# Creamos una función pública que el zombi llamará para hacerle daño
 func recibir_danio(cantidad_danio: float) -> void:
 	vida -= cantidad_danio
-	
-	# Efecto visual opcional para saber que la están comiendo
-	$Sprite2D.modulate = Color(0.8, 0.3, 0.3)
-	await get_tree().create_timer(0.1).timeout
-	$Sprite2D.modulate = Color(1, 1, 1)
-	
+
+	# Efecto visual: parpadeo rojo con enfriamiento
+	if _cooldown_flash <= 0.0:
+		$Sprite2D.modulate = Color(0.8, 0.3, 0.3)
+		_tiempo_flash = 0.1
+		_cooldown_flash = 0.5
+
 	if vida <= 0:
 		queue_free() # La planta muere y desaparece
 		

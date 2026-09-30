@@ -28,10 +28,19 @@ func _ready() -> void:
 
 ## Callback del TimerGeneracionSnitches. Expulsa una Snitch física para que el jugador la recoja.
 func _on_timer_generacion_snitches_timeout() -> void:
+	# Abrir la caja
+	if has_node("Sprite2D"):
+		$Sprite2D.frame = 1
+
 	# Efecto visual de generación
 	var tween: Tween = create_tween()
 	tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
 	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
+	# Cerrar la caja al terminar
+	tween.tween_callback(func():
+		if is_instance_valid(self) and has_node("Sprite2D"):
+			$Sprite2D.frame = 0
+	)
 
 	# Instanciar Snitch física si está configurada la escena
 	var recurso_snitch: PackedScene = escena_snitch
@@ -48,9 +57,31 @@ func _on_timer_generacion_snitches_timeout() -> void:
 	snitches_generadas.emit(snitches_por_generacion)
 
 
+var _tiempo_flash: float = 0.0
+var _cooldown_flash: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if _cooldown_flash > 0.0:
+		_cooldown_flash -= delta
+		
+	if _tiempo_flash > 0.0:
+		_tiempo_flash -= delta
+		if _tiempo_flash <= 0.0:
+			if has_node("Sprite2D"):
+				$Sprite2D.modulate = Color(1.0, 1.0, 1.0)
+
+
 ## Aplica daño a la Caja de Snitch. Llamado por los enemigos al atacar.
 func recibir_danio(cantidad: float) -> void:
 	salud -= cantidad
+	# Efecto visual de daño (parpadeo rojo con enfriamiento)
+	if _cooldown_flash <= 0.0 and has_node("Sprite2D"):
+		$Sprite2D.modulate = Color(1.0, 0.3, 0.3)
+		_tiempo_flash = 0.1
+		_cooldown_flash = 0.5
+		
 	if salud <= 0.0:
 		derrotado.emit(self)
 		queue_free()
+

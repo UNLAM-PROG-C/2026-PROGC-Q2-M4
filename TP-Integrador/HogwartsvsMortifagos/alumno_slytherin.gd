@@ -12,14 +12,23 @@ signal invasion_jardin()
 @export var velocidad: float = 32.0
 ## Daño infligido por segundo al atacar un aliado.
 @export var danio_por_segundo: float = 30.0
+## Textura de la grilla de animación cuando está lastimado (< 50 % de salud).
+@export var textura_lastimado: Texture2D
+
+## Cantidad total de cuadros en la grilla de animación.
+const TOTAL_FRAMES: int = 8
 
 var salud_actual: int = 0
 var aliado_objetivo: Area2D = null
+## Indica si ya se aplicó la textura de lastimado.
+var _lastimado: bool = false
 
 
 func _ready() -> void:
 	salud_actual = salud_maxima
 	add_to_group("enemigos")
+	# El frame inicial puede ser aleatorio para que no todos caminen en sincronía.
+	$Sprite2D.frame = randi() % TOTAL_FRAMES
 
 
 func _process(delta: float) -> void:
@@ -38,14 +47,29 @@ func _process(delta: float) -> void:
 		queue_free()
 
 
+## Avanza al siguiente cuadro de la grilla de animación.
+func _on_timer_animacion_timeout() -> void:
+	$Sprite2D.frame = ($Sprite2D.frame + 1) % TOTAL_FRAMES
+
+
 ## Aplica daño al Alumno Slytherin. Llamado por los proyectiles al impactar.
 func recibir_danio(cantidad: int) -> void:
 	salud_actual = maxi(salud_actual - cantidad, 0)
-	# Efecto visual de daño
-	if has_node("Sprite2D"):
-		$Sprite2D.modulate = Color(1.0, 0.3, 0.3)
-		var tween: Tween = create_tween()
-		tween.tween_property($Sprite2D, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+
+	# Cambiar a textura lastimada al alcanzar el 50 % de la salud máxima.
+	if not _lastimado and salud_actual <= salud_maxima / 2:
+		_lastimado = true
+		if textura_lastimado != null:
+			# Se preserva el cuadro actual de la animación al cambiar la textura.
+			var frame_actual: int = $Sprite2D.frame
+			$Sprite2D.texture = textura_lastimado
+			$Sprite2D.frame = frame_actual
+
+	# Efecto visual de daño (flash rojo)
+	$Sprite2D.modulate = Color(1.0, 0.3, 0.3)
+	var tween: Tween = create_tween()
+	tween.tween_property($Sprite2D, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+
 	if salud_actual == 0:
 		derrotado.emit(self)
 		queue_free()

@@ -17,8 +17,8 @@ signal recogida(cantidad: int)
 
 # Parámetros de escape al acercarse el mouse
 @export var escape_distance: float = 80.0 # distancia a la que la snitch reacciona
-# Duplicate escape_distance removed
-@export var escape_offset: float = 30.0 # desplazamiento extra al escapar
+@export var escape_speed: float = 200.0 # velocidad al escapar
+@export var escape_duration: float = 0.3 # duración del escape en segundos
 @export var escape_cooldown_time: float = 0.5 # tiempo en segundos antes de poder escapar nuevamente
 
 var _tiempo_restante: float = 0.0
@@ -26,15 +26,24 @@ var _fue_recogida: bool = false
 var _tiempo_total: float = 0.0
 var _start_x: float = 0.0
 var _escape_cooldown: float = 0.0
+var _tiempo_escape_restante: float = 0.0
+var _dir_escape: Vector2 = Vector2.ZERO
+var animada: bool = true
 
 
 func _ready() -> void:
+	if not animada:
+		if has_node("TimerAnimacion"):
+			$TimerAnimacion.stop()
+		if has_node("Sprite2D"):
+			$Sprite2D.frame = 1
 	_tiempo_restante = tiempo_vida
 	_start_x = position.x
 
 
 ## Configura la Snitch producida por una Caja de Snitch (pop suave hacia arriba y permanece en el suelo para clic).
 func configurar_de_caja(pos_origen: Vector2) -> void:
+	animada = false
 	velocidad_caida = 0.0
 	zigzag_amplitud = 0.0
 	escape_distance = 0.0
@@ -54,23 +63,34 @@ func _process(delta: float) -> void:
 	# Update timers
 	_tiempo_total += delta
 	_escape_cooldown = max(_escape_cooldown - delta, 0.0)
-
-	# Zigzag horizontal movement (solo si tiene amplitud configurada)
-	if zigzag_amplitud > 0.0:
-		position.x = _start_x + sin(_tiempo_total * zigzag_frecuencia) * zigzag_amplitud
-
-	# Vertical falling (solo si tiene velocidad de caída configurada)
-	if velocidad_caida > 0.0:
-		position.y += velocidad_caida * delta
 	_tiempo_restante -= delta
 
-	# Escape when mouse gets close (solo si escape_distance > 0)
-	if escape_distance > 0.0 and _escape_cooldown <= 0.0:
-		var mouse_pos: Vector2 = get_global_mouse_position()
-		if global_position.distance_to(mouse_pos) <= escape_distance:
-			var dir: Vector2 = (global_position - mouse_pos).normalized()
-			position += dir * escape_offset
-			_escape_cooldown = escape_cooldown_time
+	if _tiempo_escape_restante > 0.0:
+		# Estado: Escapando
+		_tiempo_escape_restante -= delta
+		position += _dir_escape * escape_speed * delta
+		
+		# Al terminar el escape, reajustamos el eje del zigzag para evitar un salto brusco
+		if _tiempo_escape_restante <= 0.0:
+			if zigzag_amplitud > 0.0:
+				_start_x = position.x - sin(_tiempo_total * zigzag_frecuencia) * zigzag_amplitud
+	else:
+		# Estado: Cayendo normalmente
+		if zigzag_amplitud > 0.0:
+			position.x = _start_x + sin(_tiempo_total * zigzag_frecuencia) * zigzag_amplitud
+		
+		if velocidad_caida > 0.0:
+			position.y += velocidad_caida * delta
+
+		# Comprobar si debe iniciar el escape
+		if escape_distance > 0.0 and _escape_cooldown <= 0.0:
+			var mouse_pos: Vector2 = get_global_mouse_position()
+			if global_position.distance_to(mouse_pos) <= escape_distance:
+				_dir_escape = (global_position - mouse_pos).normalized()
+				_tiempo_escape_restante = escape_duration
+				_escape_cooldown = escape_cooldown_time
+				if has_node("ParticulasEscape"):
+					$ParticulasEscape.emitting = true
 
 	# Lifetime check
 	if _tiempo_restante <= 0.0 or global_position.y > 1200.0:
@@ -112,4 +132,9 @@ func _recoger() -> void:
 	_fue_recogida = true
 	recogida.emit(valor)
 	queue_free()
+
+
+func _on_timer_animacion_timeout() -> void:
+	if animada and has_node("Sprite2D"):
+		$Sprite2D.frame = ($Sprite2D.frame + 1) % 4
 

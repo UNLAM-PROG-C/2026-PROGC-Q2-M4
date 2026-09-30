@@ -1,21 +1,45 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cpc5lnjbkueb1"]
 
-[ext_resource type="Script" path="res://snitch.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://ba15euv2u7aem" path="res://snitch.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Imagenes/Personajes_Snitch.png" id="2_texture"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
-radius = 20.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_iqije"]
+size = Vector2(128, 26)
 
-[node name="Snitch" type="Area2D"]
+[node name="Snitch" type="Area2D" unique_id=2137711152]
 collision_layer = 8
 collision_mask = 0
-input_pickable = true
 script = ExtResource("1_script")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(1, 0.843, 0, 1)
-polygon = PackedVector2Array(-15, -15, 15, -15, 15, 15, -15, 15)
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1263475426]
+position = Vector2(3.8146973e-06, 0)
+texture = ExtResource("2_texture")
+hframes = 4
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_body")
+[node name="ParticulasEscape" type="CPUParticles2D" parent="." unique_id=1118267278]
+emitting = false
+amount = 15
+lifetime = 0.5
+one_shot = true
+explosiveness = 0.8
+emission_shape = 1
+emission_sphere_radius = 10.0
+direction = Vector2(0, 0)
+spread = 180.0
+gravity = Vector2(0, 30)
+initial_velocity_min = 20.0
+initial_velocity_max = 50.0
+scale_amount_min = 2.0
+scale_amount_max = 5.0
+color = Color(1, 0.9, 0.2, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=459639053]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_iqije")
+
+[node name="TimerAnimacion" type="Timer" parent="." unique_id=230132648]
+wait_time = 0.1
+autostart = true
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]
+[connection signal="timeout" from="TimerAnimacion" to="." method="_on_timer_animacion_timeout"]

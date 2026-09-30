@@ -40,13 +40,31 @@ func _hay_enemigo_en_linea() -> bool:
 	return false
 
 
+var _tiempo_flash: float = 0.0
+var _cooldown_flash: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if _cooldown_flash > 0.0:
+		_cooldown_flash -= delta
+		
+	if _tiempo_flash > 0.0:
+		_tiempo_flash -= delta
+		if _tiempo_flash <= 0.0:
+			$Sprite2D.modulate = Color(1.0, 1.0, 1.0)
+
+
 ## Aplica daño a Harry. Llamado por los enemigos al atacar.
 func recibir_danio(cantidad: float) -> void:
 	salud -= cantidad
-	# Efecto visual de daño
-	$Sprite2D.modulate = Color(1.0, 0.3, 0.3)
-	var tween: Tween = create_tween()
-	tween.tween_property($Sprite2D, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+	
+	# Efecto visual de daño (parpadeo rojo con enfriamiento)
+	if _cooldown_flash <= 0.0:
+		$Sprite2D.modulate = Color(1.0, 0.3, 0.3)
+		_tiempo_flash = 0.1
+		_cooldown_flash = 0.5
+		
 	if salud <= 0.0:
 		derrotado.emit(self)
 		queue_free()
+
