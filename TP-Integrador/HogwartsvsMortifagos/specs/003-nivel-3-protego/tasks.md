@@ -4,7 +4,7 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Duplicar la escena base del nivel anterior para crear `nivel_3.tscn` y actualizar las referencias internas.
+- [X] T001 Duplicar la escena base del nivel anterior para crear `nivel_3.tscn` y actualizar las referencias internas.
 
 ---
 
@@ -24,8 +24,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T002 [US1] Añadir 2 `Marker2D` adicionales en el nodo Spawners de `nivel_3.tscn` (total 5) asignándoles las coordenadas Y de las nuevas filas superior e inferior.
-- [ ] T003 [US1] Ajustar la lógica del generador de grilla y la interfaz de plantado en `nivel_3.tscn` para validar las 5 filas horizontales completas.
+- [X] T002 [US1] Añadir 2 `Marker2D` adicionales en el nodo Spawners de `nivel_3.tscn` (total 5) asignándoles las coordenadas Y de las nuevas filas superior e inferior.
+- [X] T003 [US1] Ajustar la lógica del generador de grilla y la interfaz de plantado en `nivel_3.tscn` para validar las 5 filas horizontales completas.
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -39,8 +39,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T004 [P] [US2] Crear la escena `draco.tscn` (Area2D) configurando los nodos visuales y añadiéndolo al grupo `"enemigos"` según el contrato.
-- [ ] T005 [P] [US2] Crear el script `draco.gd` con la variable `@export var vida: float` balanceada al doble del Slytherin, e implementar la función `recibir_danio(cantidad: float)`.
+- [X] T004 [P] [US2] Crear la escena `draco.tscn` (Area2D) configurando los nodos visuales y añadiéndolo al grupo `"enemigos"` según el contrato.
+- [X] T005 [P] [US2] Crear el script `draco.gd` con la variable `@export var vida: float` balanceada al doble del Slytherin, e implementar la función `recibir_danio(cantidad: float)`.
 - [ ] T006 [US2] Modificar la lógica del generador de oleadas en `nivel_3.tscn` para instanciar aletoriamente la escena de Draco o AlumnoSlytherin.
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
@@ -55,9 +55,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T007 [P] [US3] Crear la escena `protego.tscn` (Area2D) configurando los nodos visuales y añadiéndolo al grupo `"aliados"` según el contrato.
-- [ ] T008 [P] [US3] Crear el script `protego.gd` con `@export var coste: int = 50`, `tiempo_recarga` (10-15s), `salud` masiva, e implementar `recibir_danio(cantidad: float)` emitiendo `derrotado`.
-- [ ] T009 [US3] Configurar el HUD en `nivel_3.tscn` para habilitar el botón de la carta Protego, vinculándola a la nueva escena.
+- [X] T007 [P] [US3] Crear la escena `protego.tscn` (Area2D) configurando los nodos visuales y añadiéndolo al grupo `"aliados"` según el contrato.
+- [X] T008 [P] [US3] Crear el script `protego.gd` con `@export var coste: int = 50`, `tiempo_recarga` (10-15s), `salud` masiva, e implementar `recibir_danio(cantidad: float)` emitiendo `derrotado`.
+- [X] T009 [US3] Configurar el HUD en `nivel_3.tscn` para habilitar el botón de la carta Protego, vinculándola a la nueva escena.
 
 **Checkpoint**: All user stories should now be independently functional
 

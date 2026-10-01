@@ -11,7 +11,10 @@ extends Node2D
 @export var escena_caja_snitch: PackedScene
 ## Escena del Alumno Slytherin para instanciar.
 @export var escena_alumno_slytherin: PackedScene
-@export var escena_recordadora: PackedScene
+@export var escena_draco: PackedScene
+@export var escena_protego: PackedScene
+@export var tiempo_recarga_protego: float = 12.0
+
 ## Escena de la Snitch recolectable para instanciar.
 @export var escena_snitch: PackedScene
 ## Escena del Dementor (cortadora de pasto defensiva) para instanciar.
@@ -29,6 +32,7 @@ var snitches: int = 0
 var aliado_seleccionado: String = ""
 var celdas_ocupadas: Dictionary = {}
 var tiempo_recarga_recordadora: float = 0.0
+var tiempo_recarga_protego_actual: float = 0.0
 var enemigos_generados: int = 0
 var enemigos_derrotados: int = 0
 var nivel_terminado: bool = false
@@ -41,6 +45,7 @@ var nivel_terminado: bool = false
 @onready var boton_harry: Button = $HUD/BotonHarry
 @onready var boton_caja_snitch: Button = get_node_or_null("HUD/BotonCajaSnitch")
 @onready var boton_recordadora: Button = get_node_or_null("HUD/BotonRecordadora")
+@onready var boton_protego: Button = get_node_or_null("HUD/BotonProtego")
 @onready var label_estado: Label = $HUD/LabelEstado
 @onready var panel_fin_nivel: Control = $HUD/PanelFinNivel
 @onready var label_titulo_fin: Label = $HUD/PanelFinNivel/CajaModal/VBox/LabelTitulo
@@ -88,6 +93,8 @@ func _actualizar_hud() -> void:
 		boton_caja_snitch.disabled = snitches < 50
 	if boton_recordadora != null:
 		boton_recordadora.disabled = snitches < 150 or tiempo_recarga_recordadora > 0.0
+	if boton_protego != null:
+		boton_protego.disabled = snitches < 200 or tiempo_recarga_protego_actual > 0.0
 
 
 ## Maneja la entrada del jugador para plantar aliados en la grilla.
@@ -119,12 +126,24 @@ func _intentar_plantar() -> void:
 	var escena: PackedScene = null
 	var coste_aliado: int = 0
 	match aliado_seleccionado:
+	"harry":
+		escena = escena_harry
+		coste_aliado = 100
+	"caja_snitch":
+		escena = escena_caja_snitch
+		coste_aliado = 50
+	"recordadora":
+		escena = escena_recordadora
+		coste_aliado = 150
+	"protego":
+		escena = escena_protego
+		coste_aliado = 50
 		"harry":
 			escena = escena_harry
 			coste_aliado = 100
 		"caja_snitch":
 			escena = escena_caja_snitch
-			coste_aliado = 50
+			coste_aliado = 200
 		"recordadora":
 			escena = escena_recordadora
 			coste_aliado = 150
@@ -206,8 +225,8 @@ func _on_timer_spawneo_timeout() -> void:
 		timer_spawneo.stop()
 		return
 
-	var nuevo_enemigo: Node2D = escena_alumno_slytherin.instantiate() as Node2D
-	if nuevo_enemigo == null:
+	var enemy_scene: PackedScene = (randi() % 2 == 0) ? escena_alumno_slytherin : escena_draco
+var nuevo_enemigo: Node2D = enemy_scene.instantiate() as Node2D
 		return
 	if spawners_activos.size() > 0:
 		var spawner = spawners_activos.pick_random()
@@ -324,6 +343,13 @@ func _on_boton_recordadora_pressed() -> void:
 		aliado_seleccionado = ""
 	else:
 		aliado_seleccionado = "recordadora"
+	_actualizar_seleccion_visual()
+
+func _on_boton_protego_pressed() -> void:
+	if aliado_seleccionado == "protego":
+		aliado_seleccionado = ""
+	else:
+		aliado_seleccionado = "protego"
 	_actualizar_seleccion_visual()
 
 
