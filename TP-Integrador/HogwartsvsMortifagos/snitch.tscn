@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Imagenes/Personajes_Snitch.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iqije"]
-size = Vector2(128, 26)
+size = Vector2(128, 34)
 
 [node name="Snitch" type="Area2D" unique_id=2137711152]
 collision_layer = 8
@@ -34,7 +34,6 @@ scale_amount_max = 5.0
 color = Color(1, 0.9, 0.2, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=459639053]
-position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_iqije")
 
 [node name="TimerAnimacion" type="Timer" parent="." unique_id=230132648]
