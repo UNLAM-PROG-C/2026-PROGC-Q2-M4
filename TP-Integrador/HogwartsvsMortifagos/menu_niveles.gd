@@ -14,6 +14,7 @@ static var progreso_desbloqueado: int = 10
 ## Escena del nivel para cargar al hacer clic en un nivel desbloqueado.
 @export var escena_nivel_principal: PackedScene
 @export var escena_nivel_2: PackedScene
+@export var escena_nivel_3: PackedScene
 
 @export_group("Sistema A - Huellas de Camino")
 ## Distancia en píxeles entre cada paso a lo largo del Path2D.
@@ -162,6 +163,12 @@ func _on_boton_nivel_pressed(numero_nivel: int) -> void:
 		else:
 			print("[MenuNiveles] escena_nivel_2 es null, cargando por ruta")
 			get_tree().change_scene_to_file("res://nivel_2.tscn")
+	elif numero_nivel == 3:
+		if escena_nivel_3 != null:
+			get_tree().change_scene_to_packed(escena_nivel_3)
+		else:
+			print("[MenuNiveles] escena_nivel_3 es null, cargando por ruta")
+			get_tree().change_scene_to_file("res://nivel_3.tscn")
 
 
 # ==============================================================================

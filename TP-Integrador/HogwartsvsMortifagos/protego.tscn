@@ -1,19 +1,18 @@
-[gd_scene format=3 uid="uid://protego_scene"]
+[gd_scene format=3 uid="uid://p7rotego3n1v3"]
 
 [ext_resource type="Script" path="res://protego.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://Imagenes/Protego.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(48, 80)
 
 [node name="Protego" type="Area2D" groups=["aliados"]]
 collision_layer = 1
-collision_mask = 2
+collision_mask = 0
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_texture")
-hframes = 8
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.35, 0.55, 0.95, 0.9)
+polygon = PackedVector2Array(-24, -40, 24, -40, 24, 40, -24, 40)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")

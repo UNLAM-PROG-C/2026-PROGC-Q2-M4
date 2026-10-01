@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://c8yjskdqci0c"]
+[gd_scene format=4 uid="uid://n1vel3prot3go"]
 
 [ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Imagenes/Pasto.png" id="1_44v15"]
 [ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Imagenes/Pasto2.png" id="2_4osvq"]
@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
 [ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
 [ext_resource type="PackedScene" path="res://recordadora.tscn" id="10_recordadora"]
+[ext_resource type="PackedScene" path="res://draco.tscn" id="11_draco"]
+[ext_resource type="PackedScene" path="res://protego.tscn" id="12_protego"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -63,17 +65,20 @@ escena_alumno_slytherin = ExtResource("6_slytherin")
 escena_recordadora = ExtResource("10_recordadora")
 escena_snitch = ExtResource("7_snitch")
 escena_dementor = ExtResource("8_dementor")
+escena_draco = ExtResource("11_draco")
+escena_protego = ExtResource("12_protego")
 filas_activas = Array[int]([2, 3, 4, 5, 6])
 spawners_activos = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4"), NodePath("Spawners/Marker2D5")])
 nivel_siguiente_desbloqueo = 4
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1951683565]
-tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=)
-[tile_set = SubResource("TileSet_5uq62")]
+tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=")
+tile_set = SubResource("TileSet_5uq62")
 
 [node name="BloqueoMagico" type="Node2D" parent="." unique_id=1038295434]
 
 [node name="Fila2" type="ColorRect" parent="BloqueoMagico" unique_id=2053891754]
+visible = false
 offset_left = 256.0
 offset_top = 256.0
 offset_right = 1280.0
@@ -97,6 +102,7 @@ offset_bottom = 768.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
 [node name="Fila6" type="ColorRect" parent="BloqueoMagico" unique_id=186289501]
+visible = false
 offset_left = 256.0
 offset_top = 768.0
 offset_right = 1280.0
@@ -170,7 +176,7 @@ offset_top = 10.0
 offset_right = 1080.0
 offset_bottom = 55.0
 theme_override_font_sizes/font_size = 18
-text = "Protego (200)"
+text = "Protego (50)"
 
 
 [node name="LabelEstado" type="Label" parent="HUD" unique_id=461003767]
