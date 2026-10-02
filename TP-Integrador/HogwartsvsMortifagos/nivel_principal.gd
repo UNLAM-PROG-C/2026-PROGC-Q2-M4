@@ -188,7 +188,7 @@ func _intentar_plantar() -> void:
 ## Callback cuando la Caja de Snitch expulsa una Snitch física para ser recolectada.
 func _on_snitch_soltada(snitch_instancia: Snitch) -> void:
 	add_child(snitch_instancia)
-	snitch_instancia.recogida.connect(_on_snitch_recogida)
+	snitch_instancia.collected.connect(_on_snitch_recogida)
 
 
 ## Callback de compatibilidad cuando la Caja de Snitch genera Snitches directamente.
@@ -207,7 +207,7 @@ func _on_spawner_de_snitches_timeout() -> void:
 	var x_pos: float = randf_range(300.0, 1150.0)
 	nueva_snitch.position = Vector2(x_pos, -20.0)
 	add_child(nueva_snitch)
-	nueva_snitch.recogida.connect(_on_snitch_recogida)
+	nueva_snitch.collected.connect(_on_snitch_recogida)
 
 
 ## Callback cuando el jugador hace clic y recoge una Snitch.

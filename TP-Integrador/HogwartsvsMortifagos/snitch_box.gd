@@ -50,8 +50,8 @@ func _on_snitch_timer_timeout() -> void:
 	if snitch_resource != null:
 		var new_snitch: Snitch = snitch_resource.instantiate() as Snitch
 		if new_snitch != null:
-			new_snitch.valor = snitches_per_drop
-			new_snitch.configurar_de_caja(global_position)
+			new_snitch.value = snitches_per_drop
+			new_snitch.setup_from_box(global_position)
 			snitch_dropped.emit(new_snitch)
 
 	snitches_generadas.emit(snitches_per_drop)
