@@ -32,9 +32,9 @@ enabled=PackedStringArray("res://addons/godot_mcp_bridge/plugin.cfg")
 
 [global_group]
 
-aliados=""
-enemigos=""
-hechizos=""
+allies=""
+enemies=""
+spells=""
 
 [physics]
 

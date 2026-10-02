@@ -16,7 +16,7 @@ var _cooldown_flash: float = 0.0
 
 
 func _ready() -> void:
-	add_to_group("aliados")
+	add_to_group("allies")
 
 
 func _process(delta: float) -> void:

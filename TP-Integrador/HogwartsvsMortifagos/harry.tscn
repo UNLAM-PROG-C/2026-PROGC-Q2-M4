@@ -7,7 +7,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(80, 100)
 
-[node name="Harry" type="Area2D" groups=["aliados"]]
+[node name="Harry" type="Area2D" groups=["allies"]]
 collision_layer = 1
 collision_mask = 0
 script = ExtResource("1_script")

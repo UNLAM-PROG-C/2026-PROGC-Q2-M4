@@ -15,7 +15,7 @@ signal defeated(entity: Node2D)
 
 
 func _ready() -> void:
-	add_to_group("aliados")
+	add_to_group("allies")
 	$ShootTimer.wait_time = shot_interval
 	$ShootTimer.start()
 
@@ -33,7 +33,7 @@ func _on_shoot_timer_timeout() -> void:
 
 ## Checks whether at least one valid enemy is in the same horizontal lane.
 func _has_enemy_in_lane() -> bool:
-	for enemy: Node in get_tree().get_nodes_in_group("enemigos"):
+	for enemy: Node in get_tree().get_nodes_in_group("enemies"):
 		if enemy is Node2D and is_instance_valid(enemy):
 			if absf((enemy as Node2D).global_position.y - global_position.y) < 64.0:
 				return true

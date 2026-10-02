@@ -55,7 +55,7 @@ func activate() -> void:
 
 ## Area2D collision callback. Detects an enemy making contact.
 func _on_area_entered(area: Area2D) -> void:
-	if area.is_in_group("enemigos"):
+	if area.is_in_group("enemies"):
 		if not _is_active:
 			activate()
 		_kill_enemy(area)
@@ -63,7 +63,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 ## Checks whether an enemy in the same lane reached the Dementor's position.
 func _check_enemies_at_position() -> void:
-	for enemy: Node in get_tree().get_nodes_in_group("enemigos"):
+	for enemy: Node in get_tree().get_nodes_in_group("enemies"):
 		if enemy is Node2D and is_instance_valid(enemy):
 			var enemy_position: Vector2 = (enemy as Node2D).global_position
 			# Same horizontal lane
@@ -79,11 +79,11 @@ func _check_enemies_at_position() -> void:
 func _sweep_lane() -> void:
 	# 1. Direct collisions detected by the Area2D
 	for area: Area2D in get_overlapping_areas():
-		if area.is_in_group("enemigos"):
+		if area.is_in_group("enemies"):
 			_kill_enemy(area)
 
 	# 2. Enemies in the same lane reached by the sweep
-	for enemy: Node in get_tree().get_nodes_in_group("enemigos"):
+	for enemy: Node in get_tree().get_nodes_in_group("enemies"):
 		if enemy is Node2D and is_instance_valid(enemy):
 			var enemy_position: Vector2 = (enemy as Node2D).global_position
 			if absf(enemy_position.y - global_position.y) < 64.0:

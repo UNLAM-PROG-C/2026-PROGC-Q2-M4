@@ -21,7 +21,7 @@ signal defeated(entity: Node2D)
 
 
 func _ready() -> void:
-	add_to_group("aliados")
+	add_to_group("allies")
 	$SnitchTimer.wait_time = drop_interval
 	$SnitchTimer.start()
 

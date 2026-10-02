@@ -10,7 +10,7 @@ size = Vector2(48, 80)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
 size = Vector2(60, 80)
 
-[node name="SlytherinStudent" type="Area2D" groups=["enemigos"]]
+[node name="SlytherinStudent" type="Area2D" groups=["enemies"]]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_script")
