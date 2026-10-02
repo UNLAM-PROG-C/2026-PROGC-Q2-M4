@@ -166,10 +166,10 @@ func _intentar_plantar() -> void:
 	tile_map.add_child(nuevo_aliado)
 	celdas_ocupadas[celda] = nuevo_aliado
 
-	# Conectar señales del aliado (solo CajaSnitch necesita señal adicional)
-	if nuevo_aliado is CajaSnitch:
-		var caja: CajaSnitch = nuevo_aliado as CajaSnitch
-		caja.snitch_soltada.connect(_on_snitch_soltada)
+	# Conectar señales del aliado (solo SnitchBox necesita señal adicional)
+	if nuevo_aliado is SnitchBox:
+		var caja: SnitchBox = nuevo_aliado as SnitchBox
+		caja.snitch_dropped.connect(_on_snitch_soltada)
 
 	nuevo_aliado.tree_exiting.connect(_on_aliado_eliminado.bind(celda))
 

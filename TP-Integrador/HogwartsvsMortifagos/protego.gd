@@ -1,15 +1,15 @@
 class_name Protego
 extends Area2D
 
-## Señal emitida cuando Protego pierde toda su salud.
-signal derrotado(entidad: Node2D)
+## Emitted when Protego loses all its health.
+signal defeated(entity: Node2D)
 
-## Costo en Snitches para plantar un Protego.
+## Snitch cost to place a Protego.
 @export var coste: int = 50
-## Segundos de recarga de la carta después de plantarlo.
+## Card cooldown in seconds after placing it.
 @export var tiempo_recarga: float = 12.0
-## Salud de la barrera. Mucho mayor que la de un mago.
-@export var salud: float = 4000.0
+## Barrier health. Much higher than a wizard's.
+@export var health: float = 4000.0
 
 var _tiempo_flash: float = 0.0
 var _cooldown_flash: float = 0.0
@@ -28,13 +28,13 @@ func _process(delta: float) -> void:
 			$Visual.modulate = Color(1.0, 1.0, 1.0)
 
 
-## Absorbe daño sin atacar. Llamado por los enemigos al colisionar.
-func recibir_danio(cantidad: float) -> void:
-	salud -= cantidad
+## Absorbs damage without attacking. Called by enemies on contact.
+func take_damage(amount: float) -> void:
+	health -= amount
 	if _cooldown_flash <= 0.0:
 		$Visual.modulate = Color(1.0, 0.3, 0.3)
 		_tiempo_flash = 0.1
 		_cooldown_flash = 0.5
-	if salud <= 0.0:
-		derrotado.emit(self)
+	if health <= 0.0:
+		defeated.emit(self)
 		queue_free()

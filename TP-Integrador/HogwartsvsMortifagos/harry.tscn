@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://harry.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://c7vaise20xj34" path="res://Imagenes/Harry.png" id="2_texture"]
-[ext_resource type="PackedScene" uid="uid://bwxniwtn2vxfv" path="res://Proyectil.tscn" id="3_proyectil"]
+[ext_resource type="PackedScene" uid="uid://bwxniwtn2vxfv" path="res://projectile.tscn" id="3_projectile"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(80, 100)
@@ -11,7 +11,7 @@ size = Vector2(80, 100)
 collision_layer = 1
 collision_mask = 0
 script = ExtResource("1_script")
-escena_proyectil = ExtResource("3_proyectil")
+projectile_scene = ExtResource("3_projectile")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_texture")
@@ -19,9 +19,9 @@ texture = ExtResource("2_texture")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="PuntoDisparo" type="Marker2D" parent="."]
+[node name="ShootPoint" type="Marker2D" parent="."]
 position = Vector2(64, 0)
 
-[node name="TimerDisparo" type="Timer" parent="."]
+[node name="ShootTimer" type="Timer" parent="."]
 
-[connection signal="timeout" from="TimerDisparo" to="." method="_on_timer_disparo_timeout"]
+[connection signal="timeout" from="ShootTimer" to="." method="_on_shoot_timer_timeout"]

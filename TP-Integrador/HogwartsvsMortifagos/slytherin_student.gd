@@ -34,8 +34,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if is_instance_valid(_target_ally):
 		# State: attacking the ally
-		if _target_ally.has_method("recibir_danio"):
-			_target_ally.call("recibir_danio", damage_per_second * delta)
+		if _target_ally.has_method("take_damage"):
+			_target_ally.call("take_damage", damage_per_second * delta)
 	else:
 		_target_ally = null
 		# State: walking towards the garden
