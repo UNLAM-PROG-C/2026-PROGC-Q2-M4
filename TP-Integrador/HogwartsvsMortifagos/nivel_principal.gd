@@ -248,8 +248,8 @@ func _on_timer_spawneo_timeout() -> void:
 	enemigos_generados += 1
 
 	# Conectar señales del enemigo
-	nuevo_enemigo.connect("derrotado", _on_enemigo_derrotado)
-	nuevo_enemigo.connect("invasion_jardin", _on_invasion_jardin)
+	nuevo_enemigo.connect("defeated", _on_enemigo_derrotado)
+	nuevo_enemigo.connect("garden_invaded", _on_invasion_jardin)
 
 
 ## Callback cuando un enemigo es derrotado. Verifica condición de victoria.

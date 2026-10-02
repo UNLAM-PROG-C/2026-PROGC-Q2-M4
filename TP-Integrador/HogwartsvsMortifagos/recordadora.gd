@@ -59,7 +59,7 @@ func detonar() -> void:
 	var areas = area.get_overlapping_areas()
 	for entity_area in areas:
 		if entity_area.is_in_group("enemigos"):
-			if entity_area.has_method("recibir_danio"):
-				entity_area.recibir_danio(1800)
+			if entity_area.has_method("take_damage"):
+				entity_area.take_damage(1800)
 	detonada.emit(self)
 	queue_free()

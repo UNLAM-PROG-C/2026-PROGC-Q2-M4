@@ -21,9 +21,9 @@ func _process(delta: float) -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if _impacto_registrado:
 		return
-	if area.is_in_group("enemigos") and area.has_method("recibir_danio"):
+	if area.is_in_group("enemigos") and area.has_method("take_damage"):
 		_impacto_registrado = true
-		area.call("recibir_danio", danio)
+		area.call("take_damage", danio)
 		queue_free()
 
 

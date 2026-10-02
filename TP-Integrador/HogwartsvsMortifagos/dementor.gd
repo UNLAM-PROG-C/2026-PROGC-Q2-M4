@@ -95,7 +95,7 @@ func _barrer_fila() -> void:
 func _eliminar_enemigo(entidad: Node2D) -> void:
 	if not is_instance_valid(entidad) or entidad.is_queued_for_deletion():
 		return
-	if entidad.has_method("recibir_danio"):
-		entidad.call("recibir_danio", danio)
+	if entidad.has_method("take_damage"):
+		entidad.call("take_damage", danio)
 	else:
 		entidad.queue_free()

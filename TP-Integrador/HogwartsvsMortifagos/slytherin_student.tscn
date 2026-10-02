@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://deqnbfjd6va"]
+[gd_scene format=3 uid="uid://cqbyxqa58mwy"]
 
-[ext_resource type="Script" path="res://draco.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://ju3blv3dlx2n" path="res://Imagenes/Personajes_Draco.png" id="2_texture"]
-[ext_resource type="Texture2D" uid="uid://b7op036lglxx4" path="res://Imagenes/Personajes_Draco Lastimado.png" id="3_hurt_texture"]
+[ext_resource type="Script" path="res://slytherin_student.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cwuskmhw8i4af" path="res://Imagenes/Personajes_Slytherin.png" id="2_texture"]
+[ext_resource type="Texture2D" uid="uid://dh0xk0hpq0hji" path="res://Imagenes/Personajes_Slytherin Lastimado.png" id="3_hurt_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(48, 80)
@@ -10,7 +10,7 @@ size = Vector2(48, 80)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
 size = Vector2(60, 80)
 
-[node name="Draco" type="Area2D" groups=["enemigos"]]
+[node name="SlytherinStudent" type="Area2D" groups=["enemigos"]]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_script")

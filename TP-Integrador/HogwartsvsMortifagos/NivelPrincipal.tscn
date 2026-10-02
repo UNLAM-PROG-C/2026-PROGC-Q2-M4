@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://nivel_principal.gd" id="3_script"]
 [ext_resource type="PackedScene" path="res://harry.tscn" id="4_harry"]
 [ext_resource type="PackedScene" path="res://caja_snitch.tscn" id="5_caja"]
-[ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://alumno_slytherin.tscn" id="6_slytherin"]
+[ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
 [ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
 

@@ -1,13 +1,13 @@
-class_name Draco
+class_name SlytherinStudent
 extends Area2D
 
-## Emitted when Draco is defeated.
+## Emitted when the Slytherin Student is defeated.
 signal defeated(entity: Node2D)
-## Emitted when Draco invades the garden.
+## Emitted when the Slytherin Student invades the garden.
 signal garden_invaded()
 
-## Draco's maximum health. Twice a Slytherin Student's (200).
-@export var max_health: int = 400
+## Maximum health of the Slytherin Student.
+@export var max_health: int = 200
 ## Walking speed in pixels per second.
 @export var speed: float = 32.0
 ## Damage dealt per second while attacking an ally.
@@ -27,17 +27,21 @@ var _is_hurt: bool = false
 func _ready() -> void:
 	_health = max_health
 	add_to_group("enemigos")
+	# Random starting frame so not every enemy walks in sync.
 	$Sprite2D.frame = randi() % TOTAL_FRAMES
 
 
 func _process(delta: float) -> void:
 	if is_instance_valid(_target_ally):
+		# State: attacking the ally
 		if _target_ally.has_method("recibir_danio"):
 			_target_ally.call("recibir_danio", damage_per_second * delta)
 	else:
 		_target_ally = null
+		# State: walking towards the garden
 		position.x -= speed * delta
 
+	# Garden invasion condition
 	if global_position.x < 0.0:
 		garden_invaded.emit()
 		queue_free()
@@ -48,17 +52,20 @@ func _on_animation_timer_timeout() -> void:
 	$Sprite2D.frame = ($Sprite2D.frame + 1) % TOTAL_FRAMES
 
 
-## Applies damage to Draco. Called by projectiles on hit.
+## Applies damage to the Slytherin Student. Called by projectiles on hit.
 func take_damage(amount: int) -> void:
 	_health = maxi(_health - amount, 0)
 
+	# Switch to the hurt texture at 50 % of max health.
 	if not _is_hurt and _health <= max_health / 2:
 		_is_hurt = true
 		if hurt_texture != null:
+			# Keep the current animation frame when swapping the texture.
 			var current_frame: int = $Sprite2D.frame
 			$Sprite2D.texture = hurt_texture
 			$Sprite2D.frame = current_frame
 
+	# Damage visual effect (red flash)
 	$Sprite2D.modulate = Color(1.0, 0.3, 0.3)
 	var tween: Tween = create_tween()
 	tween.tween_property($Sprite2D, "modulate", Color(1.0, 1.0, 1.0), 0.15)
@@ -74,7 +81,7 @@ func _on_detection_area_area_entered(area: Area2D) -> void:
 		_target_ally = area
 
 
-## DetectionArea callback. Releases the ally when it leaves range.
+## DetectionArea callback. Releases the target when it leaves range.
 func _on_detection_area_area_exited(area: Area2D) -> void:
 	if not is_instance_valid(_target_ally) or area == _target_ally:
 		_target_ally = null
