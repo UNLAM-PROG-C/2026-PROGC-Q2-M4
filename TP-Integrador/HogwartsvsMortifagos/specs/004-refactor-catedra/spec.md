@@ -33,6 +33,10 @@ El `AGENTS.md` de la raíz del repositorio es la regla de la cátedra y **preval
 
 - Q: ¿Se reindenta a 2 espacios en este refactor, dado que Godot reindenta al guardar según la configuración de cada editor y no se sabe cuál usa el equipo? → A: No. La indentación (§3) queda fuera de este refactor y se difiere a la etapa final del proyecto. Los `.gd` conservan las tabulaciones actuales.
 
+### Session 2026-10-02
+
+- Q: ¿El equipo confirma los únicos dos cambios permitidos en `project.godot` (`[autoload]`: agregar `GameManager`; `[global_group]`: `aliados`/`enemigos`/`hechizos` → `allies`/`enemies`/`spells`)? → A: Sí, confirmado por el equipo el 2026-10-02 (T002).
+
 ## User Scenarios & Testing *(mandatory)*
 
 Las historias están en orden de ejecución. Cada una deja el juego jugable y se puede commitear por separado.
