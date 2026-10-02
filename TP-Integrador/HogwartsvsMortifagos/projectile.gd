@@ -9,10 +9,6 @@ extends Area2D
 var _has_hit: bool = false
 
 
-func _ready() -> void:
-	add_to_group("spells")
-
-
 func _process(delta: float) -> void:
 	position.x += speed * delta
 
@@ -21,7 +17,7 @@ func _process(delta: float) -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if _has_hit:
 		return
-	if area.is_in_group("enemies") and area.has_method("take_damage"):
+	if area.is_in_group(Groups.ENEMIES) and area.has_method("take_damage"):
 		_has_hit = true
 		area.call("take_damage", damage)
 		queue_free()

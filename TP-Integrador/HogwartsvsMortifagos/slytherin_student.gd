@@ -26,7 +26,6 @@ var _is_hurt: bool = false
 
 func _ready() -> void:
 	_health = max_health
-	add_to_group("enemies")
 	# Random starting frame so not every enemy walks in sync.
 	$Sprite2D.frame = randi() % TOTAL_FRAMES
 
@@ -77,7 +76,7 @@ func take_damage(amount: int) -> void:
 
 ## DetectionArea callback. Targets allies that enter attack range.
 func _on_detection_area_area_entered(area: Area2D) -> void:
-	if area.is_in_group("allies"):
+	if area.is_in_group(Groups.ALLIES):
 		_target_ally = area
 
 

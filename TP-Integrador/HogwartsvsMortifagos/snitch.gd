@@ -1,8 +1,27 @@
 class_name Snitch
 extends Area2D
 
+## Collectable Snitch. Falls from the sky in a zigzag dodging the mouse, or
+## rests on the ground when dropped by a Snitch Box. Clicking it collects it.
+
 ## Emitted when the player collects the snitch by clicking it.
 signal collected(amount: int)
+
+## Frames of the flying animation sheet.
+const FLY_FRAMES: int = 4
+## Frame shown while resting on the ground (dropped by a Snitch Box).
+const RESTING_FRAME: int = 1
+## The snitch is freed once it falls below this y coordinate.
+const FALL_LIMIT_Y: float = 1200.0
+## Clicks closer than this (pixels) collect the snitch.
+const CLICK_RADIUS: float = 32.0
+## Random horizontal offset (pixels) when dropped by a Snitch Box.
+const BOX_DROP_SPREAD: float = 15.0
+## Pop when dropped by a Snitch Box: height, landing offset and duration of each half.
+const BOX_POP_HEIGHT: float = 45.0
+const BOX_LANDING_OFFSET: float = 15.0
+const BOX_POP_DURATION: float = 0.25
+const GLOBAL_Y_PROPERTY: NodePath = ^"global_position:y"
 
 ## Snitches granted when collected.
 @export var value: int = 25
@@ -30,13 +49,15 @@ var _escape_time_left: float = 0.0
 var _escape_direction: Vector2 = Vector2.ZERO
 var _is_animated: bool = true
 
+@onready var sprite: Sprite2D = $Sprite2D
+@onready var animation_timer: Timer = $AnimationTimer
+@onready var escape_particles: CPUParticles2D = $EscapeParticles
+
 
 func _ready() -> void:
 	if not _is_animated:
-		if has_node("AnimationTimer"):
-			$AnimationTimer.stop()
-		if has_node("Sprite2D"):
-			$Sprite2D.frame = 1
+		animation_timer.stop()
+		sprite.frame = RESTING_FRAME
 	_time_left = lifetime
 	_start_x = position.x
 
@@ -47,83 +68,89 @@ func setup_from_box(origin: Vector2) -> void:
 	fall_speed = 0.0
 	zigzag_amplitude = 0.0
 	escape_distance = 0.0
-	_start_x = origin.x + randf_range(-15.0, 15.0)
+	_start_x = origin.x + randf_range(-BOX_DROP_SPREAD, BOX_DROP_SPREAD)
 	global_position = origin
-	var jump_y: float = origin.y - 45.0
-	var ground_y: float = origin.y + 15.0
 	var tween: Tween = create_tween()
-	tween.tween_property(self, "global_position:y", jump_y, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "global_position:y", ground_y, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, GLOBAL_Y_PROPERTY, origin.y - BOX_POP_HEIGHT, BOX_POP_DURATION).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, GLOBAL_Y_PROPERTY, origin.y + BOX_LANDING_OFFSET, BOX_POP_DURATION).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
 func _process(delta: float) -> void:
 	if _is_collected:
 		return
-
-	# Update timers
-	_elapsed += delta
-	_escape_cooldown = max(_escape_cooldown - delta, 0.0)
-	_time_left -= delta
-
+	_tick_timers(delta)
 	if _escape_time_left > 0.0:
-		# State: escaping
-		_escape_time_left -= delta
-		position += _escape_direction * escape_speed * delta
-
-		# When the escape ends, re-center the zigzag axis to avoid a sudden jump
-		if _escape_time_left <= 0.0:
-			if zigzag_amplitude > 0.0:
-				_start_x = position.x - sin(_elapsed * zigzag_frequency) * zigzag_amplitude
+		_process_escape(delta)
 	else:
-		# State: falling normally
-		if zigzag_amplitude > 0.0:
-			position.x = _start_x + sin(_elapsed * zigzag_frequency) * zigzag_amplitude
-
-		if fall_speed > 0.0:
-			position.y += fall_speed * delta
-
-		# Check whether it should start escaping
-		if escape_distance > 0.0 and _escape_cooldown <= 0.0:
-			var mouse_pos: Vector2 = get_global_mouse_position()
-			if global_position.distance_to(mouse_pos) <= escape_distance:
-				_escape_direction = (global_position - mouse_pos).normalized()
-				_escape_time_left = escape_duration
-				_escape_cooldown = escape_cooldown_time
-				if has_node("EscapeParticles"):
-					$EscapeParticles.emitting = true
-
-	# Lifetime check
-	if _time_left <= 0.0 or global_position.y > 1200.0:
+		_process_fall(delta)
+		_try_start_escape()
+	if _is_expired():
 		queue_free()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if _is_collected:
+func _tick_timers(delta: float) -> void:
+	_elapsed += delta
+	_escape_cooldown = maxf(_escape_cooldown - delta, 0.0)
+	_time_left -= delta
+
+
+## Escaping state: flies away from the mouse.
+func _process_escape(delta: float) -> void:
+	_escape_time_left -= delta
+	position += _escape_direction * escape_speed * delta
+	# When the escape ends, re-center the zigzag axis to avoid a sudden jump
+	if _escape_time_left <= 0.0 and zigzag_amplitude > 0.0:
+		_start_x = position.x - _zigzag_offset()
+
+
+## Falling state: zigzags down.
+func _process_fall(delta: float) -> void:
+	if zigzag_amplitude > 0.0:
+		position.x = _start_x + _zigzag_offset()
+	if fall_speed > 0.0:
+		position.y += fall_speed * delta
+
+
+func _zigzag_offset() -> float:
+	return sin(_elapsed * zigzag_frequency) * zigzag_amplitude
+
+
+func _try_start_escape() -> void:
+	if escape_distance <= 0.0 or _escape_cooldown > 0.0:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var mouse_pos: Vector2 = get_global_mouse_position()
-		if global_position.distance_to(mouse_pos) <= 32.0:
-			_collect()
-			get_viewport().set_input_as_handled()
+	var mouse_position: Vector2 = get_global_mouse_position()
+	if global_position.distance_to(mouse_position) > escape_distance:
+		return
+	_escape_direction = (global_position - mouse_position).normalized()
+	_escape_time_left = escape_duration
+	_escape_cooldown = escape_cooldown_time
+	escape_particles.emitting = true
+
+
+func _is_expired() -> bool:
+	return _time_left <= 0.0 or global_position.y > FALL_LIMIT_Y
+
 
 # Global input handling to ensure collection even if other nodes consume the event
 func _input(event: InputEvent) -> void:
-	if _is_collected:
+	if _is_collected or not _is_left_click(event):
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var mouse_pos: Vector2 = get_global_mouse_position()
-		if global_position.distance_to(mouse_pos) <= 32.0:
-			_collect()
-			get_viewport().set_input_as_handled()
+	if global_position.distance_to(get_global_mouse_position()) <= CLICK_RADIUS:
+		_collect()
+		get_viewport().set_input_as_handled()
 
 
 ## input_event callback. Detects the player's click on the snitch.
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
-	if _is_collected:
+	if _is_collected or not _is_left_click(event):
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_collect()
-		get_viewport().set_input_as_handled()
+	_collect()
+	get_viewport().set_input_as_handled()
+
+
+func _is_left_click(event: InputEvent) -> bool:
+	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+	return mouse_event != null and mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT
 
 
 func _collect() -> void:
@@ -135,6 +162,5 @@ func _collect() -> void:
 
 
 func _on_animation_timer_timeout() -> void:
-	if _is_animated and has_node("Sprite2D"):
-		$Sprite2D.frame = ($Sprite2D.frame + 1) % 4
-
+	if _is_animated:
+		sprite.frame = (sprite.frame + 1) % FLY_FRAMES

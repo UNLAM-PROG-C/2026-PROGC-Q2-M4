@@ -61,7 +61,7 @@ func detonate() -> void:
 	var area: Area2D = $ExplosionArea
 	var areas = area.get_overlapping_areas()
 	for entity_area in areas:
-		if entity_area.is_in_group("enemies"):
+		if entity_area.is_in_group(Groups.ENEMIES):
 			if entity_area.has_method("take_damage"):
 				entity_area.take_damage(explosion_damage)
 	detonated.emit(self)

@@ -6,6 +6,15 @@ const WIN_TITLE_TEXT: String = "¡VICTORIA!"
 const WIN_MESSAGE_TEXT: String = "¡Has defendido el jardín con éxito!\nNivel %d desbloqueado en el Mapa del Merodeador."
 const LOSE_TITLE_TEXT: String = "¡DERROTA!"
 const LOSE_MESSAGE_TEXT: String = "Los mortífagos han invadido el jardín de Hogwarts."
+## Lane y coordinates where a Dementor is placed, and their x coordinate.
+const DEMENTOR_ROWS_Y: Array[float] = [320.0, 448.0, 576.0, 704.0, 832.0]
+const DEMENTOR_X: float = 160.0
+## Horizontal range and starting height of Snitches falling from the sky.
+const SKY_SNITCH_MIN_X: float = 300.0
+const SKY_SNITCH_MAX_X: float = 1150.0
+const SKY_SNITCH_Y: float = -20.0
+## TileMapLayer source id of a cell without a tile.
+const EMPTY_CELL_SOURCE: int = -1
 
 ## Snitches the player starts with.
 @export var starting_snitches: int = 150
@@ -94,12 +103,10 @@ func _process(delta: float) -> void:
 func _spawn_dementors() -> void:
 	if dementor_scene == null:
 		return
-	var rows_y: Array[float] = [320.0, 448.0, 576.0, 704.0, 832.0]
-	var dementor_x: float = 160.0
-	for y: float in rows_y:
+	for y: float in DEMENTOR_ROWS_Y:
 		var dementor: Dementor = dementor_scene.instantiate() as Dementor
 		if dementor != null:
-			dementor.position = Vector2(dementor_x, y)
+			dementor.position = Vector2(DEMENTOR_X, y)
 			add_child(dementor)
 
 
@@ -133,7 +140,7 @@ func _try_place_ally() -> void:
 	if not cell.y in active_rows:
 		return
 	# The cell must have a valid tile
-	if source_id == -1:
+	if source_id == EMPTY_CELL_SOURCE:
 		return
 	# The cell must be free
 	if _occupied_cells.has(cell):
@@ -209,8 +216,8 @@ func _on_snitch_spawn_timer_timeout() -> void:
 	var new_snitch: Snitch = snitch_scene.instantiate() as Snitch
 	if new_snitch == null:
 		return
-	var x_position: float = randf_range(300.0, 1150.0)
-	new_snitch.position = Vector2(x_position, -20.0)
+	var x_position: float = randf_range(SKY_SNITCH_MIN_X, SKY_SNITCH_MAX_X)
+	new_snitch.position = Vector2(x_position, SKY_SNITCH_Y)
 	add_child(new_snitch)
 	new_snitch.collected.connect(_on_snitch_collected)
 
