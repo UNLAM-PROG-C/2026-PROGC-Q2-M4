@@ -162,13 +162,13 @@ func _on_boton_nivel_pressed(numero_nivel: int) -> void:
 			get_tree().change_scene_to_packed(escena_nivel_2)
 		else:
 			print("[MenuNiveles] escena_nivel_2 es null, cargando por ruta")
-			get_tree().change_scene_to_file("res://nivel_2.tscn")
+			get_tree().change_scene_to_file("res://level_2.tscn")
 	elif numero_nivel == 3:
 		if escena_nivel_3 != null:
 			get_tree().change_scene_to_packed(escena_nivel_3)
 		else:
 			print("[MenuNiveles] escena_nivel_3 es null, cargando por ruta")
-			get_tree().change_scene_to_file("res://nivel_3.tscn")
+			get_tree().change_scene_to_file("res://level_3.tscn")
 
 
 # ==============================================================================

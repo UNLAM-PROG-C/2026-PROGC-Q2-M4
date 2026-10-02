@@ -1,16 +1,13 @@
-[gd_scene format=4 uid="uid://n1vel3prot3go"]
+[gd_scene format=4 uid="uid://cro1qg23bp5oe"]
 
 [ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Imagenes/Pasto.png" id="1_44v15"]
 [ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Imagenes/Pasto2.png" id="2_4osvq"]
-[ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://nivel_principal.gd" id="3_script"]
+[ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://level.gd" id="3_script"]
 [ext_resource type="PackedScene" path="res://harry.tscn" id="4_harry"]
-[ext_resource type="PackedScene" path="res://snitch_box.tscn" id="5_caja"]
+[ext_resource type="PackedScene" path="res://snitch_box.tscn" id="5_snitch_box"]
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
 [ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
-[ext_resource type="PackedScene" path="res://remembrall.tscn" id="10_recordadora"]
-[ext_resource type="PackedScene" path="res://draco.tscn" id="11_draco"]
-[ext_resource type="PackedScene" path="res://protego.tscn" id="12_protego"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -42,7 +39,7 @@ shadow_color = Color(0, 0, 0, 0.35)
 shadow_size = 10
 shadow_offset = Vector2(4, 4)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boton"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
 bg_color = Color(0.921569, 0.862745, 0.698039, 1)
 border_width_left = 3
 border_width_top = 3
@@ -57,87 +54,77 @@ shadow_color = Color(0.235, 0.141, 0.082, 0.25)
 shadow_size = 3
 shadow_offset = Vector2(2, 2)
 
-[node name="Nivel3" type="Node2D" unique_id=1917860156]
+[node name="Level1" type="Node2D" unique_id=1050787483]
 script = ExtResource("3_script")
 escena_harry = ExtResource("4_harry")
-escena_caja_snitch = ExtResource("5_caja")
+escena_caja_snitch = ExtResource("5_snitch_box")
 escena_alumno_slytherin = ExtResource("6_slytherin")
-escena_recordadora = ExtResource("10_recordadora")
-escena_snitch = ExtResource("7_snitch")
-escena_dementor = ExtResource("8_dementor")
-escena_draco = ExtResource("11_draco")
-escena_protego = ExtResource("12_protego")
-filas_activas = Array[int]([2, 3, 4, 5, 6])
-spawners_activos = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4"), NodePath("Spawners/Marker2D5")])
-nivel_siguiente_desbloqueo = 4
+snitch_scene = ExtResource("7_snitch")
+dementor_scene = ExtResource("8_dementor")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1951683565]
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=224131285]
 tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_5uq62")
 
-[node name="BloqueoMagico" type="Node2D" parent="." unique_id=1038295434]
+[node name="MagicBarrier" type="Node2D" parent="." unique_id=1782391045]
 
-[node name="Fila2" type="ColorRect" parent="BloqueoMagico" unique_id=2053891754]
-visible = false
+[node name="Row2" type="ColorRect" parent="MagicBarrier" unique_id=1782391046]
 offset_left = 256.0
 offset_top = 256.0
 offset_right = 1280.0
 offset_bottom = 384.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Fila3" type="ColorRect" parent="BloqueoMagico" unique_id=1807211417]
-visible = false
+[node name="Row3" type="ColorRect" parent="MagicBarrier" unique_id=1782391047]
 offset_left = 256.0
 offset_top = 384.0
 offset_right = 1280.0
 offset_bottom = 512.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Fila5" type="ColorRect" parent="BloqueoMagico" unique_id=555105216]
-visible = false
+[node name="Row5" type="ColorRect" parent="MagicBarrier" unique_id=1782391048]
 offset_left = 256.0
 offset_top = 640.0
 offset_right = 1280.0
 offset_bottom = 768.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Fila6" type="ColorRect" parent="BloqueoMagico" unique_id=186289501]
-visible = false
+[node name="Row6" type="ColorRect" parent="MagicBarrier" unique_id=1782391049]
 offset_left = 256.0
 offset_top = 768.0
 offset_right = 1280.0
 offset_bottom = 896.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Spawners" type="Node2D" parent="." unique_id=1273519751]
+[node name="Spawners" type="Node2D" parent="." unique_id=1233715859]
 position = Vector2(8, 0)
 
-[node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1962193308]
+[node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1252911193]
 position = Vector2(1280, 320)
 
-[node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=1311341990]
+[node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=623987642]
 position = Vector2(1280, 448)
 
-[node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=1422415545]
+[node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=636651906]
 position = Vector2(1280, 576)
 
-[node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=1556994656]
+[node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=511596980]
 position = Vector2(1280, 704)
 
-[node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=902178117]
+[node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=1338716025]
 position = Vector2(1280, 832)
 
-[node name="TimerSpawneoMortifagos" type="Timer" parent="." unique_id=1162641464]
-wait_time = 8.0
+[node name="EnemySpawnTimer" type="Timer" parent="." unique_id=1572878674]
+wait_time = 15.0
 autostart = true
 
-[node name="SpawnerDeSnitches" type="Timer" parent="." unique_id=2049164940]
+[node name="SnitchSpawnTimer" type="Timer" parent="." unique_id=1849204912]
 wait_time = 10.0
 autostart = true
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=1566728793]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=454797086]
 
-[node name="LabelSnitches" type="Label" parent="HUD" unique_id=1112626491]
+[node name="SnitchesLabel" type="Label" parent="HUD" unique_id=138423222]
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 240.0
@@ -145,7 +132,7 @@ offset_bottom = 50.0
 theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
 
-[node name="BotonHarry" type="Button" parent="HUD" unique_id=1005889825]
+[node name="HarryCardButton" type="Button" parent="HUD" unique_id=426968617]
 offset_left = 250.0
 offset_top = 10.0
 offset_right = 430.0
@@ -153,33 +140,15 @@ offset_bottom = 55.0
 theme_override_font_sizes/font_size = 18
 text = "Harry (100)"
 
-[node name="BotonCajaSnitch" type="Button" parent="HUD" unique_id=2122149562]
+[node name="SnitchBoxCardButton" type="Button" parent="HUD" unique_id=610114963]
 offset_left = 440.0
 offset_top = 10.0
-offset_right = 620.0
+offset_right = 660.0
 offset_bottom = 55.0
 theme_override_font_sizes/font_size = 18
 text = "Caja Snitch (50)"
 
-
-[node name="BotonRecordadora" type="Button" parent="HUD" unique_id=1303248469]
-offset_left = 630.0
-offset_top = 10.0
-offset_right = 850.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Recordadora (150)"
-
-[node name="BotonProtego" type="Button" parent="HUD" unique_id=1400000000]
-offset_left = 860.0
-offset_top = 10.0
-offset_right = 1080.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Protego (50)"
-
-
-[node name="LabelEstado" type="Label" parent="HUD" unique_id=461003767]
+[node name="StatusLabel" type="Label" parent="HUD" unique_id=360801785]
 visible = false
 offset_left = 760.0
 offset_top = 440.0
@@ -189,7 +158,7 @@ theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PanelFinNivel" type="Control" parent="HUD" unique_id=376989656]
+[node name="LevelEndPanel" type="Control" parent="HUD" unique_id=987123456]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -198,7 +167,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FondoOscuro" type="ColorRect" parent="HUD/PanelFinNivel" unique_id=603967626]
+[node name="DarkOverlay" type="ColorRect" parent="HUD/LevelEndPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -207,7 +176,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="CajaModal" type="PanelContainer" parent="HUD/PanelFinNivel" unique_id=123981555]
+[node name="ModalBox" type="PanelContainer" parent="HUD/LevelEndPanel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -222,64 +191,62 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
 
-[node name="VBox" type="VBoxContainer" parent="HUD/PanelFinNivel/CajaModal" unique_id=1658954176]
+[node name="VBox" type="VBoxContainer" parent="HUD/LevelEndPanel/ModalBox"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="LabelTitulo" type="Label" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=925492386]
+[node name="TitleLabel" type="Label" parent="HUD/LevelEndPanel/ModalBox/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 44
 text = "¡VICTORIA!"
 horizontal_alignment = 1
 
-[node name="LabelMensaje" type="Label" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=1154489533]
+[node name="MessageLabel" type="Label" parent="HUD/LevelEndPanel/ModalBox/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.2, 0.15, 1)
 theme_override_font_sizes/font_size = 20
 text = "¡Has defendido el jardín con éxito!"
 horizontal_alignment = 1
 
-[node name="Espaciador" type="Control" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=2145730638]
+[node name="Spacer" type="Control" parent="HUD/LevelEndPanel/ModalBox/VBox"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="HBoxBotones" type="HBoxContainer" parent="HUD/PanelFinNivel/CajaModal/VBox" unique_id=1749682852]
+[node name="ButtonsRow" type="HBoxContainer" parent="HUD/LevelEndPanel/ModalBox/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="BotonSiguienteNivel" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones" unique_id=1007129947]
+[node name="NextLevelButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow"]
 custom_minimum_size = Vector2(170, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 text = "Siguiente Nivel"
 
-[node name="BotonReintentar" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones" unique_id=1747888044]
+[node name="RetryButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow"]
 custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 text = "Reintentar"
 
-[node name="BotonVolverMapa" type="Button" parent="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones" unique_id=214647230]
+[node name="BackToMapButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_boton")
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 text = "Volver al Mapa"
 
-[connection signal="timeout" from="TimerSpawneoMortifagos" to="." method="_on_timer_spawneo_timeout"]
-[connection signal="timeout" from="SpawnerDeSnitches" to="." method="_on_spawner_de_snitches_timeout"]
-[connection signal="pressed" from="HUD/BotonHarry" to="." method="_on_boton_harry_pressed"]
-[connection signal="pressed" from="HUD/BotonCajaSnitch" to="." method="_on_boton_caja_snitch_pressed"]
-[connection signal="pressed" from="HUD/BotonRecordadora" to="." method="_on_boton_recordadora_pressed"]
-[connection signal="pressed" from="HUD/BotonProtego" to="." method="_on_boton_protego_pressed"]
-[connection signal="pressed" from="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones/BotonSiguienteNivel" to="." method="_on_boton_siguiente_nivel_pressed"]
-[connection signal="pressed" from="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones/BotonReintentar" to="." method="_on_boton_reintentar_pressed"]
-[connection signal="pressed" from="HUD/PanelFinNivel/CajaModal/VBox/HBoxBotones/BotonVolverMapa" to="." method="_on_boton_volver_mapa_pressed"]
+[connection signal="timeout" from="EnemySpawnTimer" to="." method="_on_enemy_spawn_timer_timeout"]
+[connection signal="timeout" from="SnitchSpawnTimer" to="." method="_on_snitch_spawn_timer_timeout"]
+[connection signal="pressed" from="HUD/HarryCardButton" to="." method="_on_boton_harry_pressed"]
+[connection signal="pressed" from="HUD/SnitchBoxCardButton" to="." method="_on_boton_caja_snitch_pressed"]
+[connection signal="pressed" from="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow/NextLevelButton" to="." method="_on_next_level_button_pressed"]
+[connection signal="pressed" from="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow/RetryButton" to="." method="_on_retry_button_pressed"]
+[connection signal="pressed" from="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow/BackToMapButton" to="." method="_on_back_to_map_button_pressed"]
