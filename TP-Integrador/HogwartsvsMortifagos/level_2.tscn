@@ -63,6 +63,7 @@ escena_alumno_slytherin = ExtResource("6_slytherin")
 escena_recordadora = ExtResource("10_remembrall")
 snitch_scene = ExtResource("7_snitch")
 dementor_scene = ExtResource("8_dementor")
+level_select_scene = "uid://c0vgnide3ben3"
 active_rows = Array[int]([3, 4, 5])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4")])
 next_level_to_unlock = 3

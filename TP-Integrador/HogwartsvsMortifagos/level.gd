@@ -27,8 +27,9 @@ const LOSE_MESSAGE_TEXT: String = "Los mortífagos han invadido el jardín de Ho
 @export var snitch_scene: PackedScene
 ## Dementor scene (defensive lawnmower) to instantiate.
 @export var dementor_scene: PackedScene
-## Level Select Menu scene (Marauder's Map).
-@export var level_select_scene: PackedScene
+## Level Select Menu scene (Marauder's Map). A path, not a PackedScene:
+## the menu already references every level, and Godot rejects cyclic scene references.
+@export_file("*.tscn") var level_select_scene: String
 
 ## Active grid rows (TileMap Y coordinate).
 ## Only these rows allow placing allies and spawning enemies in the level.
@@ -280,7 +281,7 @@ func _win() -> void:
 	snitch_spawn_timer.stop()
 
 	# Update the map progression to unlock the next level
-	MenuNiveles.progreso_desbloqueado = maxi(MenuNiveles.progreso_desbloqueado, next_level_to_unlock)
+	LevelSelectMenu.progreso_desbloqueado = maxi(LevelSelectMenu.progreso_desbloqueado, next_level_to_unlock)
 	var game_manager: Node = get_node_or_null("/root/GameManager")
 	if game_manager != null and "nivel_maximo_desbloqueado" in game_manager:
 		var current: int = int(game_manager.get("nivel_maximo_desbloqueado"))
@@ -328,10 +329,7 @@ func _on_retry_button_pressed() -> void:
 
 
 func _go_to_map() -> void:
-	if level_select_scene != null:
-		get_tree().change_scene_to_packed(level_select_scene)
-	else:
-		get_tree().change_scene_to_file("res://menu_niveles.tscn")
+	get_tree().change_scene_to_file(level_select_scene)
 
 
 ## Harry button callback. Toggles Harry's selection.

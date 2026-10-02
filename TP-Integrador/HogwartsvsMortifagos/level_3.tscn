@@ -65,6 +65,7 @@ escena_alumno_slytherin = ExtResource("6_slytherin")
 escena_recordadora = ExtResource("10_remembrall")
 snitch_scene = ExtResource("7_snitch")
 dementor_scene = ExtResource("8_dementor")
+level_select_scene = "uid://c0vgnide3ben3"
 escena_draco = ExtResource("11_draco")
 escena_protego = ExtResource("12_protego")
 active_rows = Array[int]([2, 3, 4, 5, 6])
