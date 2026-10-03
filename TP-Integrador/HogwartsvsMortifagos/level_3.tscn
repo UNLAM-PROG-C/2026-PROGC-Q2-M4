@@ -60,11 +60,10 @@ shadow_offset = Vector2(2, 2)
 
 [node name="Level3" type="Node2D" unique_id=1917860156]
 script = ExtResource("3_script")
-escena_alumno_slytherin = ExtResource("6_slytherin")
+enemy_scenes = Array[PackedScene]([ExtResource("6_slytherin"), ExtResource("11_draco")])
 snitch_scene = ExtResource("7_snitch")
 dementor_scene = ExtResource("8_dementor")
 level_select_scene = "uid://c0vgnide3ben3"
-escena_draco = ExtResource("11_draco")
 active_rows = Array[int]([2, 3, 4, 5, 6])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4"), NodePath("Spawners/Marker2D5")])
 next_level_to_unlock = 4

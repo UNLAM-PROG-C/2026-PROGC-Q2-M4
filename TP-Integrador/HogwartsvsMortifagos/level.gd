@@ -23,9 +23,8 @@ const EMPTY_CELL_SOURCE: int = -1
 @export var starting_snitches: int = 150
 ## Total number of enemies the level spawns.
 @export var total_enemies: int = 20
-## Slytherin Student scene to instantiate.
-@export var escena_alumno_slytherin: PackedScene
-@export var escena_draco: PackedScene
+## Enemy scenes spawned by the level, picked at random.
+@export var enemy_scenes: Array[PackedScene] = []
 ## Collectable Snitch scene to instantiate.
 @export var snitch_scene: PackedScene
 ## Dementor scene (defensive lawnmower) to instantiate.
@@ -49,7 +48,6 @@ var _defeated_enemies: int = 0
 var _is_level_over: bool = false
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
-@onready var spawner_central: Marker2D = $Spawners/Marker2D3
 @onready var enemy_spawn_timer: Timer = $EnemySpawnTimer
 @onready var snitch_spawn_timer: Timer = $SnitchSpawnTimer
 @onready var hud: CanvasLayer = $HUD
@@ -182,35 +180,28 @@ func _on_snitch_collected(amount: int) -> void:
 	_refresh_hud()
 
 
-## EnemySpawnTimer callback. Spawns a new enemy.
+## EnemySpawnTimer callback. Spawns a new enemy until total_enemies is reached.
 func _on_enemy_spawn_timer_timeout() -> void:
 	if _is_level_over:
 		return
 	if _spawned_enemies >= total_enemies:
 		enemy_spawn_timer.stop()
 		return
+	_spawn_enemy(enemy_scenes.pick_random())
 
-	var enemy_scene: PackedScene = escena_alumno_slytherin
-	if escena_draco != null and randi() % 2 == 0:
-		enemy_scene = escena_draco
 
-	if enemy_scene == null:
-		return
-
-	var new_enemy: Enemy = enemy_scene.instantiate() as Enemy
-	if spawn_points.size() > 0:
-		var spawner = spawn_points.pick_random()
-		if typeof(spawner) == TYPE_NODE_PATH:
-			spawner = get_node(spawner)
-		new_enemy.global_position = spawner.global_position
-	else:
-		new_enemy.global_position = spawner_central.global_position
-	add_child(new_enemy)
+func _spawn_enemy(scene: PackedScene) -> void:
+	var enemy: Enemy = scene.instantiate() as Enemy
+	enemy.global_position = _pick_spawn_position()
+	add_child(enemy)
 	_spawned_enemies += 1
+	enemy.defeated.connect(_on_enemy_defeated)
+	enemy.garden_invaded.connect(_on_garden_invaded)
 
-	# Connect enemy signals
-	new_enemy.defeated.connect(_on_enemy_defeated)
-	new_enemy.garden_invaded.connect(_on_garden_invaded)
+
+func _pick_spawn_position() -> Vector2:
+	var spawn_point: Node2D = get_node(spawn_points.pick_random()) as Node2D
+	return spawn_point.global_position
 
 
 ## Callback when an enemy is defeated. Checks the victory condition.
@@ -230,45 +221,36 @@ func _check_victory() -> void:
 		_win()
 
 
-## Wins the level and shows the interactive end panel.
+## Wins the level, unlocks the next one and shows the end panel.
 func _win() -> void:
-	_is_level_over = true
-	enemy_spawn_timer.stop()
-	snitch_spawn_timer.stop()
-
-	# Update the map progression to unlock the next level
-	LevelSelectMenu.progreso_desbloqueado = maxi(LevelSelectMenu.progreso_desbloqueado, next_level_to_unlock)
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	if game_manager != null and "nivel_maximo_desbloqueado" in game_manager:
-		var current: int = int(game_manager.get("nivel_maximo_desbloqueado"))
-		game_manager.set("nivel_maximo_desbloqueado", maxi(current, next_level_to_unlock))
-
-	if level_end_panel != null:
-		end_title_label.text = WIN_TITLE_TEXT
-		end_message_label.text = WIN_MESSAGE_TEXT % next_level_to_unlock
-		next_level_button.visible = true
-		level_end_panel.visible = true
-	else:
-		status_label.text = WIN_TITLE_TEXT
-		status_label.visible = true
+	_stop_level()
+	GameManager.unlock_level(next_level_to_unlock)
+	_show_end_panel(WIN_TITLE_TEXT, WIN_MESSAGE_TEXT % next_level_to_unlock, true)
 
 
-## Loses the level and shows the interactive end panel.
+## Loses the level and shows the end panel.
 func _lose() -> void:
 	if _is_level_over:
 		return
+	_stop_level()
+	_show_end_panel(LOSE_TITLE_TEXT, LOSE_MESSAGE_TEXT, false)
+
+
+func _stop_level() -> void:
 	_is_level_over = true
 	enemy_spawn_timer.stop()
 	snitch_spawn_timer.stop()
 
-	if level_end_panel != null:
-		end_title_label.text = LOSE_TITLE_TEXT
-		end_message_label.text = LOSE_MESSAGE_TEXT
-		next_level_button.visible = false
-		level_end_panel.visible = true
-	else:
-		status_label.text = LOSE_TITLE_TEXT
+
+func _show_end_panel(title: String, message: String, show_next: bool) -> void:
+	if level_end_panel == null:
+		status_label.text = title
 		status_label.visible = true
+		return
+	end_title_label.text = title
+	end_message_label.text = message
+	next_level_button.visible = show_next
+	level_end_panel.visible = true
 
 
 ## Callbacks of the interactive level end panel

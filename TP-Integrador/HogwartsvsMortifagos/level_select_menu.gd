@@ -8,16 +8,13 @@ signal level_selected(level_number: int)
 
 const LEVEL_BUTTON_TEXT: String = "Nivel %d"
 const LOCKED_SUFFIX_TEXT: String = "\n[Cerrado]"
+const LEVEL_BUTTON_NAME_FORMAT: String = "Level%d"
+## Number of level buttons on the map (the path ends at the last one).
+const LEVEL_COUNT: int = 10
 
-@export_group("Progression")
-## Highest unlocked level (synced with GameManager if it exists).
-@export var nivel_maximo_desbloqueado: int = 10
-## Progress kept in memory during the game session.
-static var progreso_desbloqueado: int = 10
-## Level scenes to load when clicking an unlocked level.
-@export var escena_nivel_principal: PackedScene
-@export var escena_nivel_2: PackedScene
-@export var escena_nivel_3: PackedScene
+@export_group("Levels")
+## Scene loaded by each level button, in order. Buttons past the end load nothing.
+@export var level_scenes: Array[PackedScene] = []
 
 @export_group("System A - Path Footprints")
 ## Distance in pixels between steps along the Path2D.
@@ -63,7 +60,6 @@ func _ready() -> void:
 	level_buttons_container.z_index = 10
 	level_buttons_container.z_as_relative = false
 
-	_sincronizar_progresion_global()
 	_setup_level_buttons()
 	_refresh_level_buttons()
 	_start_path_footprints()
@@ -72,22 +68,16 @@ func _ready() -> void:
 		_setup_ambient_timer()
 
 
-## Syncs with GameManager if registered as a global Autoload, or with the session variable.
-func _sincronizar_progresion_global() -> void:
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	if game_manager != null and "nivel_maximo_desbloqueado" in game_manager:
-		nivel_maximo_desbloqueado = int(game_manager.get("nivel_maximo_desbloqueado"))
-	else:
-		nivel_maximo_desbloqueado = maxi(nivel_maximo_desbloqueado, progreso_desbloqueado)
-	nivel_maximo_desbloqueado = clamp(nivel_maximo_desbloqueado, 1, 10)
+## Highest unlocked level, kept within the buttons on the map.
+func _unlocked_level() -> int:
+	return clampi(GameManager.max_unlocked_level, 1, LEVEL_COUNT)
 
 
-## Finds and stores the 10 level buttons of the container.
+## Finds and stores the level buttons of the container.
 func _setup_level_buttons() -> void:
 	_level_buttons.clear()
-	for i: int in range(1, 11):
-		var button_path: String = "Level" + str(i)
-		var button: Button = level_buttons_container.get_node_or_null(button_path) as Button
+	for i: int in range(1, LEVEL_COUNT + 1):
+		var button: Button = level_buttons_container.get_node_or_null(LEVEL_BUTTON_NAME_FORMAT % i) as Button
 		if button != null:
 			_level_buttons.append(button)
 			button.pressed.connect(_on_level_button_pressed.bind(i))
@@ -133,12 +123,12 @@ func _aplicar_estilo_pergamino_boton(button: Button) -> void:
 	button.add_theme_color_override("font_disabled_color", Color(0.35, 0.25, 0.18, 0.85))
 
 
-## Updates the visual state (enabled/disabled) of each of the 10 buttons.
+## Updates the visual state (enabled/disabled) of each level button.
 func _refresh_level_buttons() -> void:
 	for index: int in range(_level_buttons.size()):
 		var level_number: int = index + 1
 		var button: Button = _level_buttons[index]
-		var is_unlocked: bool = level_number <= nivel_maximo_desbloqueado
+		var is_unlocked: bool = level_number <= _unlocked_level()
 
 		button.disabled = not is_unlocked
 		if is_unlocked:
@@ -150,25 +140,13 @@ func _refresh_level_buttons() -> void:
 			button.modulate = Color(0.82, 0.78, 0.72, 1.0)
 
 
-## Handles a click on a level button.
+## Handles a click on a level button. Levels without a scene load nothing.
 func _on_level_button_pressed(level_number: int) -> void:
-	if level_number > nivel_maximo_desbloqueado:
+	if level_number > _unlocked_level():
 		return
-
 	level_selected.emit(level_number)
-
-	if level_number == 1 and escena_nivel_principal != null:
-		get_tree().change_scene_to_packed(escena_nivel_principal)
-	elif level_number == 2:
-		if escena_nivel_2 != null:
-			get_tree().change_scene_to_packed(escena_nivel_2)
-		else:
-			get_tree().change_scene_to_file("res://level_2.tscn")
-	elif level_number == 3:
-		if escena_nivel_3 != null:
-			get_tree().change_scene_to_packed(escena_nivel_3)
-		else:
-			get_tree().change_scene_to_file("res://level_3.tscn")
+	if level_number <= level_scenes.size():
+		get_tree().change_scene_to_packed(level_scenes[level_number - 1])
 
 
 # ==============================================================================
@@ -184,10 +162,9 @@ func _start_path_footprints() -> void:
 	for child: Node in path_footprints_layer.get_children():
 		child.queue_free()
 
-	# Fraction of the path to walk according to the highest unlocked level
-	# If the highest level is 1, no path has been walked yet
-	# If the highest level is 10, the whole path is walked
-	var walked_fraction: float = clamp(float(nivel_maximo_desbloqueado - 1) / 9.0, 0.0, 1.0)
+	# Fraction of the path to walk according to the highest unlocked level:
+	# none for the first level, the whole path for the last one
+	var walked_fraction: float = clampf(float(_unlocked_level() - 1) / float(LEVEL_COUNT - 1), 0.0, 1.0)
 	if walked_fraction <= 0.0:
 		return
 

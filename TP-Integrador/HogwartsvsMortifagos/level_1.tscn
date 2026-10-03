@@ -57,9 +57,10 @@ shadow_offset = Vector2(2, 2)
 
 [node name="Level1" type="Node2D" unique_id=1050787483]
 script = ExtResource("3_script")
-escena_alumno_slytherin = ExtResource("6_slytherin")
+enemy_scenes = Array[PackedScene]([ExtResource("6_slytherin")])
 snitch_scene = ExtResource("7_snitch")
 dementor_scene = ExtResource("8_dementor")
+spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D3")])
 level_select_scene = "uid://c0vgnide3ben3"
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=224131285]
