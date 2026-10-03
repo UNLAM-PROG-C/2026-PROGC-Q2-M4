@@ -3,11 +3,12 @@
 [ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Imagenes/Pasto.png" id="1_44v15"]
 [ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Imagenes/Pasto2.png" id="2_4osvq"]
 [ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://level.gd" id="3_script"]
-[ext_resource type="PackedScene" path="res://harry.tscn" id="4_harry"]
-[ext_resource type="PackedScene" path="res://snitch_box.tscn" id="5_snitch_box"]
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
 [ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
+[ext_resource type="Script" path="res://ally_card_button.gd" id="13_card_button"]
+[ext_resource type="Resource" path="res://harry_card.tres" id="14_harry_card"]
+[ext_resource type="Resource" path="res://snitch_box_card.tres" id="15_snitch_box_card"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -56,8 +57,6 @@ shadow_offset = Vector2(2, 2)
 
 [node name="Level1" type="Node2D" unique_id=1050787483]
 script = ExtResource("3_script")
-escena_harry = ExtResource("4_harry")
-escena_caja_snitch = ExtResource("5_snitch_box")
 escena_alumno_slytherin = ExtResource("6_slytherin")
 snitch_scene = ExtResource("7_snitch")
 dementor_scene = ExtResource("8_dementor")
@@ -134,6 +133,8 @@ theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
 
 [node name="HarryCardButton" type="Button" parent="HUD" unique_id=426968617]
+script = ExtResource("13_card_button")
+card = ExtResource("14_harry_card")
 offset_left = 250.0
 offset_top = 10.0
 offset_right = 430.0
@@ -142,6 +143,8 @@ theme_override_font_sizes/font_size = 18
 text = "Harry (100)"
 
 [node name="SnitchBoxCardButton" type="Button" parent="HUD" unique_id=610114963]
+script = ExtResource("13_card_button")
+card = ExtResource("15_snitch_box_card")
 offset_left = 440.0
 offset_top = 10.0
 offset_right = 660.0
@@ -246,8 +249,6 @@ text = "Volver al Mapa"
 
 [connection signal="timeout" from="EnemySpawnTimer" to="." method="_on_enemy_spawn_timer_timeout"]
 [connection signal="timeout" from="SnitchSpawnTimer" to="." method="_on_snitch_spawn_timer_timeout"]
-[connection signal="pressed" from="HUD/HarryCardButton" to="." method="_on_boton_harry_pressed"]
-[connection signal="pressed" from="HUD/SnitchBoxCardButton" to="." method="_on_boton_caja_snitch_pressed"]
 [connection signal="pressed" from="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow/NextLevelButton" to="." method="_on_next_level_button_pressed"]
 [connection signal="pressed" from="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow/RetryButton" to="." method="_on_retry_button_pressed"]
 [connection signal="pressed" from="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow/BackToMapButton" to="." method="_on_back_to_map_button_pressed"]

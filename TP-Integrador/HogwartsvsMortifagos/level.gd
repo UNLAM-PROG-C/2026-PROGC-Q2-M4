@@ -1,6 +1,9 @@
 class_name Level
 extends Node2D
 
+## A playable level: places allies from the HUD cards on the grid, spawns
+## enemies, runs the Snitch economy and shows the win/lose end panel.
+
 const SNITCHES_LABEL_TEXT: String = "Snitches: "
 const WIN_TITLE_TEXT: String = "¡VICTORIA!"
 const WIN_MESSAGE_TEXT: String = "¡Has defendido el jardín con éxito!\nNivel %d desbloqueado en el Mapa del Merodeador."
@@ -20,18 +23,9 @@ const EMPTY_CELL_SOURCE: int = -1
 @export var starting_snitches: int = 150
 ## Total number of enemies the level spawns.
 @export var total_enemies: int = 20
-## Harry scene to instantiate.
-@export var escena_harry: PackedScene
-## Snitch Box scene to instantiate.
-@export var escena_caja_snitch: PackedScene
-## Remembrall scene to instantiate.
-@export var escena_recordadora: PackedScene
 ## Slytherin Student scene to instantiate.
 @export var escena_alumno_slytherin: PackedScene
 @export var escena_draco: PackedScene
-@export var escena_protego: PackedScene
-@export var tiempo_recarga_protego: float = 12.0
-
 ## Collectable Snitch scene to instantiate.
 @export var snitch_scene: PackedScene
 ## Dementor scene (defensive lawnmower) to instantiate.
@@ -39,18 +33,17 @@ const EMPTY_CELL_SOURCE: int = -1
 ## Level Select Menu scene (Marauder's Map). A path, not a PackedScene:
 ## the menu already references every level, and Godot rejects cyclic scene references.
 @export_file("*.tscn") var level_select_scene: String
-
-## Active grid rows (TileMap Y coordinate).
-## Only these rows allow placing allies and spawning enemies in the level.
+## Active grid rows (TileMap y coordinate). Only these rows accept allies.
 @export var active_rows: Array[int] = [4]
+## Markers where enemies spawn, picked at random.
 @export var spawn_points: Array[NodePath] = []
+## Level unlocked on the map when this level is won.
 @export var next_level_to_unlock: int = 2
 
 var _snitches: int = 0
-var _selected_card: String = ""
-var _occupied_cells: Dictionary = {}
-var tiempo_recarga_recordadora: float = 0.0
-var tiempo_recarga_protego_actual: float = 0.0
+## Card chosen in the HUD, or null when nothing is selected.
+var _selected_card: AllyCard = null
+var _occupied_cells: Dictionary[Vector2i, Node2D] = {}
 var _spawned_enemies: int = 0
 var _defeated_enemies: int = 0
 var _is_level_over: bool = false
@@ -59,11 +52,8 @@ var _is_level_over: bool = false
 @onready var spawner_central: Marker2D = $Spawners/Marker2D3
 @onready var enemy_spawn_timer: Timer = $EnemySpawnTimer
 @onready var snitch_spawn_timer: Timer = $SnitchSpawnTimer
+@onready var hud: CanvasLayer = $HUD
 @onready var snitches_label: Label = $HUD/SnitchesLabel
-@onready var boton_harry: Button = $HUD/HarryCardButton
-@onready var boton_caja_snitch: Button = get_node_or_null("HUD/SnitchBoxCardButton")
-@onready var boton_recordadora: Button = get_node_or_null("HUD/RemembrallCardButton")
-@onready var boton_protego: Button = get_node_or_null("HUD/ProtegoCardButton")
 @onready var status_label: Label = $HUD/StatusLabel
 @onready var level_end_panel: Control = $HUD/LevelEndPanel
 @onready var end_title_label: Label = $HUD/LevelEndPanel/ModalBox/VBox/TitleLabel
@@ -75,162 +65,121 @@ var _is_level_over: bool = false
 
 func _ready() -> void:
 	_snitches = starting_snitches
-	if level_end_panel != null:
-		level_end_panel.visible = false
+	level_end_panel.visible = false
+	for button: AllyCardButton in _card_buttons():
+		button.card_pressed.connect(_on_card_pressed)
+		button.cooldown_finished.connect(_refresh_hud)
 	_refresh_hud()
 	_spawn_dementors()
 
-func _process(delta: float) -> void:
-	var refresh_hud: bool = false
-	if tiempo_recarga_recordadora > 0.0:
-		tiempo_recarga_recordadora = max(tiempo_recarga_recordadora - delta, 0.0)
-		if boton_recordadora != null:
-			boton_recordadora.disabled = true
-		if tiempo_recarga_recordadora <= 0.0:
-			refresh_hud = true
-	if tiempo_recarga_protego_actual > 0.0:
-		tiempo_recarga_protego_actual = max(tiempo_recarga_protego_actual - delta, 0.0)
-		if boton_protego != null:
-			boton_protego.disabled = true
-		if tiempo_recarga_protego_actual <= 0.0:
-			refresh_hud = true
-	if refresh_hud:
-		_refresh_hud()
 
-
-
-## Spawns a protective Dementor on each row left of the garden (column 0/1).
+## Spawns a protective Dementor on each row left of the garden.
 func _spawn_dementors() -> void:
-	if dementor_scene == null:
-		return
-	for y: float in DEMENTOR_ROWS_Y:
+	for row_y: float in DEMENTOR_ROWS_Y:
 		var dementor: Dementor = dementor_scene.instantiate() as Dementor
-		if dementor != null:
-			dementor.position = Vector2(DEMENTOR_X, y)
-			add_child(dementor)
+		dementor.position = Vector2(DEMENTOR_X, row_y)
+		add_child(dementor)
+
+
+func _card_buttons() -> Array[AllyCardButton]:
+	var buttons: Array[AllyCardButton] = []
+	for child: Node in hud.get_children():
+		if child is AllyCardButton:
+			buttons.append(child as AllyCardButton)
+	return buttons
 
 
 func _refresh_hud() -> void:
 	snitches_label.text = SNITCHES_LABEL_TEXT + str(_snitches)
-	boton_harry.disabled = _snitches < 100
-	if boton_caja_snitch != null:
-		boton_caja_snitch.disabled = _snitches < 50
-	if boton_recordadora != null:
-		boton_recordadora.disabled = _snitches < 150 or tiempo_recarga_recordadora > 0.0
-	if boton_protego != null:
-		boton_protego.disabled = _snitches < 50 or tiempo_recarga_protego_actual > 0.0
+	for button: AllyCardButton in _card_buttons():
+		button.refresh(_snitches)
 
 
-## Handles player input to place allies on the grid.
+## Toggles the clicked card: clicking the selected card deselects it.
+func _on_card_pressed(button: AllyCardButton) -> void:
+	_selected_card = null if _selected_card == button.card else button.card
+	_refresh_card_selection()
+
+
+func _refresh_card_selection() -> void:
+	for button: AllyCardButton in _card_buttons():
+		button.set_selected(button.card == _selected_card)
+
+
+## Places the selected ally when the player clicks the grid.
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_level_over:
+	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+	if _is_level_over or _selected_card == null or mouse_event == null:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _selected_card != "":
-			_try_place_ally()
+	if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+		_try_place_ally()
 
 
 ## Tries to place the selected ally on the cell under the cursor.
 func _try_place_ally() -> void:
-	var mouse_position: Vector2 = tile_map.get_local_mouse_position()
-	var cell: Vector2i = tile_map.local_to_map(mouse_position)
-	var source_id: int = tile_map.get_cell_source_id(cell)
+	var cell: Vector2i = _cell_under_mouse()
+	if _can_place_at(cell) and _snitches >= _selected_card.cost:
+		_place_ally(_selected_card, cell)
 
-	# The cell must be on an active row
-	if not cell.y in active_rows:
-		return
-	# The cell must have a valid tile
-	if source_id == EMPTY_CELL_SOURCE:
-		return
-	# The cell must be free
-	if _occupied_cells.has(cell):
-		return
 
-	var scene: PackedScene = null
-	var ally_cost: int = 0
-	match _selected_card:
-		"harry":
-			scene = escena_harry
-			ally_cost = 100
-		"snitch_box":
-			scene = escena_caja_snitch
-			ally_cost = 50
-		"remembrall":
-			scene = escena_recordadora
-			ally_cost = 150
-		"protego":
-			scene = escena_protego
-			ally_cost = 50
+func _cell_under_mouse() -> Vector2i:
+	return tile_map.local_to_map(tile_map.get_local_mouse_position())
 
-	if scene == null or _snitches < ally_cost:
-		return
 
-	# Spend snitches
-	_snitches -= ally_cost
+## The cell must be on an active row, have a tile and be free.
+func _can_place_at(cell: Vector2i) -> bool:
+	if not cell.y in active_rows or _occupied_cells.has(cell):
+		return false
+	return tile_map.get_cell_source_id(cell) != EMPTY_CELL_SOURCE
 
-	# Instantiate and position the ally
-	var new_ally: Node2D = scene.instantiate() as Node2D
-	if new_ally == null:
-		_snitches += ally_cost
-		return
-	var cell_center: Vector2 = tile_map.map_to_local(cell)
-	new_ally.position = cell_center
-	tile_map.add_child(new_ally)
-	_occupied_cells[cell] = new_ally
 
-	# Connect ally signals (only SnitchBox needs an extra one)
-	if new_ally is SnitchBox:
-		var snitch_box: SnitchBox = new_ally as SnitchBox
-		snitch_box.snitch_dropped.connect(_on_snitch_dropped)
-
-	new_ally.tree_exiting.connect(_on_ally_removed.bind(cell))
-
-	# Start the cooldown of cards that have one
-	if _selected_card == "remembrall":
-		tiempo_recarga_recordadora = 25.0
-	if _selected_card == "protego":
-		tiempo_recarga_protego_actual = tiempo_recarga_protego
-
-	# Deselect and refresh the HUD
-	_selected_card = ""
+func _place_ally(card: AllyCard, cell: Vector2i) -> void:
+	var ally: Ally = card.scene.instantiate() as Ally
+	ally.position = tile_map.map_to_local(cell)
+	tile_map.add_child(ally)
+	_occupied_cells[cell] = ally
+	ally.tree_exiting.connect(_on_ally_removed.bind(cell))
+	if ally is SnitchBox:
+		(ally as SnitchBox).snitch_dropped.connect(_on_snitch_dropped)
+	_snitches -= card.cost
+	_button_for(card).start_cooldown()
+	_selected_card = null
 	_refresh_card_selection()
 	_refresh_hud()
 
 
-## Callback when the Snitch Box drops a physical Snitch to be collected.
+func _button_for(card: AllyCard) -> AllyCardButton:
+	for button: AllyCardButton in _card_buttons():
+		if button.card == card:
+			return button
+	return null
+
+
+## Frees the grid cell of an ally that left the tree.
+func _on_ally_removed(cell: Vector2i) -> void:
+	_occupied_cells.erase(cell)
+
+
+## Callback when a Snitch Box drops a physical Snitch to be collected.
 func _on_snitch_dropped(snitch: Snitch) -> void:
 	add_child(snitch)
 	snitch.collected.connect(_on_snitch_collected)
 
 
-## Compatibility callback for a Snitch Box generating Snitches directly.
-func _on_snitches_generadas(amount: int) -> void:
-	_snitches += amount
-	_refresh_hud()
-
-
 ## SnitchSpawnTimer callback. Spawns a Snitch falling from the sky.
 func _on_snitch_spawn_timer_timeout() -> void:
-	if _is_level_over or snitch_scene == null:
+	if _is_level_over:
 		return
-	var new_snitch: Snitch = snitch_scene.instantiate() as Snitch
-	if new_snitch == null:
-		return
-	var x_position: float = randf_range(SKY_SNITCH_MIN_X, SKY_SNITCH_MAX_X)
-	new_snitch.position = Vector2(x_position, SKY_SNITCH_Y)
-	add_child(new_snitch)
-	new_snitch.collected.connect(_on_snitch_collected)
+	var snitch: Snitch = snitch_scene.instantiate() as Snitch
+	snitch.position = Vector2(randf_range(SKY_SNITCH_MIN_X, SKY_SNITCH_MAX_X), SKY_SNITCH_Y)
+	add_child(snitch)
+	snitch.collected.connect(_on_snitch_collected)
 
 
 ## Callback when the player clicks and collects a Snitch.
 func _on_snitch_collected(amount: int) -> void:
 	_snitches += amount
 	_refresh_hud()
-
-
-## Callback when an ally is removed. Frees its grid cell.
-func _on_ally_removed(cell: Vector2i) -> void:
-	_occupied_cells.erase(cell)
 
 
 ## EnemySpawnTimer callback. Spawns a new enemy.
@@ -337,46 +286,3 @@ func _on_retry_button_pressed() -> void:
 
 func _go_to_map() -> void:
 	get_tree().change_scene_to_file(level_select_scene)
-
-
-## Harry button callback. Toggles Harry's selection.
-func _on_boton_harry_pressed() -> void:
-	if _selected_card == "harry":
-		_selected_card = ""
-	else:
-		_selected_card = "harry"
-	_refresh_card_selection()
-
-
-## Snitch Box button callback. Toggles the Snitch Box selection.
-func _on_boton_caja_snitch_pressed() -> void:
-	if _selected_card == "snitch_box":
-		_selected_card = ""
-	else:
-		_selected_card = "snitch_box"
-	_refresh_card_selection()
-
-func _on_boton_recordadora_pressed() -> void:
-	if _selected_card == "remembrall":
-		_selected_card = ""
-	else:
-		_selected_card = "remembrall"
-	_refresh_card_selection()
-
-func _on_boton_protego_pressed() -> void:
-	if _selected_card == "protego":
-		_selected_card = ""
-	else:
-		_selected_card = "protego"
-	_refresh_card_selection()
-
-
-## Updates the card buttons' look according to the current selection.
-func _refresh_card_selection() -> void:
-	boton_harry.modulate = Color(0.5, 1.0, 0.5) if _selected_card == "harry" else Color(1.0, 1.0, 1.0)
-	if boton_caja_snitch != null:
-		boton_caja_snitch.modulate = Color(0.5, 1.0, 0.5) if _selected_card == "snitch_box" else Color(1.0, 1.0, 1.0)
-	if boton_recordadora != null:
-		boton_recordadora.modulate = Color(0.5, 1.0, 0.5) if _selected_card == "remembrall" else Color(1.0, 1.0, 1.0)
-	if boton_protego != null:
-		boton_protego.modulate = Color(0.5, 1.0, 0.5) if _selected_card == "protego" else Color(1.0, 1.0, 1.0)
