@@ -27,7 +27,7 @@ const GARDEN_EDGE_X: float = 0.0
 @export var hurt_texture: Texture2D
 
 var _health: float = 0.0
-var _target_ally: Area2D = null
+var _target_ally: Ally = null
 ## Whether the hurt texture was already applied.
 var _is_hurt: bool = false
 
@@ -44,7 +44,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if is_instance_valid(_target_ally):
 		# State: attacking the ally
-		_target_ally.call("take_damage", damage_per_second * delta)
+		_target_ally.take_damage(damage_per_second * delta)
 	else:
 		_target_ally = null
 		# State: walking towards the garden
@@ -87,7 +87,7 @@ func _on_animation_timer_timeout() -> void:
 ## DetectionArea callback. Targets allies that enter attack range.
 func _on_detection_area_area_entered(area: Area2D) -> void:
 	if area.is_in_group(Groups.ALLIES):
-		_target_ally = area
+		_target_ally = area as Ally
 
 
 ## DetectionArea callback. Releases the target when it leaves range.

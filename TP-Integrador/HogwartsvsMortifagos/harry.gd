@@ -1,64 +1,30 @@
 class_name Harry
-extends Area2D
+extends Ally
 
-## Emitted when Harry loses all his health.
-signal defeated(entity: Node2D)
+## Peashooter ally: shoots a projectile while an enemy is in its lane.
 
-## Snitch cost to place Harry.
-@export var coste: int = 100
-## Harry's total health.
-@export var health: float = 100.0
 ## Seconds between shots.
 @export var shot_interval: float = 1.5
 ## Projectile scene Harry shoots.
 @export var projectile_scene: PackedScene
 
+@onready var shoot_timer: Timer = $ShootTimer
+@onready var shoot_point: Marker2D = $ShootPoint
+
 
 func _ready() -> void:
-	$ShootTimer.wait_time = shot_interval
-	$ShootTimer.start()
+	shoot_timer.wait_time = shot_interval
+	shoot_timer.start()
 
 
-## ShootTimer callback. Shoots a projectile if there is an enemy in the same lane.
+## ShootTimer callback. Shoots only if there is an enemy in the same lane.
 func _on_shoot_timer_timeout() -> void:
-	if projectile_scene == null:
-		return
 	if not _has_enemy_in_lane():
 		return
-	var new_projectile: Area2D = projectile_scene.instantiate()
-	new_projectile.global_position = $ShootPoint.global_position
-	get_tree().current_scene.add_child(new_projectile)
+	var projectile: Projectile = projectile_scene.instantiate() as Projectile
+	projectile.global_position = shoot_point.global_position
+	get_tree().current_scene.add_child(projectile)
 
 
-## Checks whether at least one valid enemy is in the same horizontal lane.
 func _has_enemy_in_lane() -> bool:
 	return not Lane.enemies_in_lane(get_tree(), global_position.y).is_empty()
-
-
-var _tiempo_flash: float = 0.0
-var _cooldown_flash: float = 0.0
-
-
-func _process(delta: float) -> void:
-	if _cooldown_flash > 0.0:
-		_cooldown_flash -= delta
-
-	if _tiempo_flash > 0.0:
-		_tiempo_flash -= delta
-		if _tiempo_flash <= 0.0:
-			$Sprite2D.modulate = Color(1.0, 1.0, 1.0)
-
-
-## Applies damage to Harry. Called by enemies while attacking.
-func take_damage(amount: float) -> void:
-	health -= amount
-
-	# Damage visual effect (red flash with cooldown)
-	if _cooldown_flash <= 0.0:
-		$Sprite2D.modulate = Color(1.0, 0.3, 0.3)
-		_tiempo_flash = 0.1
-		_cooldown_flash = 0.5
-
-	if health <= 0.0:
-		defeated.emit(self)
-		queue_free()
