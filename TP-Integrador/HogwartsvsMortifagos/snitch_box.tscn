@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://snitch_box.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://snitch.tscn" id="2_snitch"]
 [ext_resource type="Texture2D" uid="uid://cwpi3k743ja8h" path="res://Imagenes/Personajes_Caja Snitch.png" id="3_texture"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(80, 80)
@@ -21,5 +22,9 @@ hframes = 2
 shape = SubResource("RectangleShape2D_body")
 
 [node name="SnitchTimer" type="Timer" parent="."]
+
+[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
+target = NodePath("../Sprite2D")
+cooldown = 0.5
 
 [connection signal="timeout" from="SnitchTimer" to="." method="_on_snitch_timer_timeout"]

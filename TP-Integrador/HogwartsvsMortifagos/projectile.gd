@@ -15,12 +15,11 @@ func _process(delta: float) -> void:
 
 ## Collision callback. Damages the enemy it hits and frees itself.
 func _on_area_entered(area: Area2D) -> void:
-	if _has_hit:
+	if _has_hit or not area.is_in_group(Groups.ENEMIES):
 		return
-	if area.is_in_group(Groups.ENEMIES) and area.has_method("take_damage"):
-		_has_hit = true
-		area.call("take_damage", damage)
-		queue_free()
+	_has_hit = true
+	(area as Enemy).take_damage(damage)
+	queue_free()
 
 
 ## VisibleOnScreenNotifier2D callback. Frees itself when leaving the screen.

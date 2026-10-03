@@ -248,7 +248,7 @@ func _on_enemy_spawn_timer_timeout() -> void:
 	if enemy_scene == null:
 		return
 
-	var new_enemy: Node2D = enemy_scene.instantiate() as Node2D
+	var new_enemy: Enemy = enemy_scene.instantiate() as Enemy
 	if spawn_points.size() > 0:
 		var spawner = spawn_points.pick_random()
 		if typeof(spawner) == TYPE_NODE_PATH:
@@ -260,8 +260,8 @@ func _on_enemy_spawn_timer_timeout() -> void:
 	_spawned_enemies += 1
 
 	# Connect enemy signals
-	new_enemy.connect("defeated", _on_enemy_defeated)
-	new_enemy.connect("garden_invaded", _on_garden_invaded)
+	new_enemy.defeated.connect(_on_enemy_defeated)
+	new_enemy.garden_invaded.connect(_on_garden_invaded)
 
 
 ## Callback when an enemy is defeated. Checks the victory condition.

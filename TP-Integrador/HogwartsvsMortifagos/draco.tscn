@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://draco.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://ju3blv3dlx2n" path="res://Imagenes/Personajes_Draco.png" id="2_texture"]
 [ext_resource type="Texture2D" uid="uid://b7op036lglxx4" path="res://Imagenes/Personajes_Draco Lastimado.png" id="3_hurt_texture"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(48, 80)
@@ -14,6 +15,7 @@ size = Vector2(60, 80)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_script")
+max_health = 400.0
 hurt_texture = ExtResource("3_hurt_texture")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -34,6 +36,11 @@ shape = SubResource("RectangleShape2D_detection")
 [node name="AnimationTimer" type="Timer" parent="."]
 wait_time = 0.25
 autostart = true
+
+[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
+target = NodePath("../Sprite2D")
+duration = 0.15
+fade_out = true
 
 [connection signal="area_entered" from="DetectionArea" to="." method="_on_detection_area_area_entered"]
 [connection signal="area_exited" from="DetectionArea" to="." method="_on_detection_area_area_exited"]

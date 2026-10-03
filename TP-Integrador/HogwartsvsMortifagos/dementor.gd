@@ -23,7 +23,7 @@ const EXIT_X: float = 1450.0
 ## Forward speed once active, in pixels per second.
 @export var speed: float = 800.0
 ## Massive damage dealt to enemies in its lane (instant kill).
-@export var damage: int = 9999
+@export var damage: float = 9999.0
 
 var _is_active: bool = false
 
@@ -61,7 +61,7 @@ func activate() -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group(Groups.ENEMIES):
 		activate()
-		_kill_enemy(area)
+		_kill_enemy(area as Enemy)
 
 
 ## Activates when an enemy in the same lane reached the Dementor's position.
@@ -69,7 +69,7 @@ func _check_enemies_at_position() -> void:
 	for enemy: Node2D in Lane.enemies_in_lane(get_tree(), global_position.y):
 		if enemy.global_position.x <= global_position.x + TRIGGER_REACH:
 			activate()
-			_kill_enemy(enemy)
+			_kill_enemy(enemy as Enemy)
 			return
 
 
@@ -77,17 +77,13 @@ func _check_enemies_at_position() -> void:
 func _sweep_lane() -> void:
 	for area: Area2D in get_overlapping_areas():
 		if area.is_in_group(Groups.ENEMIES):
-			_kill_enemy(area)
+			_kill_enemy(area as Enemy)
 	for enemy: Node2D in Lane.enemies_in_lane(get_tree(), global_position.y):
 		if enemy.global_position.x <= global_position.x + SWEEP_REACH:
-			_kill_enemy(enemy)
+			_kill_enemy(enemy as Enemy)
 
 
 ## Kills the enemy with massive damage, guaranteeing its destruction.
-func _kill_enemy(entity: Node2D) -> void:
-	if not is_instance_valid(entity) or entity.is_queued_for_deletion():
-		return
-	if entity.has_method("take_damage"):
-		entity.call("take_damage", damage)
-	else:
-		entity.queue_free()
+func _kill_enemy(enemy: Enemy) -> void:
+	if is_instance_valid(enemy) and not enemy.is_queued_for_deletion():
+		enemy.take_damage(damage)

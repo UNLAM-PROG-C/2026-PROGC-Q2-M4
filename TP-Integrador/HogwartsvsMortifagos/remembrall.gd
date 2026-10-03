@@ -10,10 +10,13 @@ extends Area2D
 @export var tiempo_recarga: float = 25.0
 @export var health: float = 100.0
 ## Damage dealt to every enemy inside ExplosionArea.
-@export var explosion_damage: int = 1800
+@export var explosion_damage: float = 1800.0
 
 signal destruida_sin_explotar(entity: Node2D)
 signal detonated(entity: Node2D)
+
+@onready var explosion_area: Area2D = $ExplosionArea
+
 
 func _ready() -> void:
 	start_fuse()
@@ -58,11 +61,8 @@ func take_damage(amount: float) -> void:
 
 func detonate() -> void:
 	# Damage enemies in explosion area
-	var area: Area2D = $ExplosionArea
-	var areas = area.get_overlapping_areas()
-	for entity_area in areas:
-		if entity_area.is_in_group(Groups.ENEMIES):
-			if entity_area.has_method("take_damage"):
-				entity_area.take_damage(explosion_damage)
+	for area: Area2D in explosion_area.get_overlapping_areas():
+		if area.is_in_group(Groups.ENEMIES):
+			(area as Enemy).take_damage(explosion_damage)
 	detonated.emit(self)
 	queue_free()

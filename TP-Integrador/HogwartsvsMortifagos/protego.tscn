@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://p7rotego3n1v3"]
 
 [ext_resource type="Script" path="res://protego.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(48, 80)
@@ -16,3 +17,7 @@ polygon = PackedVector2Array(-24, -40, 24, -40, 24, 40, -24, 40)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
+
+[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
+target = NodePath("../Visual")
+cooldown = 0.5

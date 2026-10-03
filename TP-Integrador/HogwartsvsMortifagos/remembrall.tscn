@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://remembrall.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://Imagenes/recordadora.jpg" id="2_texture"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(80, 80)
@@ -32,5 +33,9 @@ shape = SubResource("RectShape")
 wait_time = 1.5
 one_shot = true
 autostart = false
+
+[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
+target = NodePath("../Sprite2D")
+cooldown = 0.5
 
 [connection signal="timeout" from="FuseTimer" to="." method="_on_fuse_timer_timeout"]
