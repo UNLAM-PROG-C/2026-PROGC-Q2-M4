@@ -15,6 +15,7 @@ const MAX_FUNCTION_LINES: int = 15
 
 const REMOVED_MARKER: String = "—"
 const CELL_SEPARATOR: String = "|"
+const LINE_SEPARATOR: String = "\n"
 const OLD_CELL_INDEX: int = 1
 const NEW_CELL_INDEX: int = 2
 const MIN_ROW_CELLS: int = 4
@@ -93,7 +94,7 @@ func _load_rename_map() -> bool:
 	if not FileAccess.file_exists(RENAME_MAP_PATH):
 		printerr(MAP_MISSING_FORMAT % RENAME_MAP_PATH)
 		return false
-	var lines: PackedStringArray = FileAccess.get_file_as_string(RENAME_MAP_PATH).split("\n")
+	var lines: PackedStringArray = FileAccess.get_file_as_string(RENAME_MAP_PATH).split(LINE_SEPARATOR)
 	for index: int in lines.size():
 		if not _parse_map_row(lines[index]):
 			printerr(MAP_ERROR_FORMAT % [RENAME_MAP_PATH, index + 1])
@@ -136,7 +137,7 @@ func _collect_files(dir_path: String) -> PackedStringArray:
 
 
 func _check_file(path: String) -> void:
-	var lines: PackedStringArray = FileAccess.get_file_as_string(path).split("\n")
+	var lines: PackedStringArray = FileAccess.get_file_as_string(path).split(LINE_SEPARATOR)
 	var extension: String = path.get_extension()
 	for index: int in lines.size():
 		if not _is_ignored_line(lines[index], extension):
