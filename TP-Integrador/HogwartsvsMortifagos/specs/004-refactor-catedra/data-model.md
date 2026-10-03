@@ -130,7 +130,8 @@ Registro en `project.godot` (`[autoload] GameManager="*res://game_manager.gd"`),
 | `spawn_points` | `@export Array[NodePath]` | `Marker2D3` | `Marker2D2..4` | `Marker2D..5` |
 | `active_rows` | `@export Array[int]` | [4] | [3, 4, 5] | [2..6] |
 | `next_level_to_unlock` | `@export int` | 2 | 3 | 4 |
-| `snitch_scene`, `dementor_scene`, `level_select_scene` | `@export PackedScene` | | | |
+| `snitch_scene`, `dementor_scene` | `@export PackedScene` | | | |
+| `level_select_scene` | `@export_file String` (`uid://` del menú; un `PackedScene` crearía una referencia cíclica menú ↔ nivel) | | | |
 | `_selected_card` | `AllyCard` | `null` = nada seleccionado | | |
 | `_occupied_cells` | `Dictionary[Vector2i, Node2D]` | | | |
 
