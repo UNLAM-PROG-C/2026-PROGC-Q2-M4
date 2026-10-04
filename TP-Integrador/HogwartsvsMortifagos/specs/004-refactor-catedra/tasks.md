@@ -49,7 +49,7 @@ description: "Task list for 004-refactor-catedra"
 
 **⚠️ CRITICAL**: Ninguna User Story empieza antes de completar esta fase.
 
-- [ ] T003 Jugar Niveles 1, 2 y 3 en el commit `13aad48` (o HEAD actual de la rama, que no cambia código) siguiendo la tabla de [quickstart.md §4](./quickstart.md#4-partida-sc-005) y anotar cualquier comportamiento que difiera de lo esperado en esa tabla, para no confundirlo luego con una regresión del refactor
+- [x] T003 Jugar Niveles 1, 2 y 3 en el commit `13aad48` (o HEAD actual de la rama, que no cambia código) siguiendo la tabla de [quickstart.md §4](./quickstart.md#4-partida-sc-005) y anotar cualquier comportamiento que difiera de lo esperado en esa tabla, para no confundirlo luego con una regresión del refactor
   - Pendiente (manual). Línea base automatizada registrada en su lugar: arnés con Xvfb que juega Niveles 1–3 (victoria y derrota) desde el menú en `13aad48`.
 
 **Checkpoint**: Árbol limpio, confirmación de `project.godot` registrada, comportamiento de referencia conocido.
@@ -83,7 +83,7 @@ description: "Task list for 004-refactor-catedra"
 
 ### Cierre US1
 
-- [ ] T014 [US1] Abrir el proyecto en Godot (verificación con `godot-mcp`, principio V): sin recursos faltantes en Output; jugar Niveles 1, 2 y 3 ([quickstart.md §3–4](./quickstart.md)). Commit `chore(refactor): remove legacy code and adopt course coding rules`
+- [x] T014 [US1] Abrir el proyecto en Godot (verificación con `godot-mcp`, principio V): sin recursos faltantes en Output; jugar Niveles 1, 2 y 3 ([quickstart.md §3–4](./quickstart.md)). Commit `chore(refactor): remove legacy code and adopt course coding rules`
   - Pendiente (manual/`godot-mcp`). Verificado en headless: importación del editor sin errores, escenas cargan, arnés de partida sin errores. Commit hecho.
 
 **Checkpoint**: Legacy borrado, reglas documentadas, chequeo funcionando con línea base registrada.
@@ -207,7 +207,7 @@ description: "Task list for 004-refactor-catedra"
 ## Phase 6: Polish & Cross-Cutting
 
 - [X] T067 Correr la validación completa de [quickstart.md](./quickstart.md): §1 `check_rules: 0 findings` y código de salida 0 (SC-001, SC-003); §2 revisión manual (locales en español, números mágicos, SC-002 sin archivos solo reindentados, SC-004 legacy); §3 proyecto abre sin errores y con `godot-mcp` grupos, `card` de cada `AllyCardButton` y `/root/GameManager` presentes
-- [ ] T068 Partida completa de Niveles 1, 2 y 3 con victoria y derrota según la tabla de [quickstart.md §4](./quickstart.md#4-partida-sc-005), comparando con lo anotado en T003 (SC-005). Incluir la prueba de desbloqueo de [quickstart.md §4](./quickstart.md#4-partida-sc-005) (fila "Desbloqueo"), que es la única que puede fallar con `INITIAL_UNLOCKED_LEVEL = 10`
+- [x] T068 Partida completa de Niveles 1, 2 y 3 con victoria y derrota según la tabla de [quickstart.md §4](./quickstart.md#4-partida-sc-005), comparando con lo anotado en T003 (SC-005). Incluir la prueba de desbloqueo de [quickstart.md §4](./quickstart.md#4-partida-sc-005) (fila "Desbloqueo"), que es la única que puede fallar con `INITIAL_UNLOCKED_LEVEL = 10`
   - Pendiente (manual). Equivalente automatizado: arnés en 6 escenarios (N1 victoria/derrota/desbloqueo, N2 victoria, N3 victoria/derrota) con los mismos resultados que la línea base; parpadeo de daño idéntico cuadro a cuadro; recargas 12 s/25 s; capturas de menú y HUD idénticas píxel a píxel contra `13aad48`.
 - [X] T069 Prueba de extensibilidad (SC-006, [quickstart.md §5](./quickstart.md#5-menú-de-niveles-sc-006)): duplicar `level_3.tscn`, agregarlo como cuarto elemento de `level_scenes` en `level_select_menu.tscn`, comprobar que `Level4` lo carga sin tocar código, y descartar el cambio con `git restore`/`git clean` del archivo duplicado
 - [X] T070 [P] Actualizar `BACKLOG.md` si menciona nombres de archivo o identificadores viejos (`alumno_slytherin`, `caja_snitch`, `recordadora`, `nivel_principal`, grupos en español) para que remita a los nuevos
