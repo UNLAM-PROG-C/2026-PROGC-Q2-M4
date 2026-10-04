@@ -56,6 +56,9 @@ func _process(delta: float) -> void:
 
 ## Called by projectiles, the Remembrall and Dementors.
 func take_damage(amount: float) -> void:
+	# Already dying: avoid emitting defeated twice in the same frame.
+	if _health <= 0.0:
+		return
 	_health = maxf(_health - amount, 0.0)
 	_update_hurt_texture()
 	damage_flash.flash()
