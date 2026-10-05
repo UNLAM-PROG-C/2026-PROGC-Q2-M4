@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dpmy83a2se0jj"]
 
-[ext_resource type="Script" path="res://remembrall.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://Imagenes/recordadora.jpg" id="2_texture"]
+[ext_resource type="Script" uid="uid://dr52fkvyj3m11" path="res://remembrall.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b31epu6xbr7su" path="res://Images/remembrall.png" id="2_texture"]
 [ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
@@ -10,32 +10,38 @@ size = Vector2(80, 80)
 [sub_resource type="RectangleShape2D" id="RectShape"]
 size = Vector2(384, 384)
 
-[node name="Remembrall" type="Area2D" groups=["allies"]]
-script = ExtResource("1_script")
-collision_layer = 1
+[node name="Remembrall" type="Area2D" unique_id=1746715646 groups=["allies"]]
+position = Vector2(40, 0)
 collision_mask = 0
+script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=997140244]
+position = Vector2(-20, 0)
 texture = ExtResource("2_texture")
-scale = Vector2(0.12, 0.12)
+hframes = 7
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2001559161]
+position = Vector2(-20, 0)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="ExplosionArea" type="Area2D" parent="."]
+[node name="ExplosionArea" type="Area2D" parent="." unique_id=1948798448]
+position = Vector2(-20, 0)
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ExplosionArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExplosionArea" unique_id=1911695927]
 shape = SubResource("RectShape")
 
-[node name="FuseTimer" type="Timer" parent="."]
+[node name="FuseTimer" type="Timer" parent="." unique_id=38361793]
 wait_time = 1.5
 one_shot = true
-autostart = false
 
-[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
+[node name="AnimationTimer" type="Timer" parent="." unique_id=1179637143]
+wait_time = 0.21428572
+
+[node name="DamageFlash" parent="." unique_id=287329024 node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
 target = NodePath("../Sprite2D")
 cooldown = 0.5
 
 [connection signal="timeout" from="FuseTimer" to="." method="_on_fuse_timer_timeout"]
+[connection signal="timeout" from="AnimationTimer" to="." method="_on_animation_timer_timeout"]

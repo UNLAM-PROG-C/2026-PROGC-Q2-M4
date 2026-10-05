@@ -6,6 +6,7 @@ extends Node
 const INITIAL_UNLOCKED_LEVEL: int = 10
 
 var max_unlocked_level: int = INITIAL_UNLOCKED_LEVEL
+var debug_mode: bool = false
 
 
 func unlock_level(level_number: int) -> void:

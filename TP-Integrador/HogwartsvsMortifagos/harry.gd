@@ -7,6 +7,8 @@ extends Ally
 @export var shot_interval: float = 1.5
 ## Projectile scene Harry shoots.
 @export var projectile_scene: PackedScene
+## Pool that provides reusable projectiles for this ally.
+@export var projectile_pool: ProjectilePool
 
 @onready var shoot_timer: Timer = $ShootTimer
 @onready var shoot_point: Marker2D = $ShootPoint
@@ -21,9 +23,11 @@ func _ready() -> void:
 func _on_shoot_timer_timeout() -> void:
 	if not _has_enemy_in_lane():
 		return
-	var projectile: Projectile = projectile_scene.instantiate() as Projectile
-	projectile.global_position = shoot_point.global_position
-	get_tree().current_scene.add_child(projectile)
+	if projectile_pool == null or not is_instance_valid(projectile_pool):
+		return
+	var projectile: Projectile = projectile_pool.acquire_projectile(shoot_point.global_position)
+	if projectile == null:
+		return
 
 
 func _has_enemy_in_lane() -> bool:

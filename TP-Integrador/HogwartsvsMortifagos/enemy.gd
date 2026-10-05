@@ -25,11 +25,18 @@ const GARDEN_EDGE_X: float = 0.0
 @export var damage_per_second: float = 30.0
 ## Animation sheet used once hurt.
 @export var hurt_texture: Texture2D
+## Walking animation sheet.
+@export var walk_texture: Texture2D
+## Attacking animation sheet.
+@export var attacking_texture: Texture2D
+## Attacking animation sheet used once hurt.
+@export var hurt_attacking_texture: Texture2D
 
 var _health: float = 0.0
 var _target_ally: Ally = null
 ## Whether the hurt texture was already applied.
 var _is_hurt: bool = false
+var _is_attacking: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var damage_flash: DamageFlash = $DamageFlash
@@ -37,11 +44,17 @@ var _is_hurt: bool = false
 
 func _ready() -> void:
 	_health = max_health
+	if walk_texture != null:
+		sprite.texture = walk_texture
 	# Random starting frame so not every enemy walks in sync.
 	sprite.frame = randi() % TOTAL_FRAMES
 
 
 func _process(delta: float) -> void:
+	var has_attack_target: bool = is_instance_valid(_target_ally)
+	if has_attack_target != _is_attacking:
+		_is_attacking = has_attack_target
+		_update_animation_texture()
 	if is_instance_valid(_target_ally):
 		# State: attacking the ally
 		_target_ally.take_damage(damage_per_second * delta)
@@ -70,11 +83,37 @@ func _update_hurt_texture() -> void:
 	if _is_hurt or _health > max_health * HURT_HEALTH_RATIO:
 		return
 	_is_hurt = true
-	if hurt_texture != null:
-		# Keep the current animation frame when swapping the texture.
-		var current_frame: int = sprite.frame
-		sprite.texture = hurt_texture
-		sprite.frame = current_frame
+	_update_animation_texture()
+
+
+func _update_animation_texture() -> void:
+	var next_texture: Texture2D = _walking_texture()
+	var frame_count: int = TOTAL_FRAMES
+	if _is_attacking:
+		next_texture = attacking_texture if not _is_hurt else hurt_attacking_texture
+		frame_count = 4
+	elif _is_hurt:
+		next_texture = hurt_texture
+	if next_texture == null:
+		return
+	var previous_frame_size: Vector2 = _frame_size(sprite.texture, sprite.hframes)
+	var previous_left_edge: float = sprite.position.x - previous_frame_size.x * absf(sprite.scale.x) * 0.5
+	sprite.texture = next_texture
+	sprite.hframes = frame_count
+	sprite.frame = sprite.frame % frame_count
+	var next_frame_size: Vector2 = _frame_size(next_texture, frame_count)
+	sprite.position.x = previous_left_edge + next_frame_size.x * absf(sprite.scale.x) * 0.5
+
+
+func _frame_size(texture: Texture2D, frame_count: int) -> Vector2:
+	return Vector2(
+		texture.get_width() / frame_count,
+		texture.get_height()
+	)
+
+
+func _walking_texture() -> Texture2D:
+	return walk_texture
 
 
 func _die() -> void:
@@ -84,7 +123,7 @@ func _die() -> void:
 
 ## Advances to the next frame of the animation sheet.
 func _on_animation_timer_timeout() -> void:
-	sprite.frame = (sprite.frame + 1) % TOTAL_FRAMES
+	sprite.frame = (sprite.frame + 1) % sprite.hframes
 
 
 ## DetectionArea callback. Targets allies that enter attack range.

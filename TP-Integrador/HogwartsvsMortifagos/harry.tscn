@@ -1,31 +1,33 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://be20uc101306e"]
 
-[ext_resource type="Script" path="res://harry.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://c7vaise20xj34" path="res://Imagenes/Harry.png" id="2_texture"]
+[ext_resource type="Script" uid="uid://db3eup730ddh1" path="res://harry.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c7vaise20xj34" path="res://Images/harry.png" id="2_texture"]
 [ext_resource type="PackedScene" uid="uid://bwxniwtn2vxfv" path="res://projectile.tscn" id="3_projectile"]
 [ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(80, 100)
+size = Vector2(148, 112)
 
-[node name="Harry" type="Area2D" groups=["allies"]]
-collision_layer = 1
+[node name="Harry" type="Area2D" unique_id=615921006 groups=["allies"]]
 collision_mask = 0
 script = ExtResource("1_script")
 projectile_scene = ExtResource("3_projectile")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1958026077]
+position = Vector2(19.5, -10.5)
+scale = Vector2(1.4384617, 1.4384617)
 texture = ExtResource("2_texture")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1893202376]
+position = Vector2(-2, 0)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="ShootPoint" type="Marker2D" parent="."]
-position = Vector2(64, 0)
+[node name="ShootPoint" type="Marker2D" parent="." unique_id=1061187823]
+position = Vector2(104, -40)
 
-[node name="ShootTimer" type="Timer" parent="."]
+[node name="ShootTimer" type="Timer" parent="." unique_id=1649040163]
 
-[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
+[node name="DamageFlash" parent="." unique_id=697652815 node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
 target = NodePath("../Sprite2D")
 cooldown = 0.5
 

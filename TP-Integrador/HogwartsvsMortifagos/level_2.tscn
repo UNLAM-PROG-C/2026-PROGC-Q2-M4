@@ -1,15 +1,19 @@
 [gd_scene format=4 uid="uid://c8yjskdqci0c"]
 
-[ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Imagenes/Pasto.png" id="1_44v15"]
-[ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Imagenes/Pasto2.png" id="2_4osvq"]
+[ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Images/grass.png" id="1_44v15"]
+[ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Images/grass_variant.png" id="2_4osvq"]
 [ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://level.gd" id="3_script"]
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
 [ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
+[ext_resource type="Texture2D" uid="uid://m2225llgru1t" path="res://Images/background.png" id="10_background"]
 [ext_resource type="Script" path="res://ally_card_button.gd" id="13_card_button"]
 [ext_resource type="Resource" path="res://harry_card.tres" id="14_harry_card"]
 [ext_resource type="Resource" path="res://snitch_box_card.tres" id="15_snitch_box_card"]
 [ext_resource type="Resource" path="res://remembrall_card.tres" id="16_remembrall_card"]
+[ext_resource type="Script" path="res://projectile_pool.gd" id="18_projectile_pool"]
+[ext_resource type="PackedScene" path="res://projectile.tscn" id="19_projectile"]
+[ext_resource type="Script" path="res://wave_director.gd" id="20_wave_director"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -64,22 +68,34 @@ dementor_scene = ExtResource("8_dementor")
 level_select_scene = "uid://c0vgnide3ben3"
 active_rows = Array[int]([3, 4, 5])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4")])
+dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
 next_level_to_unlock = 3
+is_special_level = false
 
-[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1951683565]
+[node name="Grid" type="Node2D" parent="." unique_id=2109126223]
+top_level = true
+position = Vector2(12, -149)
+scale = Vector2(1.28, 1.28)
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Grid" unique_id=1951683565]
+visible = false
 tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_5uq62")
 
-[node name="MagicBarrier" type="Node2D" parent="." unique_id=1038295434]
+[node name="MagicBarrier" type="Node2D" parent="Grid" unique_id=1038295434]
+visible = false
+top_level = true
+position = Vector2(11, -149)
+scale = Vector2(1.28, 1.28)
 
-[node name="Row2" type="ColorRect" parent="MagicBarrier" unique_id=2053891754]
+[node name="Row2" type="ColorRect" parent="Grid/MagicBarrier" unique_id=2053891754]
 offset_left = 256.0
 offset_top = 256.0
 offset_right = 1280.0
 offset_bottom = 384.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Row3" type="ColorRect" parent="MagicBarrier" unique_id=1807211417]
+[node name="Row3" type="ColorRect" parent="Grid/MagicBarrier" unique_id=1807211417]
 visible = false
 offset_left = 256.0
 offset_top = 384.0
@@ -87,7 +103,7 @@ offset_right = 1280.0
 offset_bottom = 512.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Row5" type="ColorRect" parent="MagicBarrier" unique_id=555105216]
+[node name="Row5" type="ColorRect" parent="Grid/MagicBarrier" unique_id=555105216]
 visible = false
 offset_left = 256.0
 offset_top = 640.0
@@ -95,30 +111,46 @@ offset_right = 1280.0
 offset_bottom = 768.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
-[node name="Row6" type="ColorRect" parent="MagicBarrier" unique_id=186289501]
+[node name="Row6" type="ColorRect" parent="Grid/MagicBarrier" unique_id=186289501]
 offset_left = 256.0
 offset_top = 768.0
 offset_right = 1280.0
 offset_bottom = 896.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
+[node name="Background" type="Node2D" parent="." unique_id=605582532]
+
+[node name="Background" type="Sprite2D" parent="Background" unique_id=1121262887]
+show_behind_parent = true
+position = Vector2(-248, 0)
+scale = Vector2(1.6, 1.6)
+texture = ExtResource("10_background")
+centered = false
+
+[node name="Entities" type="Node2D" parent="." unique_id=605582533]
+z_index = 10
+
+[node name="ProjectilePool" type="Node2D" parent="Entities"]
+script = ExtResource("18_projectile_pool")
+projectile_scene = ExtResource("19_projectile")
+
 [node name="Spawners" type="Node2D" parent="." unique_id=1273519751]
-position = Vector2(8, 0)
+position = Vector2(216, 0)
 
 [node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1962193308]
-position = Vector2(1280, 320)
+position = Vector2(1760, 260.6)
 
 [node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=1311341990]
-position = Vector2(1280, 448)
+position = Vector2(1760, 424.44)
 
 [node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=1422415545]
-position = Vector2(1280, 576)
+position = Vector2(1760, 588.28)
 
 [node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=1556994656]
-position = Vector2(1280, 704)
+position = Vector2(1760, 752.12)
 
 [node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=902178117]
-position = Vector2(1280, 832)
+position = Vector2(1760, 915.96)
 
 [node name="EnemySpawnTimer" type="Timer" parent="." unique_id=1162641464]
 wait_time = 8.0
@@ -137,6 +169,15 @@ offset_right = 240.0
 offset_bottom = 50.0
 theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
+
+[node name="PoolDebugLabel" type="Label" parent="HUD"]
+offset_left = 10.0
+offset_top = 60.0
+offset_right = 430.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "DEBUG | Disparos consecutivos: 0\nPool: 50 | Activos: 0 | Disponibles: 50"
 
 [node name="HarryCardButton" type="Button" parent="HUD" unique_id=1005889825]
 script = ExtResource("13_card_button")
@@ -175,6 +216,30 @@ offset_top = 440.0
 offset_right = 1160.0
 offset_bottom = 540.0
 theme_override_font_sizes/font_size = 48
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WaveAnnouncement" type="ColorRect" parent="HUD" unique_id=461003768]
+visible = false
+mouse_filter = 2
+offset_left = 420.0
+offset_top = 390.0
+offset_right = 1500.0
+offset_bottom = 570.0
+color = Color(0.055, 0.025, 0.12, 0.94)
+
+[node name="Label" type="Label" parent="HUD/WaveAnnouncement" unique_id=461003769]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.24, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 52
+text = "¡SE AVECINA UNA OLEADA DE ENEMIGOS!"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -262,6 +327,9 @@ theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 text = "Volver al Mapa"
+
+[node name="WaveDirector" type="Node" parent="."]
+script = ExtResource("20_wave_director")
 
 [connection signal="timeout" from="EnemySpawnTimer" to="." method="_on_enemy_spawn_timer_timeout"]
 [connection signal="timeout" from="SnitchSpawnTimer" to="." method="_on_snitch_spawn_timer_timeout"]

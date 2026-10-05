@@ -87,6 +87,7 @@ var _active_walkers: int = 0
 @onready var path_footprints_layer: Node2D = $PathFootprintsLayer
 @onready var ambient_footprints_layer: Node2D = $AmbientFootprintsLayer
 @onready var ambient_footprints_timer: Timer = $AmbientFootprintsTimer
+@onready var debug_mode_check_button: CheckButton = $DebugModeCheckButton
 
 
 func _ready() -> void:
@@ -95,9 +96,22 @@ func _ready() -> void:
 	_set_absolute_z(level_buttons_container, BUTTONS_Z)
 	_setup_level_buttons()
 	_refresh_level_buttons()
+	debug_mode_check_button.button_pressed = _is_debug_mode_enabled()
+	debug_mode_check_button.toggled.connect(_on_debug_mode_toggled)
 	_start_path_footprints()
 	if ambient_footprints_enabled:
 		_setup_ambient_timer()
+
+
+func _on_debug_mode_toggled(enabled: bool) -> void:
+	var game_manager: Node = get_node_or_null("/root/GameManager")
+	if game_manager != null:
+		game_manager.set("debug_mode", enabled)
+
+
+func _is_debug_mode_enabled() -> bool:
+	var game_manager: Node = get_node_or_null("/root/GameManager")
+	return game_manager != null and bool(game_manager.get("debug_mode"))
 
 
 func _set_absolute_z(item: CanvasItem, z: int) -> void:
@@ -107,7 +121,10 @@ func _set_absolute_z(item: CanvasItem, z: int) -> void:
 
 ## Highest unlocked level, kept within the buttons on the map.
 func _unlocked_level() -> int:
-	return clampi(GameManager.max_unlocked_level, 1, LEVEL_COUNT)
+	var game_manager: Node = get_node_or_null("/root/GameManager")
+	if game_manager == null:
+		return 1
+	return clampi(int(game_manager.get("max_unlocked_level")), 1, LEVEL_COUNT)
 
 
 ## Finds the level buttons of the container and gives them the parchment look.

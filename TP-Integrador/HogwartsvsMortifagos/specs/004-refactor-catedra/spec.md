@@ -49,7 +49,7 @@ Como equipo, queremos borrar el código muerto y que la documentación del proye
 
 **Acceptance Scenarios**:
 
-1. **Given** se borraron `Mago.*`, `Mortifago.*`, `tile_map_layer.gd`, `Imagenes/Mortifago.png` (+ `.import`) e `Imagenes/Pasto.png1391487371.tmp`, **When** se abre el proyecto, **Then** no hay errores de recursos faltantes.
+1. **Given** se borraron `Mago.*`, `Mortifago.*`, `tile_map_layer.gd`, `Images/Mortifago.png` (+ `.import`) e `Images/grass.png1391487371.tmp`, **When** se abre el proyecto, **Then** no hay errores de recursos faltantes.
 2. **Given** se actualizaron los documentos, **When** se lee el diccionario temático, **Then** mapea cada nombre del juego a su identificador en inglés (ej.: Snitches → `snitch`, Alumno Slytherin → `SlytherinStudent`).
 3. **Given** existe `specs/004-refactor-catedra/rename-map.md`, **When** se busca cualquier identificador en español del código, **Then** figura en el mapa con su nombre nuevo.
 

@@ -4,9 +4,9 @@ Decisiones tomadas en la Fase 0 del plan. Cada una resuelve una incógnita del s
 
 ## R1. Alcance de archivos
 
-- **Decision**: Entran todos los `.gd`, `.tscn` y `.gdshader` del juego en la raíz del proyecto. Quedan fuera `addons/`, `godot-mcp-main/`, `.godot/`, `.specify/`, `specs/` y los assets de `Imagenes/` (los nombres de imágenes no son identificadores de código).
+- **Decision**: Entran todos los `.gd`, `.tscn` y `.gdshader` del juego en la raíz del proyecto. Quedan fuera `addons/`, `godot-mcp-main/`, `.godot/`, `.specify/`, `specs/` y los assets de `Images/` (los nombres de imágenes no son identificadores de código).
 - **Rationale**: §7 exige "todo el código, sin excepción". `pergamino.gdshader` es código (uniforms y funciones en español), y sus uniforms se referencian desde `menu_niveles.tscn` como `shader_parameter/...`. El addon `godot_mcp_bridge` no es código del juego y no es responsabilidad del equipo.
-- **Alternatives considered**: Solo `.gd` y `.tscn` (como dice FR-006). Se descarta porque dejaría el shader en español y la cátedra no hace excepciones. Renombrar `Imagenes/` y las texturas: cambia `uid` e `.import` sin aportar a ninguna regla.
+- **Alternatives considered**: Solo `.gd` y `.tscn` (como dice FR-006). Se descarta porque dejaría el shader en español y la cátedra no hace excepciones. Renombrar `Images/` y las texturas: cambia `uid` e `.import` sin aportar a ninguna regla.
 
 ## R2. Convención de nombres
 

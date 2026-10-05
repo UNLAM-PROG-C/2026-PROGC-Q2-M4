@@ -5,7 +5,7 @@
 - [x] Como jugador quiero que aparezca el "Alumno Slytherin" como enemigo básico.
 
 # Feature 2: Progresión de Defensas (Niveles 2 al 6).
-- [ ] Como jugador quiero expandir la grilla de 3 a 5 líneas.
+- [x] Como jugador quiero expandir la grilla de 3 a 5 líneas.
 - [ ] Como jugador quiero desbloquear "Recordadora" (Costo 150, explosión área) y "Protego" (Costo 50, pared).
 - [ ] Como jugador quiero usar "Accio" para remover aliados de la grilla.
 - [ ] Como jugador quiero que aparezca "Draco" (más vida) y "Alumno con Protego".

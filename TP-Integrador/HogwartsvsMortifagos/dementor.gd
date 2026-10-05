@@ -17,8 +17,8 @@ const LAUNCH_DURATION: float = 0.1
 const TRIGGER_REACH: float = 40.0
 ## While sweeping, enemies in its lane up to this far ahead (x) are killed.
 const SWEEP_REACH: float = 60.0
-## The Dementor frees itself past this x coordinate (right edge of the screen).
-const EXIT_X: float = 1450.0
+## The Dementor frees itself after crossing the complete playable board.
+const EXIT_X: float = 2200.0
 
 ## Forward speed once active, in pixels per second.
 @export var speed: float = 800.0

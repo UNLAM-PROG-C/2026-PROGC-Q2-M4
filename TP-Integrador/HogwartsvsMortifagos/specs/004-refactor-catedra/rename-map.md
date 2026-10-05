@@ -1,6 +1,6 @@
 # Mapa de renombres
 
-Fuente única para el renombrado de la User Story 2 y para `tools/check_rules.gd`. El chequeo lee la primera columna (**Actual**) de todas las tablas y la busca como palabra completa (sensible a mayúsculas) en el alcance definido en [research.md R1](./research.md#r1-alcance-de-archivos). Ignora las líneas `text = ...` de los `.tscn`, las constantes `*_TEXT` de los `.gd` (textos visibles en español) y las rutas bajo `res://Imagenes/` (assets fuera de alcance).
+Fuente única para el renombrado de la User Story 2 y para `tools/check_rules.gd`. El chequeo lee la primera columna (**Actual**) de todas las tablas y la busca como palabra completa (sensible a mayúsculas) en el alcance definido en [research.md R1](./research.md#r1-alcance-de-archivos). Ignora las líneas `text = ...` de los `.tscn`, las constantes `*_TEXT` de los `.gd` (textos visibles en español) y las rutas bajo `res://Images/` (assets fuera de alcance).
 
 Reglas:
 
@@ -18,7 +18,7 @@ El `.uid` de cada script se mueve con él. Las escenas conservan su `uid://`.
 | `alumno_slytherin` | `slytherin_student` | `.gd`, `.gd.uid`, `.tscn` |
 | `caja_snitch` | `snitch_box` | `.gd`, `.gd.uid`, `.tscn` |
 | `recordadora` | `remembrall` | `.gd`, `.gd.uid`, `.tscn` |
-| `Proyectil` | `projectile` | `.gd`, `.gd.uid`, `.tscn`. La textura `Imagenes/Proyectil.png` no cambia (R1) |
+| `Proyectil` | `projectile` | `.gd`, `.gd.uid`, `.tscn`. La textura `Images/projectile.png` no cambia (R1) |
 | `huella` | `footprint` | `.gd`, `.gd.uid` |
 | `menu_niveles` | `level_select_menu` | `.gd`, `.gd.uid`, `.tscn` |
 | `nivel_principal` | `level` | `.gd`, `.gd.uid`. Script compartido por los tres niveles |
@@ -277,7 +277,7 @@ Cambia el nombre del nodo en el `.tscn`, toda ruta `$...` o `get_node(...)` que 
 | `BotonProtego` | `ProtegoCardButton` | `level_3.tscn` |
 | `LabelEstado` | `StatusLabel` | Niveles |
 | `PanelFinNivel` | `LevelEndPanel` | Niveles |
-| `FondoOscuro` | `DarkOverlay` | Niveles |
+| `BackgroundOscuro` | `DarkOverlay` | Niveles |
 | `CajaModal` | `ModalBox` | Niveles |
 | `LabelTitulo` | `TitleLabel` | Niveles |
 | `LabelMensaje` | `MessageLabel` | Niveles |
@@ -286,7 +286,7 @@ Cambia el nombre del nodo en el `.tscn`, toda ruta `$...` o `get_node(...)` que 
 | `BotonSiguienteNivel` | `NextLevelButton` | Niveles |
 | `BotonReintentar` | `RetryButton` | Niveles |
 | `BotonVolverMapa` | `BackToMapButton` | Niveles |
-| `FondoPergamino` | `ParchmentBackground` | Menú |
+| `BackgroundPergamino` | `ParchmentBackground` | Menú |
 | `CapaHuellasAmbientales` | `AmbientFootprintsLayer` | Menú |
 | `CaminoNiveles` | `LevelPath` | Menú |
 | `CapaHuellasCamino` | `PathFootprintsLayer` | Menú |

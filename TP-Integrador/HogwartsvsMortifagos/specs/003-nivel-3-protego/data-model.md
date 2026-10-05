@@ -1,6 +1,6 @@
 # Data Model & State: 003-nivel-3-protego
 
-## Entidades de Escena (Godot Nodes)
+## Entities de Escena (Godot Nodes)
 
 ### Draco (`draco.tscn` / `draco.gd`)
 - **Tipo Base**: `Area2D`

@@ -1,43 +1,51 @@
 [gd_scene format=3 uid="uid://deqnbfjd6va"]
 
-[ext_resource type="Script" path="res://draco.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://ju3blv3dlx2n" path="res://Imagenes/Personajes_Draco.png" id="2_texture"]
-[ext_resource type="Texture2D" uid="uid://b7op036lglxx4" path="res://Imagenes/Personajes_Draco Lastimado.png" id="3_hurt_texture"]
+[ext_resource type="Script" uid="uid://c0jatcdwea4gr" path="res://draco.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://ju3blv3dlx2n" path="res://Images/draco.png" id="2_texture"]
+[ext_resource type="Texture2D" uid="uid://b7op036lglxx4" path="res://Images/draco_hurt.png" id="3_hurt_texture"]
+[ext_resource type="Texture2D" path="res://Images/draco_attacking.png" id="4_attacking_texture"]
+[ext_resource type="Texture2D" path="res://Images/draco_attacking_hurt.png" id="5_hurt_attacking_texture"]
 [ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(48, 80)
+size = Vector2(48, 160)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
-size = Vector2(60, 80)
+size = Vector2(60, 160)
 
-[node name="Draco" type="Area2D" groups=["enemies"]]
+[node name="Draco" type="Area2D" unique_id=548523678 groups=["enemies"]]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_script")
 max_health = 400.0
+walk_texture = ExtResource("2_texture")
 hurt_texture = ExtResource("3_hurt_texture")
+attacking_texture = ExtResource("4_attacking_texture")
+hurt_attacking_texture = ExtResource("5_hurt_attacking_texture")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=847834079]
+position = Vector2(0, -15.999999)
+scale = Vector2(1.4, 1.4)
 texture = ExtResource("2_texture")
 hframes = 8
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=438672747]
+position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="DetectionArea" type="Area2D" parent="."]
+[node name="DetectionArea" type="Area2D" parent="." unique_id=1793446156]
 position = Vector2(-20, 0)
 collision_layer = 0
-collision_mask = 1
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1243357783]
+position = Vector2(-4, -8)
 shape = SubResource("RectangleShape2D_detection")
 
-[node name="AnimationTimer" type="Timer" parent="."]
+[node name="AnimationTimer" type="Timer" parent="." unique_id=970684436]
 wait_time = 0.25
 autostart = true
 
-[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
+[node name="DamageFlash" parent="." unique_id=318354174 node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]
 target = NodePath("../Sprite2D")
 duration = 0.15
 fade_out = true

@@ -33,7 +33,7 @@ const SCENE_TEXT_PREFIX: String = "text = "
 const SINGLE_ID_PATTERN: String = "^`(\\w+)`$"
 const FUNC_PATTERN: String = "^(?:static\\s+)?func\\s+(\\w+)"
 const TEXT_CONST_PATTERN: String = "^\\s*const\\s+\\w+_TEXT\\b"
-const ASSET_PATH_PATTERN: String = "res://Imagenes/[^\"]*"
+const ASSET_PATH_PATTERN: String = "res://Images/[^\"]*"
 const IDENTIFIER_PATTERN_FORMAT: String = "\\b(%s)\\b"
 const ALTERNATION_SEPARATOR: String = "|"
 

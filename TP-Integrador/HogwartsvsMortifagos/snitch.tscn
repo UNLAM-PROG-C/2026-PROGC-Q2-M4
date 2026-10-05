@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cpc5lnjbkueb1"]
 
 [ext_resource type="Script" uid="uid://ba15euv2u7aem" path="res://snitch.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Imagenes/Personajes_Snitch.png" id="2_texture"]
+[ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Images/snitch.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iqije"]
 size = Vector2(128, 34)

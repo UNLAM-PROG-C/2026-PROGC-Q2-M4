@@ -3,10 +3,10 @@
 [ext_resource type="Script" uid="uid://cf8kvc6i25h1g" path="res://level_select_menu.gd" id="1_menu"]
 [ext_resource type="Shader" uid="uid://yhsfd3dl7nwn" path="res://parchment.gdshader" id="2_shader"]
 [ext_resource type="PackedScene" uid="uid://cro1qg23bp5oe" path="res://level_1.tscn" id="3_level_1"]
-[ext_resource type="Texture2D" uid="uid://5sbjudpqy5l2" path="res://Imagenes/FondoMenuPrincipal.jpeg" id="4_map_background"]
-[ext_resource type="PackedScene" path="res://level_2.tscn" id="5_level_2"]
-[ext_resource type="PackedScene" path="res://level_3.tscn" id="6_level_3"]
-[ext_resource type="Theme" path="res://level_button_theme.tres" id="7_button_theme"]
+[ext_resource type="Texture2D" uid="uid://5sbjudpqy5l2" path="res://Images/main_menu_background.jpeg" id="4_map_background"]
+[ext_resource type="PackedScene" uid="uid://c8yjskdqci0c" path="res://level_2.tscn" id="5_level_2"]
+[ext_resource type="PackedScene" uid="uid://cgnrtwx0y8g6e" path="res://level_3.tscn" id="6_level_3"]
+[ext_resource type="Theme" uid="uid://d3vmh1juddnit" path="res://level_button_theme.tres" id="7_button_theme"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_parchment"]
 shader = ExtResource("2_shader")
@@ -27,7 +27,7 @@ shader_parameter/grain_intensity = 0.035
 
 [sub_resource type="Curve2D" id="Curve2D_path"]
 _data = {
-"points": PackedVector2Array(-80, 20, 80, -20, 200, 880, -90, 10, 90, -10, 520, 840, -80, -20, 80, 20, 860, 880, -80, 20, 80, -20, 1220, 830, -50, 80, 50, -80, 1560, 700, 60, 60, -60, -60, 1500, 480, 80, 10, -80, -10, 1160, 440, 80, -15, -80, 15, 800, 460, 60, 70, -60, -70, 440, 380, -90, 80, 0, 0, 960, 180)
+"points": PackedVector2Array(-80, 20, 80, -20, 200, 880, -105.35353, -112.828255, 105.35353, 112.828255, 520, 840, -80, -20, 80, 20, 860, 880, -80, 20, 80, -20, 1220, 830, -50, 80, 50, -80, 1560, 700, 60, 60, -60, -60, 1500, 480, 80, 10, -80, -10, 1160, 440, 80, -15, -80, 15, 800, 460, 60, 70, -60, -70, 440, 380, -90, 80, 90, -80, 960, 180)
 }
 point_count = 10
 
@@ -172,5 +172,13 @@ offset_right = 1040.0
 offset_bottom = 212.0
 text = "Nivel 10"
 
+[node name="DebugModeCheckButton" type="CheckButton" parent="." unique_id=1372928397]
+offset_left = 1530.0
+offset_top = 980.0
+offset_right = 1840.0
+offset_bottom = 1035.0
+theme_override_font_sizes/font_size = 20
+text = "Modo debug (10000 Snitches)"
+
 [node name="AmbientFootprintsTimer" type="Timer" parent="." unique_id=1084068347]
-wait_time = 1.0879999999999999
+wait_time = 1.088

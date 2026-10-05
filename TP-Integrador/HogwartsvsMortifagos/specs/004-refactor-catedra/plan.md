@@ -103,9 +103,9 @@ HogwartsvsMortifagos/
 ├── level_button_theme.tres       # NUEVO: estilo pergamino de los botones
 ├── footprint.gd                  # ← huella
 ├── parchment.gdshader            # ← pergamino
-└── Imagenes/                     # Sin cambios (fuera de alcance)
+└── Images/                     # Sin cambios (fuera de alcance)
 
-Borrados: Mago.*, Mortifago.*, tile_map_layer.*, Imagenes/Mortifago.png(.import), Imagenes/Pasto.png1391487371.tmp
+Borrados: Mago.*, Mortifago.*, tile_map_layer.*, Images/Mortifago.png(.import), Images/grass.png1391487371.tmp
 ```
 
 **Structure Decision**: Se mantiene la estructura plana en la raíz, como en 001–003. Mover a carpetas (`entities/`, `ui/`) cambiaría todas las rutas `res://` una segunda vez sin aportar a ninguna regla; queda para otra feature si el equipo lo quiere. Solo `tools/` se separa, porque no es parte del juego.

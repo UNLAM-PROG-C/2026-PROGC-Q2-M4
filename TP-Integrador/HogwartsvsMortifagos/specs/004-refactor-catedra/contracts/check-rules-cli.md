@@ -24,7 +24,7 @@ En Windows, `godot` es el ejecutable del editor (por ejemplo `Godot_v4.x-stable_
 2. **Identificador viejo**: una aparición de un identificador del mapa como palabra completa (`\b<id>\b`, sensible a mayúsculas). Se ignoran:
    - líneas de `.tscn` que empiezan con `text = `;
    - líneas de `.gd` que declaran una constante con sufijo `_TEXT`;
-   - rutas bajo `res://Imagenes/`.
+   - rutas bajo `res://Images/`.
 3. **Identificador a eliminar**: igual que la regla 2, con las mismas exclusiones, pero para las filas cuyo nombre nuevo es `—`.
 
 La tabulación no se chequea (indentación fuera de alcance, ver la clarificación del 2026-10-01).

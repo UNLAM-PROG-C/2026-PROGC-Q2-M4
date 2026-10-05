@@ -33,7 +33,7 @@ Theme    → level_button_theme.tres
 RefCounted (solo static) → Groups (groups.gd), Lane (lane.gd)
 ```
 
-## Entidades nuevas
+## Entities nuevas
 
 ### AllyCard (`Resource`)
 
@@ -118,7 +118,7 @@ Registro en `project.godot` (`[autoload] GameManager="*res://game_manager.gd"`),
 - `Groups`: `ALLIES = &"allies"`, `ENEMIES = &"enemies"`, `SPELLS = &"spells"`, `DEMENTORS = &"dementors"`.
 - `Lane`: `LANE_TOLERANCE = 64.0`, `is_same_lane(a_y: float, b_y: float) -> bool`, `enemies_in_lane(tree: SceneTree, lane_y: float) -> Array[Node2D]`.
 
-## Entidades modificadas
+## Entities modificadas
 
 ### Level (`level.gd`)
 
