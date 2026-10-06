@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Images/snitch.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iqije"]
-size = Vector2(128, 34)
+size = Vector2(176, 57)
 
 [node name="Snitch" type="Area2D" unique_id=2137711152]
 collision_layer = 8

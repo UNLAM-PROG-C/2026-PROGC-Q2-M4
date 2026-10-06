@@ -352,8 +352,24 @@ func _place_ally(card: AllyCard, cell: Vector2i) -> void:
 	ally.global_position = tile_map.to_global(tile_map.map_to_local(cell))
 	_init_placed_ally(ally)
 	entity_layer.add_child(ally)
+	_register_placed_ally(ally, cell)
+	_finalize_ally_placement(card)
+
+
+func _register_placed_ally(ally: Ally, cell: Vector2i) -> void:
+	if ally is Broomstick:
+		_handle_broomstick_placed(ally as Broomstick, cell)
+		return
 	_occupied_cells[cell] = ally
 	ally.tree_exiting.connect(_on_ally_removed.bind(cell))
+
+
+func _handle_broomstick_placed(broom: Broomstick, cell: Vector2i) -> void:
+	var first_col_pos: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, cell.y)))
+	broom.global_position.x = minf(0.0, first_col_pos.x - 200.0)
+
+
+func _finalize_ally_placement(card: AllyCard) -> void:
 	_snitches -= card.cost
 	_button_for(card).start_cooldown()
 	_selected_card = null
