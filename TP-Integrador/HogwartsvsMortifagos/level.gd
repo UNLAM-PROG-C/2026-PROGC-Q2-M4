@@ -33,6 +33,8 @@ const SKY_SNITCH_MAX_X: float = 1150.0
 const SKY_SNITCH_Y: float = -20.0
 ## TileMapLayer source id of a cell without a tile.
 const EMPTY_CELL_SOURCE: int = -1
+## Initial delay in seconds before the first enemy spawns in any level.
+const INITIAL_ENEMY_DELAY: float = 30.0
 
 ## Snitches the player starts with.
 @export var starting_snitches: int = 150
@@ -83,6 +85,7 @@ var _pending_request_id: int = 0
 var _defeated_enemy_ids: Dictionary[int, bool] = {}
 var _regular_enemy_ids: Dictionary[int, bool] = {}
 var _is_level_over: bool = false
+var _enemy_spawn_interval: float = 8.0
 
 @onready var tile_map: TileMapLayer = _find_tile_map()
 @onready var entity_layer: Node2D = $Entities
@@ -105,21 +108,38 @@ var _is_level_over: bool = false
 
 
 func _ready() -> void:
-	_snitches = starting_snitches
-	if _is_debug_mode_enabled():
-		_snitches = DEBUG_SNITCHES
+	_init_level_state()
+	_init_hud_and_cards()
+	_init_pool_and_defense()
+	_init_accio_nodes()
+	_init_spawn_timers()
+
+
+func _init_level_state() -> void:
+	_snitches = DEBUG_SNITCHES if _is_debug_mode_enabled() else starting_snitches
 	level_end_panel.visible = false
 	wave_announcement.visible = false
 	_intermediate_wave_size = intermediate_wave_min
 	wave_director.result_ready.connect(_on_wave_result)
+
+
+func _init_hud_and_cards() -> void:
 	for button: AllyCardButton in _card_buttons():
 		button.card_pressed.connect(_on_card_pressed)
 		button.cooldown_finished.connect(_refresh_hud)
 	_refresh_hud()
+
+
+func _init_pool_and_defense() -> void:
 	projectile_pool.stats_changed.connect(_on_pool_stats_changed)
 	_update_pool_debug_label(projectile_pool.shots_fired, projectile_pool.get_pool_size(), projectile_pool.active_projectiles.size())
 	_spawn_dementors()
-	_init_accio_nodes()
+
+
+func _init_spawn_timers() -> void:
+	_enemy_spawn_interval = enemy_spawn_timer.wait_time
+	enemy_spawn_timer.stop()
+	enemy_spawn_timer.start(INITIAL_ENEMY_DELAY)
 
 
 func _init_accio_nodes() -> void:
@@ -330,18 +350,24 @@ func _can_place_at(cell: Vector2i) -> bool:
 func _place_ally(card: AllyCard, cell: Vector2i) -> void:
 	var ally: Ally = card.scene.instantiate() as Ally
 	ally.global_position = tile_map.to_global(tile_map.map_to_local(cell))
-	if ally is Harry:
-		(ally as Harry).projectile_pool = projectile_pool
+	_init_placed_ally(ally)
 	entity_layer.add_child(ally)
 	_occupied_cells[cell] = ally
 	ally.tree_exiting.connect(_on_ally_removed.bind(cell))
-	if ally is SnitchBox:
-		(ally as SnitchBox).snitch_dropped.connect(_on_snitch_dropped)
 	_snitches -= card.cost
 	_button_for(card).start_cooldown()
 	_selected_card = null
 	_refresh_card_selection()
 	_refresh_hud()
+
+
+func _init_placed_ally(ally: Ally) -> void:
+	if ally is Harry:
+		(ally as Harry).projectile_pool = projectile_pool
+	elif "projectile_pool" in ally:
+		ally.set("projectile_pool", projectile_pool)
+	if ally is SnitchBox:
+		(ally as SnitchBox).snitch_dropped.connect(_on_snitch_dropped)
 
 
 func _button_for(card: AllyCard) -> AllyCardButton:
@@ -382,6 +408,9 @@ func _on_snitch_collected(amount: int) -> void:
 func _on_enemy_spawn_timer_timeout() -> void:
 	if _is_level_over or _wave_state != STATE_SPAWNING_NORMAL:
 		return
+	if enemy_spawn_timer.wait_time != _enemy_spawn_interval:
+		enemy_spawn_timer.wait_time = _enemy_spawn_interval
+		enemy_spawn_timer.start()
 	if _spawned_enemies >= total_enemies:
 		enemy_spawn_timer.stop()
 		_try_prepare_final_wave()

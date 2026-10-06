@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" path="res://damage_flash.tscn" id="9_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(94, 160)
+size = Vector2(94, 120)
 
 [node name="Protego" type="Area2D" unique_id=129353760 groups=["allies"]]
 collision_mask = 0
@@ -19,7 +19,7 @@ texture = ExtResource("2_texture")
 hframes = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=77967083]
-position = Vector2(0.67500305, -6.9249954)
+position = Vector2(0.67500305, -12.000002)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="DamageFlash" parent="." unique_id=643729628 node_paths=PackedStringArray("target") instance=ExtResource("9_damage_flash")]

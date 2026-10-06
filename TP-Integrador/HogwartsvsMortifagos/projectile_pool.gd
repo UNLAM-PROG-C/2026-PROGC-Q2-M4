@@ -3,6 +3,7 @@ extends Node2D
 
 const INITIAL_CAPACITY: int = 50
 const GROWTH_BATCH: int = 10
+const DEFAULT_PROJECTILE_DAMAGE: float = 20.0
 
 @export var projectile_scene: PackedScene
 
@@ -36,13 +37,14 @@ func _add_projectiles(amount: int) -> void:
 	_emit_stats()
 
 
-func acquire_projectile(spawn_position: Vector2) -> Projectile:
+func acquire_projectile(spawn_position: Vector2, custom_damage: float = DEFAULT_PROJECTILE_DAMAGE) -> Projectile:
 	if available_projectiles.is_empty():
 		_add_projectiles(GROWTH_BATCH)
 	if available_projectiles.is_empty():
 		return null
 
 	var projectile: Projectile = available_projectiles.pop_back()
+	projectile.damage = custom_damage
 	active_projectiles.append(projectile)
 	shots_fired += 1
 	projectile.activate(spawn_position)
@@ -54,6 +56,7 @@ func _on_projectile_returned(projectile: Projectile) -> void:
 	if not is_instance_valid(projectile) or not active_projectiles.has(projectile):
 		return
 	active_projectiles.erase(projectile)
+	projectile.damage = DEFAULT_PROJECTILE_DAMAGE
 	if not available_projectiles.has(projectile):
 		available_projectiles.append(projectile)
 	_emit_stats()
