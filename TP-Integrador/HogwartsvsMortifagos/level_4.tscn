@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://n1vel3prot3go"]
+[gd_scene format=4 uid="uid://n1vel4acc1o"]
 
 [ext_resource type="Texture2D" uid="uid://cxjx201gciwbk" path="res://Images/grass.png" id="1_44v15"]
 [ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Images/grass_variant.png" id="2_4osvq"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" path="res://projectile_pool.gd" id="18_projectile_pool"]
 [ext_resource type="PackedScene" path="res://projectile.tscn" id="19_projectile"]
 [ext_resource type="Script" path="res://wave_director.gd" id="20_wave_director"]
+[ext_resource type="Script" path="res://accio_button.gd" id="21_accio_button"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -62,7 +63,7 @@ shadow_color = Color(0.235, 0.141, 0.082, 0.25)
 shadow_size = 3
 shadow_offset = Vector2(2, 2)
 
-[node name="Level3" type="Node2D" unique_id=1917860156]
+[node name="Level4" type="Node2D" unique_id=1917860157]
 script = ExtResource("3_script")
 enemy_scenes = Array[PackedScene]([ExtResource("6_slytherin"), ExtResource("11_draco")])
 snitch_scene = ExtResource("7_snitch")
@@ -71,7 +72,7 @@ level_select_scene = "uid://c0vgnide3ben3"
 active_rows = Array[int]([2, 3, 4, 5, 6])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4"), NodePath("Spawners/Marker2D5")])
 dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
-next_level_to_unlock = 4
+next_level_to_unlock = 5
 is_special_level = false
 
 [node name="Grid" type="Node2D" parent="." unique_id=2109126223]
@@ -222,6 +223,24 @@ offset_right = 1080.0
 offset_bottom = 55.0
 theme_override_font_sizes/font_size = 18
 text = "Protego (50)"
+
+[node name="AccioButton" type="Button" parent="HUD" unique_id=1500000000]
+script = ExtResource("21_accio_button")
+offset_left = 1120.0
+offset_top = 10.0
+offset_right = 1260.0
+offset_bottom = 55.0
+theme_override_font_sizes/font_size = 18
+text = "Accio"
+
+[node name="AccioCursor" type="ColorRect" parent="HUD" unique_id=1500000001]
+visible = false
+mouse_filter = 2
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+color = Color(1, 0, 1, 0.8)
 
 [node name="StatusLabel" type="Label" parent="HUD" unique_id=461003767]
 visible = false

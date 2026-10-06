@@ -19,6 +19,7 @@ const DEBUG_SNITCHES: int = 10000
 ## enemies, runs the Snitch economy and shows the win/lose end panel.
 
 const SNITCHES_LABEL_TEXT: String = "Snitches: "
+const ACCIO_HOVER_COLOR: Color = Color(1.0, 0.4, 0.4, 0.8)
 const WIN_TITLE_TEXT: String = "¡VICTORIA!"
 const WIN_MESSAGE_TEXT: String = "¡Has defendido el jardín con éxito!\nNivel %d desbloqueado en el Mapa del Merodeador."
 const LOSE_TITLE_TEXT: String = "¡DERROTA!"
@@ -65,6 +66,10 @@ var _snitches: int = 0
 ## Card chosen in the HUD, or null when nothing is selected.
 var _selected_card: AllyCard = null
 var _occupied_cells: Dictionary[Vector2i, Node2D] = {}
+var _is_removing: bool = false
+var _hovered_ally: Ally = null
+var _accio_button: AccioButton = null
+var _accio_cursor: CanvasItem = null
 var _spawned_enemies: int = 0
 var _defeated_enemies: int = 0
 var _regular_defeated_enemies: int = 0
@@ -114,6 +119,16 @@ func _ready() -> void:
 	projectile_pool.stats_changed.connect(_on_pool_stats_changed)
 	_update_pool_debug_label(projectile_pool.shots_fired, projectile_pool.get_pool_size(), projectile_pool.active_projectiles.size())
 	_spawn_dementors()
+	_init_accio_nodes()
+
+
+func _init_accio_nodes() -> void:
+	_accio_button = hud.get_node_or_null("AccioButton") as AccioButton
+	if _accio_button != null:
+		_accio_button.accio_toggled.connect(_on_accio_toggled)
+	_accio_cursor = hud.get_node_or_null("AccioCursor") as CanvasItem
+	if _accio_cursor != null:
+		_accio_cursor.visible = false
 
 
 func _is_debug_mode_enabled() -> bool:
@@ -124,6 +139,15 @@ func _is_debug_mode_enabled() -> bool:
 func _process(_delta: float) -> void:
 	if not _is_level_over:
 		wave_director.poll_results()
+	_update_accio_process()
+
+
+func _update_accio_process() -> void:
+	if not _is_removing:
+		return
+	if _accio_cursor != null:
+		_accio_cursor.global_position = get_viewport().get_mouse_position()
+	_update_hovered_ally(_cell_under_mouse())
 
 
 func _find_tile_map() -> TileMapLayer:
@@ -188,8 +212,35 @@ func _update_pool_debug_label(shots_fired: int, pool_size: int, active_count: in
 
 ## Toggles the clicked card: clicking the selected card deselects it.
 func _on_card_pressed(button: AllyCardButton) -> void:
+	if _is_removing:
+		_cancel_accio()
 	_selected_card = null if _selected_card == button.card else button.card
 	_refresh_card_selection()
+
+
+func _on_accio_toggled(is_active: bool) -> void:
+	if is_active:
+		_selected_card = null
+		_refresh_card_selection()
+		_set_cursor_mode(true)
+	else:
+		_set_cursor_mode(false)
+
+
+func _set_cursor_mode(is_removing: bool) -> void:
+	_is_removing = is_removing
+	if _accio_button != null and _accio_button.is_active() != is_removing:
+		_accio_button.set_active(is_removing)
+	if _accio_cursor != null:
+		_accio_cursor.visible = is_removing
+	var mode: Input.MouseMode = Input.MOUSE_MODE_HIDDEN if is_removing else Input.MOUSE_MODE_VISIBLE
+	Input.set_mouse_mode(mode)
+	if not is_removing:
+		_clear_hovered_ally()
+
+
+func _cancel_accio() -> void:
+	_set_cursor_mode(false)
 
 
 func _refresh_card_selection() -> void:
@@ -197,13 +248,65 @@ func _refresh_card_selection() -> void:
 		button.set_selected(button.card == _selected_card)
 
 
-## Places the selected ally when the player clicks the grid.
+## Places the selected ally or executes Accio removal.
 func _unhandled_input(event: InputEvent) -> void:
-	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-	if _is_level_over or _selected_card == null or mouse_event == null:
+	if _is_level_over:
 		return
-	if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+	if _is_cancel_event(event):
+		_handle_cancel_input()
+		return
+	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+	if mouse_event != null and mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+		_handle_left_click()
+
+
+func _is_cancel_event(event: InputEvent) -> bool:
+	if event is InputEventKey and event.is_pressed() and (event as InputEventKey).keycode == KEY_ESCAPE:
+		return true
+	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+	return mouse_event != null and mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_RIGHT
+
+
+func _handle_cancel_input() -> void:
+	if _is_removing:
+		_cancel_accio()
+	elif _selected_card != null:
+		_selected_card = null
+		_refresh_card_selection()
+
+
+func _handle_left_click() -> void:
+	if _is_removing:
+		_try_remove_ally(_cell_under_mouse())
+	elif _selected_card != null:
 		_try_place_ally()
+
+
+func _update_hovered_ally(cell: Vector2i) -> void:
+	var ally: Ally = _occupied_cells.get(cell) as Ally
+	if ally == _hovered_ally:
+		return
+	_clear_hovered_ally()
+	if is_instance_valid(ally):
+		_hovered_ally = ally
+		_hovered_ally.modulate = ACCIO_HOVER_COLOR
+
+
+func _clear_hovered_ally() -> void:
+	if is_instance_valid(_hovered_ally):
+		_hovered_ally.modulate = Color.WHITE
+	_hovered_ally = null
+
+
+func _try_remove_ally(cell: Vector2i) -> void:
+	if not _occupied_cells.has(cell):
+		return
+	var ally: Ally = _occupied_cells[cell] as Ally
+	_occupied_cells.erase(cell)
+	_clear_hovered_ally()
+	_set_cursor_mode(false)
+	if is_instance_valid(ally):
+		ally.queue_free()
 
 
 ## Tries to place the selected ally on the cell under the cursor.
@@ -330,7 +433,8 @@ func _update_wave_progress() -> void:
 		return
 	if _wave_state == STATE_SPAWNING_NORMAL:
 		_try_prepare_intermediate_wave()
-		_try_prepare_final_wave()
+		if _wave_state == STATE_SPAWNING_NORMAL:
+			_try_prepare_final_wave()
 
 
 func _try_prepare_intermediate_wave() -> void:
@@ -469,6 +573,8 @@ func _lose() -> void:
 
 
 func _stop_level() -> void:
+	if _is_removing:
+		_set_cursor_mode(false)
 	_is_level_over = true
 	_level_generation += 1
 	enemy_spawn_timer.stop()
@@ -478,6 +584,8 @@ func _stop_level() -> void:
 
 
 func _exit_tree() -> void:
+	if _is_removing:
+		_set_cursor_mode(false)
 	if is_instance_valid(wave_director):
 		wave_director.cancel_and_wait()
 	if is_instance_valid(projectile_pool):

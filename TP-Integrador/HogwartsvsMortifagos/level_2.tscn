@@ -74,24 +74,24 @@ is_special_level = false
 
 [node name="Grid" type="Node2D" parent="." unique_id=2109126223]
 top_level = true
-position = Vector2(12, -149)
-scale = Vector2(1.28, 1.28)
+position = Vector2(24, -128)
+scale = Vector2(1.25, 1.25)
 
 [node name="TileMapLayer" type="TileMapLayer" parent="Grid" unique_id=1951683565]
 visible = false
-tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAA=")
+tile_map_data = PackedByteArray("AAACAAIAAAAAAAAAAAACAAMAAQAAAAAAAAACAAQAAAAAAAAAAAACAAUAAQAAAAAAAAACAAYAAAAAAAAAAAADAAIAAQAAAAAAAAADAAMAAAAAAAAAAAADAAQAAQAAAAAAAAADAAUAAAAAAAAAAAADAAYAAQAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAQAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAQAAAAAAAAAEAAYAAAAAAAAAAAAFAAIAAQAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAQAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAQAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAQAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAQAAAAAAAAAGAAYAAAAAAAAAAAAHAAIAAQAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAQAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAQAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAQAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAQAAAAAAAAAIAAYAAAAAAAAAAAAJAAIAAQAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAQAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAQAAAAAAAAAKAAIAAAAAAAAAAAAKAAQAAAAAAAAAAAAKAAYAAAAAAAAAAAAKAAUAAQAAAAAAAAAKAAMAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_5uq62")
 
 [node name="MagicBarrier" type="Node2D" parent="Grid" unique_id=1038295434]
 visible = false
 top_level = true
-position = Vector2(11, -149)
-scale = Vector2(1.28, 1.28)
+position = Vector2(24, -128)
+scale = Vector2(1.25, 1.25)
 
 [node name="Row2" type="ColorRect" parent="Grid/MagicBarrier" unique_id=2053891754]
 offset_left = 256.0
 offset_top = 256.0
-offset_right = 1280.0
+offset_right = 1408.0
 offset_bottom = 384.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
@@ -99,7 +99,7 @@ color = Color(0.1, 0.1, 0.25, 0.6)
 visible = false
 offset_left = 256.0
 offset_top = 384.0
-offset_right = 1280.0
+offset_right = 1408.0
 offset_bottom = 512.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
@@ -107,14 +107,14 @@ color = Color(0.1, 0.1, 0.25, 0.6)
 visible = false
 offset_left = 256.0
 offset_top = 640.0
-offset_right = 1280.0
+offset_right = 1408.0
 offset_bottom = 768.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
 [node name="Row6" type="ColorRect" parent="Grid/MagicBarrier" unique_id=186289501]
 offset_left = 256.0
 offset_top = 768.0
-offset_right = 1280.0
+offset_right = 1408.0
 offset_bottom = 896.0
 color = Color(0.1, 0.1, 0.25, 0.6)
 
@@ -138,19 +138,19 @@ projectile_scene = ExtResource("19_projectile")
 position = Vector2(216, 0)
 
 [node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1962193308]
-position = Vector2(1760, 260.6)
+position = Vector2(1760, 272)
 
 [node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=1311341990]
-position = Vector2(1760, 424.44)
+position = Vector2(1760, 432)
 
 [node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=1422415545]
-position = Vector2(1760, 588.28)
+position = Vector2(1760, 592)
 
 [node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=1556994656]
-position = Vector2(1760, 752.12)
+position = Vector2(1760, 752)
 
 [node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=902178117]
-position = Vector2(1760, 915.96)
+position = Vector2(1760, 912)
 
 [node name="EnemySpawnTimer" type="Timer" parent="." unique_id=1162641464]
 wait_time = 8.0

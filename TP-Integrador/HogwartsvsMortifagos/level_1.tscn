@@ -77,8 +77,8 @@ final_wave_bonus_max = 0
 
 [node name="Grid" type="Node2D" parent="." unique_id=2109126223]
 top_level = true
-position = Vector2(12, -149)
-scale = Vector2(1.28, 1.28)
+position = Vector2(24, -128)
+scale = Vector2(1.25, 1.25)
 
 [node name="TileMapLayer" type="TileMapLayer" parent="Grid" unique_id=224131285]
 visible = false
@@ -88,8 +88,8 @@ tile_set = SubResource("TileSet_5uq62")
 [node name="MagicBarrier" type="Node2D" parent="Grid" unique_id=1782391045]
 visible = false
 top_level = true
-position = Vector2(11, -149)
-scale = Vector2(1.28, 1.28)
+position = Vector2(24, -128)
+scale = Vector2(1.25, 1.25)
 
 [node name="Row2" type="ColorRect" parent="Grid/MagicBarrier" unique_id=1782391046]
 offset_left = 256.0
@@ -143,19 +143,19 @@ projectile_scene = ExtResource("17_projectile")
 position = Vector2(216, 0)
 
 [node name="Marker2D" type="Marker2D" parent="Spawners" unique_id=1252911193]
-position = Vector2(1760, 260.6)
+position = Vector2(1760, 272)
 
 [node name="Marker2D2" type="Marker2D" parent="Spawners" unique_id=623987642]
-position = Vector2(1760, 424.44)
+position = Vector2(1760, 432)
 
 [node name="Marker2D3" type="Marker2D" parent="Spawners" unique_id=636651906]
-position = Vector2(1760, 588.28)
+position = Vector2(1760, 592)
 
 [node name="Marker2D4" type="Marker2D" parent="Spawners" unique_id=511596980]
-position = Vector2(1760, 752.12)
+position = Vector2(1760, 752)
 
 [node name="Marker2D5" type="Marker2D" parent="Spawners" unique_id=1338716025]
-position = Vector2(1760, 915.96)
+position = Vector2(1760, 912)
 
 [node name="EnemySpawnTimer" type="Timer" parent="." unique_id=1572878674]
 wait_time = 15.0
