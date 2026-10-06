@@ -18,3 +18,13 @@ static func enemies_in_lane(tree: SceneTree, lane_y: float) -> Array[Node2D]:
 		if enemy is Node2D and is_instance_valid(enemy) and is_same_lane((enemy as Node2D).global_position.y, lane_y):
 			result.append(enemy as Node2D)
 	return result
+
+
+## Valid allies whose lane matches lane_y and are positioned ahead (to the left) of from_x.
+static func has_allies_in_lane_ahead(tree: SceneTree, lane_y: float, from_x: float) -> bool:
+	for ally: Node in tree.get_nodes_in_group(Groups.ALLIES):
+		if ally is Node2D and is_instance_valid(ally):
+			var pos: Vector2 = (ally as Node2D).global_position
+			if is_same_lane(pos.y, lane_y) and pos.x < from_x:
+				return true
+	return false

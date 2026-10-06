@@ -2,6 +2,7 @@ class_name Projectile
 extends Area2D
 
 const IMPACT_EXPLOSION_SCENE: PackedScene = preload("res://impact_explosion.tscn")
+const SLOW_TINT_COLOR: Color = Color(0.3, 0.6, 1.0)
 
 ## Travel speed in pixels per second.
 @export var speed: float = 400.0
@@ -9,6 +10,10 @@ const IMPACT_EXPLOSION_SCENE: PackedScene = preload("res://impact_explosion.tscn
 @export var damage: float = 20.0
 ## Duration in seconds of each animation frame.
 @export var animation_frame_duration: float = 0.08
+## Whether this projectile slows enemies on impact.
+@export var slows: bool = false
+@export var slow_factor: float = 0.70
+@export var slow_duration: float = 5.0
 
 var _has_hit: bool = false
 var _animation_elapsed: float = 0.0
@@ -29,12 +34,14 @@ func _process(delta: float) -> void:
 		sprite.frame = (sprite.frame + 1) % sprite.hframes
 
 
-func activate(spawn_position: Vector2) -> void:
+func activate(spawn_position: Vector2, slows_target: bool = false) -> void:
 	global_position = spawn_position
+	slows = slows_target
 	_has_hit = false
 	_animation_elapsed = 0.0
 	_is_active = true
 	sprite.frame = 0
+	sprite.modulate = SLOW_TINT_COLOR if slows else Color.WHITE
 	visible = true
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
@@ -44,8 +51,10 @@ func activate(spawn_position: Vector2) -> void:
 func deactivate() -> void:
 	_is_active = false
 	_has_hit = false
+	slows = false
 	_animation_elapsed = 0.0
 	visible = false
+	sprite.modulate = Color.WHITE
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
 	set_process(false)
@@ -68,6 +77,8 @@ func _on_area_entered(area: Area2D) -> void:
 	_has_hit = true
 	_spawn_impact_explosion()
 	enemy.take_damage(damage)
+	if slows and enemy.has_method("apply_slow"):
+		enemy.apply_slow(slow_factor, slow_duration)
 	_return_to_pool()
 
 

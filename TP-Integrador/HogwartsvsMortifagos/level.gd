@@ -380,6 +380,8 @@ func _finalize_ally_placement(card: AllyCard) -> void:
 func _init_placed_ally(ally: Ally) -> void:
 	if ally is Harry:
 		(ally as Harry).projectile_pool = projectile_pool
+	elif ally is Hermione:
+		(ally as Hermione).projectile_pool = projectile_pool
 	elif "projectile_pool" in ally:
 		ally.set("projectile_pool", projectile_pool)
 	if ally is SnitchBox:

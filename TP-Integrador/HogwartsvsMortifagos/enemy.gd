@@ -16,6 +16,8 @@ const TOTAL_FRAMES: int = 8
 const HURT_HEALTH_RATIO: float = 0.5
 ## Enemies past this x coordinate have invaded the garden.
 const GARDEN_EDGE_X: float = 0.0
+const SLOW_TINT_COLOR: Color = Color(0.5, 0.75, 1.0)
+const MIN_SLOW_FACTOR: float = 0.70
 
 ## Maximum health.
 @export var max_health: float = 200.0
@@ -37,6 +39,9 @@ var _target_ally: Ally = null
 ## Whether the hurt texture was already applied.
 var _is_hurt: bool = false
 var _is_attacking: bool = false
+var _slow_factor: float = 1.0
+var _base_modulate: Color = Color.WHITE
+var _slow_timer: Timer
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var damage_flash: DamageFlash = $DamageFlash
@@ -48,23 +53,52 @@ func _ready() -> void:
 		sprite.texture = walk_texture
 	# Random starting frame so not every enemy walks in sync.
 	sprite.frame = randi() % TOTAL_FRAMES
+	_init_slow_timer()
+
+
+func _init_slow_timer() -> void:
+	_slow_timer = Timer.new()
+	_slow_timer.one_shot = true
+	_slow_timer.timeout.connect(_on_slow_timer_timeout)
+	add_child(_slow_timer)
 
 
 func _process(delta: float) -> void:
+	_update_target_state()
+	_process_actions(delta)
+	if global_position.x < GARDEN_EDGE_X:
+		garden_invaded.emit()
+		queue_free()
+
+
+func _update_target_state() -> void:
 	var has_attack_target: bool = is_instance_valid(_target_ally)
 	if has_attack_target != _is_attacking:
 		_is_attacking = has_attack_target
 		_update_animation_texture()
+
+
+func _process_actions(delta: float) -> void:
 	if is_instance_valid(_target_ally):
-		# State: attacking the ally
-		_target_ally.take_damage(damage_per_second * delta)
+		_target_ally.take_damage(damage_per_second * _slow_factor * delta)
 	else:
 		_target_ally = null
-		# State: walking towards the garden
-		position.x -= speed * delta
-	if global_position.x < GARDEN_EDGE_X:
-		garden_invaded.emit()
-		queue_free()
+		position.x -= speed * _slow_factor * delta
+
+
+func apply_slow(factor: float, duration: float) -> void:
+	_slow_factor = minf(_slow_factor, maxf(factor, MIN_SLOW_FACTOR))
+	_base_modulate = SLOW_TINT_COLOR
+	sprite.modulate = _base_modulate
+	sprite.set_meta(&"base_modulate", _base_modulate)
+	_slow_timer.start(duration)
+
+
+func _on_slow_timer_timeout() -> void:
+	_slow_factor = 1.0
+	_base_modulate = Color.WHITE
+	sprite.modulate = _base_modulate
+	sprite.set_meta(&"base_modulate", _base_modulate)
 
 
 ## Called by projectiles, the Remembrall and Dementors.
@@ -94,8 +128,11 @@ func _update_animation_texture() -> void:
 		frame_count = 4
 	elif _is_hurt:
 		next_texture = hurt_texture
-	if next_texture == null:
-		return
+	if next_texture != null:
+		_apply_next_texture(next_texture, frame_count)
+
+
+func _apply_next_texture(next_texture: Texture2D, frame_count: int) -> void:
 	var previous_frame_size: Vector2 = _frame_size(sprite.texture, sprite.hframes)
 	var previous_left_edge: float = sprite.position.x - previous_frame_size.x * absf(sprite.scale.x) * 0.5
 	sprite.texture = next_texture

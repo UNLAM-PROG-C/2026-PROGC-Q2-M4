@@ -37,7 +37,7 @@ func _add_projectiles(amount: int) -> void:
 	_emit_stats()
 
 
-func acquire_projectile(spawn_position: Vector2, custom_damage: float = DEFAULT_PROJECTILE_DAMAGE) -> Projectile:
+func acquire_projectile(spawn_position: Vector2, custom_damage: float = DEFAULT_PROJECTILE_DAMAGE, slows: bool = false) -> Projectile:
 	if available_projectiles.is_empty():
 		_add_projectiles(GROWTH_BATCH)
 	if available_projectiles.is_empty():
@@ -47,7 +47,7 @@ func acquire_projectile(spawn_position: Vector2, custom_damage: float = DEFAULT_
 	projectile.damage = custom_damage
 	active_projectiles.append(projectile)
 	shots_fired += 1
-	projectile.activate(spawn_position)
+	projectile.activate(spawn_position, slows)
 	_emit_stats()
 	return projectile
 
