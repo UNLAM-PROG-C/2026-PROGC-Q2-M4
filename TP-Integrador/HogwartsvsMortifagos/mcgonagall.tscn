@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://mcgonagall.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://Images/mcgonagall.png" id="2_texture"]
+[ext_resource type="PackedScene" path="res://projectile.tscn" id="3_projectile"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="4_damage_flash"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(148, 112)
+
+[node name="McGonagall" type="Area2D" groups=["allies"]]
+collision_mask = 0
+script = ExtResource("1_script")
+projectile_scene = ExtResource("3_projectile")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(19.5, -10.5)
+scale = Vector2(1.4384617, 1.4384617)
+texture = ExtResource("2_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-2, 0)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="ShootPoint" type="Marker2D" parent="."]
+position = Vector2(104, -40)
+
+[node name="ShootTimer" type="Timer" parent="."]
+
+[node name="BurstTimer" type="Timer" parent="."]
+
+[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("4_damage_flash")]
+target = NodePath("../Sprite2D")
+cooldown = 0.5
+
+[connection signal="timeout" from="ShootTimer" to="." method="_on_shoot_timer_timeout"]
+[connection signal="timeout" from="BurstTimer" to="." method="_on_burst_timer_timeout"]

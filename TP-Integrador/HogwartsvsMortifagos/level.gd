@@ -12,7 +12,8 @@ const STATE_LEVEL_COMPLETE: int = 5
 const STANDARD_WAVE_RATIO: float = 0.5
 const SPECIAL_FIRST_WAVE_RATIO: float = 0.33
 const SPECIAL_SECOND_WAVE_RATIO: float = 0.66
-const WAVE_ANNOUNCEMENT_TEXT: String = "¡SE AVECINA UNA OLEADA DE ENEMIGOS!"
+const WAVE_ANNOUNCEMENT_TEXT: String = "¡SE AVECINA UNA GRAN OLEADA DE MORTÍFAGOS!"
+const FINAL_WAVE_ANNOUNCEMENT_TEXT: String = "¡OLEADA FINAL!"
 const WAVE_ANNOUNCEMENT_DURATION: float = 2.0
 const DEBUG_SNITCHES: int = 10000
 ## A playable level: places allies from the HUD cards on the grid, spawns
@@ -382,6 +383,8 @@ func _init_placed_ally(ally: Ally) -> void:
 		(ally as Harry).projectile_pool = projectile_pool
 	elif ally is Hermione:
 		(ally as Hermione).projectile_pool = projectile_pool
+	elif ally is McGonagall:
+		(ally as McGonagall).projectile_pool = projectile_pool
 	elif "projectile_pool" in ally:
 		ally.set("projectile_pool", projectile_pool)
 	if ally is SnitchBox:
@@ -569,7 +572,10 @@ func _apply_wave_plan(plan: RefCounted) -> void:
 
 
 func _show_wave_announcement() -> void:
-	wave_announcement_label.text = WAVE_ANNOUNCEMENT_TEXT
+	if _final_wave_active:
+		wave_announcement_label.text = FINAL_WAVE_ANNOUNCEMENT_TEXT
+	else:
+		wave_announcement_label.text = WAVE_ANNOUNCEMENT_TEXT
 	wave_announcement.visible = true
 	await get_tree().create_timer(WAVE_ANNOUNCEMENT_DURATION).timeout
 	if is_instance_valid(wave_announcement):

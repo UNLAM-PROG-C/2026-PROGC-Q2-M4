@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://dumbledore_projectile.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://tlcaashchsh0" path="res://Images/dumbledore_shot.png" id="2_texture"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 24.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_splash"]
+size = Vector2(480, 480)
+
+[node name="DumbledoreProjectile" type="Area2D" groups=["spells"]]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("2_texture")
+hframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(10, 0)
+shape = SubResource("CircleShape2D_body")
+
+[node name="SplashArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitoring = true
+monitorable = false
+
+[node name="SplashCollisionShape2D" type="CollisionShape2D" parent="SplashArea"]
+shape = SubResource("RectangleShape2D_splash")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
