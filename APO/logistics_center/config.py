@@ -22,6 +22,10 @@ OPERATOR_PROCESSING_SECONDS: Final[float] = 0.2
 
 DASHBOARD_REFRESH_SECONDS: Final[float] = 0.5
 
+# Chaos monkey: (min, max) seconds of normal operation / maintenance window.
+SUPERVISOR_UPTIME_RANGE_SECONDS: Final[tuple[float, float]] = (2.0, 5.0)
+SUPERVISOR_PAUSE_RANGE_SECONDS: Final[tuple[float, float]] = (0.5, 2.0)
+
 PRODUCT_SKUS: Final[tuple[str, ...]] = ("SKU-A", "SKU-B", "SKU-C", "SKU-D")
 
 LOG_FORMAT: Final[str] = "%(asctime)s [%(threadName)-12s] %(levelname)s %(message)s"
