@@ -1,32 +1,26 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://dementor.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dh8ovl7c03dh3" path="res://dementor.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://u1d7w1x8fds" path="res://Images/dementor.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dementor"]
 size = Vector2(80, 110)
 
-[node name="Dementor" type="Area2D" groups=["dementores"]]
+[node name="Dementor" type="Area2D" groups=["dementors"]]
 collision_layer = 1
 collision_mask = 2
 monitoring = true
 monitorable = true
 script = ExtResource("1_script")
 
-[node name="Capa" type="Polygon2D" parent="."]
-color = Color(0.12, 0.13, 0.18, 0.95)
-polygon = PackedVector2Array(-25, -45, 0, -55, 25, -45, 30, 0, 20, 50, 5, 40, -10, 52, -25, 42, -30, 0)
-
-[node name="Aura" type="Polygon2D" parent="."]
-color = Color(0.25, 0.45, 0.7, 0.5)
-polygon = PackedVector2Array(-15, -35, 0, -42, 15, -35, 18, -10, 0, 0, -18, -10)
-
-[node name="Ojos" type="Polygon2D" parent="."]
-color = Color(0.6, 0.85, 1, 0.9)
-polygon = PackedVector2Array(-8, -26, -3, -26, -5, -22, -9, -22)
-
-[node name="Ojos2" type="Polygon2D" parent="."]
-color = Color(0.6, 0.85, 1, 0.9)
-polygon = PackedVector2Array(3, -26, 8, -26, 9, -22, 5, -22)
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_texture")
+hframes = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_dementor")
+
+[node name="AnimationTimer" type="Timer" parent="."]
+wait_time = 0.15
+
+[connection signal="timeout" from="AnimationTimer" to="." method="_on_animation_timer_timeout"]

@@ -1,0 +1,339 @@
+[gd_scene format=3 uid="uid://bk6idun0ls2af"]
+
+[ext_resource type="Texture2D" uid="uid://bc6dsoyw84hu0" path="res://Images/troll_body.png" id="1_rfb57"]
+[ext_resource type="Texture2D" uid="uid://kp6picl713o5" path="res://Images/troll_right_arm.png" id="2_2kaq2"]
+[ext_resource type="Texture2D" uid="uid://bqormvonlaagt" path="res://Images/troll_left_arm.png" id="3_a584y"]
+[ext_resource type="Texture2D" uid="uid://utrcnowba8dj" path="res://Images/troll_leg.png" id="4_5bwth"]
+[ext_resource type="Texture2D" uid="uid://djx2xn76babvy" path="res://Images/troll_foot.png" id="5_8b1m1"]
+[ext_resource type="Texture2D" uid="uid://d1guipsbowiym" path="res://Images/troll_loincloth.png" id="6_8tvpv"]
+[ext_resource type="Script" path="res://troll.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="7_damage_flash"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(100, 180)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
+size = Vector2(100, 140)
+
+[sub_resource type="Animation" id="Animation_015qh"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Troll_Body/Right_Arm:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Troll_Body/Left_Arm:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Troll_Body/Back_Leg:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Troll_Body/Front_Leg:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Troll_Body:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Troll_Body:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-5, -34)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("Troll_Body/Front_Leg/Front_Foot:rotation")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.3196315]
+}
+
+[sub_resource type="Animation" id="Animation_c77af"]
+resource_name = "Walk"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Troll_Body/Right_Arm:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.6),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.13555092]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Troll_Body/Left_Arm:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.6),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, -0.42561683]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Troll_Body/Back_Leg:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.6),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, -0.1453134]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Troll_Body/Front_Leg:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.6),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.34213036]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Troll_Body:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Troll_Body:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.6),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-5, -32), Vector2(-5, -34)]
+}
+
+[sub_resource type="Animation" id="Animation_rfb57"]
+resource_name = "attack"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Troll_Body/Right_Arm:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1.2, 1.706981),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.0, 1.5569745, -0.74855804]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Troll_Body/Left_Arm:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 1.1778169, 1.7155159),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.0, -0.31173098, -1.0140004]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Troll_Body:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Troll_Body/Back_Leg:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 1.169282, 1.2, 1.7155159),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.2637068, -0.27063462, 0.07853982]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Troll_Body/Front_Leg:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Troll_Body/Front_Leg/Front_Foot:rotation")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 1.169282, 1.2, 1.706981),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [0.0, 0.31144944, 0.3196315, -0.03942222]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_f0o8l"]
+_data = {
+&"RESET": SubResource("Animation_015qh"),
+&"Walk": SubResource("Animation_c77af"),
+&"attack": SubResource("Animation_rfb57")
+}
+
+[node name="Troll" type="Area2D" unique_id=1843223953 groups=["enemies"]]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+max_health = 3600.0
+speed = 20.0
+
+[node name="Troll_Body" type="Sprite2D" parent="." unique_id=683487249]
+position = Vector2(-5, -34)
+texture = ExtResource("1_rfb57")
+
+[node name="Right_Arm" type="Sprite2D" parent="Troll_Body" unique_id=194396686]
+z_index = -1
+position = Vector2(6, -6)
+texture = ExtResource("2_2kaq2")
+offset = Vector2(-50, -2)
+
+[node name="Left_Arm" type="Sprite2D" parent="Troll_Body" unique_id=1354063833]
+z_index = 2
+position = Vector2(9, -10)
+texture = ExtResource("3_a584y")
+offset = Vector2(-29, 33)
+
+[node name="Back_Leg" type="Sprite2D" parent="Troll_Body" unique_id=697703560]
+z_index = -1
+position = Vector2(-12, 52)
+texture = ExtResource("4_5bwth")
+offset = Vector2(5, 15)
+
+[node name="Back_Foot" type="Sprite2D" parent="Troll_Body/Back_Leg" unique_id=372202776]
+position = Vector2(-3, 41)
+texture = ExtResource("5_8b1m1")
+offset = Vector2(-7, 11)
+
+[node name="Front_Leg" type="Sprite2D" parent="Troll_Body" unique_id=1032221779]
+z_index = 1
+position = Vector2(11, 50)
+texture = ExtResource("4_5bwth")
+offset = Vector2(0, 16)
+
+[node name="Front_Foot" type="Sprite2D" parent="Troll_Body/Front_Leg" unique_id=1879260844]
+position = Vector2(-8, 41)
+rotation = 0.3196315
+texture = ExtResource("5_8b1m1")
+offset = Vector2(-7, 15)
+
+[node name="Loincloth" type="Sprite2D" parent="Troll_Body" unique_id=471932437]
+z_index = 1
+position = Vector2(-3, 42)
+rotation = -0.0059208237
+scale = Vector2(1.0967742, 1)
+texture = ExtResource("6_8tvpv")
+offset = Vector2(1.8235292, 19)
+
+[node name="Animation" type="AnimationPlayer" parent="." unique_id=412744626]
+libraries/ = SubResource("AnimationLibrary_f0o8l")
+autoplay = &"Walk"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+position = Vector2(-70, 0)
+shape = SubResource("RectangleShape2D_detection")
+
+[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("7_damage_flash")]
+target = NodePath("../Troll_Body")
+duration = 0.15
+fade_out = true
+
+[connection signal="area_entered" from="DetectionArea" to="." method="_on_detection_area_area_entered"]

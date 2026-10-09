@@ -1,0 +1,117 @@
+DOCUMENTACIÓN DEL PROYECTO
+HOGWARTS VS. MORTÍFAGOS
+
+1. PROPÓSITO DEL PROYECTO
+
+El proyecto es un videojuego 2D desarrollado en Godot 4 con una temática de
+Harry Potter. El jugador debe defender el jardín de Hogwarts colocando aliados
+en filas y utilizando sus ataques contra los enemigos.
+
+La arquitectura utiliza escenas y nodos de Godot. Los aliados, enemigos,
+proyectiles y efectos visuales son entidades reutilizables, con sus propias
+escenas y scripts.
+
+2. POOL REUTILIZABLE DE PROYECTILES
+
+Los proyectiles de Harry se administran mediante un pool de objetos
+reutilizables. El pool se crea junto con cada nivel bajo el nodo:
+
+    Level/Entities/ProjectilePool
+
+Al iniciar el nivel se precalientan 50 instancias de la escena
+projectile.tscn. Cuando Harry dispara, el sistema toma un proyectil inactivo,
+lo ubica en ShootPoint, reinicia su estado y lo activa.
+
+Cuando el proyectil impacta contra un enemigo o sale de la pantalla, no se
+destruye durante el uso normal. Se desactiva, deja de procesar movimiento y
+colisiones, se oculta y vuelve a la colección de proyectiles disponibles.
+
+Si todos los proyectiles están activos, el pool aumenta su capacidad en lotes
+de 10. Antes de ampliar la capacidad siempre se busca un proyectil inactivo
+para reutilizarlo.
+
+Al reactivar un proyectil se reinician:
+
+- La posición global.
+- El estado de impacto.
+- El tiempo de animación.
+- El primer cuadro de la animación.
+- La visibilidad.
+- El monitoreo de colisiones.
+- El procesamiento de movimiento.
+
+La devolución al pool es idempotente. Esto evita que un mismo proyectil vuelva
+dos veces al pool si el impacto y la salida de pantalla ocurren en el mismo
+cuadro.
+
+3. DIFERENCIA ENTRE OBJECT POOL Y WorkerThreadPool
+
+El pool de proyectiles es un Object Pool: una colección de instancias creadas
+en el hilo principal que se reutilizan durante el juego. Su objetivo es reducir
+la creación y destrucción repetida de nodos y disminuir la basura de memoria
+durante las oleadas.
+
+WorkerThreadPool es una herramienta diferente de Godot para ejecutar cálculos
+en hilos de trabajo. No se utiliza para crear, mover, activar, desactivar ni
+modificar proyectiles, porque esas operaciones afectan al Scene Tree y deben
+realizarse en el hilo principal.
+
+Si en el futuro se paraleliza un cálculo auxiliar, el hilo secundario solo
+deberá producir datos simples. La aplicación de esos resultados sobre nodos,
+colisiones, sprites o señales deberá realizarse nuevamente desde el hilo
+principal.
+
+4. SEGURIDAD Y COMUNICACIÓN ENTRE NODOS
+
+El proyectil conserva el grupo spells, la capa de colisión 4 y la máscara de
+colisión correspondiente a los enemigos. La detección continúa realizándose
+con Area2D y sus señales area_entered y screen_exited.
+
+Harry solicita el proyectil al ProjectilePool. El proyectil comunica su
+finalización mediante una señal tipada y el pool actualiza las colecciones de
+proyectiles activos y disponibles.
+
+Al reiniciar o abandonar un nivel, el nivel desactiva los proyectiles activos
+antes de liberar la escena.
+## Sistema de oleadas y comunicación entre hilos
+
+El sistema de oleadas separa el cálculo de la progresión de la modificación real
+del escenario. Cada nivel contiene un `WaveDirector` propio. El director recibe
+una instantánea de datos simples del tablero: cuota de enemigos, enemigos
+activos, derrotas regulares, valor de las defensas, estado y generación del
+nivel.
+
+El director ejecuta el cálculo en un `Thread`. El hilo secundario no crea,
+mueve, conecta ni libera nodos de Godot. Solo calcula un `WavePlan` y coloca un
+`WaveResult` en una cola protegida por `Mutex`. El hilo principal consulta esa
+cola y es el único que instancia enemigos, los agrega a `Entities`, conecta las
+señales `defeated` y `garden_invaded`, y procesa la física y las animaciones.
+
+La generación del nivel permite descartar resultados obsoletos cuando el jugador
+reinicia, gana, pierde o cambia de escena. Antes de liberar el nivel se solicita
+la cancelación y se espera la terminación del hilo. Así se evita que una orden
+calculada para una escena anterior modifique la escena nueva.
+
+Los niveles estándar utilizan un umbral intermedio del 50% y una oleada final
+al 100%. La configuración también permite niveles especiales con umbrales del
+33% y 66%. El spawn regular se detiene mientras una oleada está en preparación,
+activa o esperando que el tablero quede vacío. La oleada final solo se prepara
+cuando se agotó la cuota regular y no quedan enemigos activos.
+
+Antes de instanciar cada oleada, el HUD muestra durante 2 segundos un cartel
+destacado con el mensaje "¡SE AVECINA UNA OLEADA DE ENEMIGOS!". El anuncio se
+ejecuta en el hilo principal junto con la actualización de la interfaz y no
+modifica la comunicación concurrente del director.
+
+El menú del Mapa del Merodeador incluye un `CheckButton` temporal de modo
+debug. Cuando está activado, el `GameManager` conserva la opción al cambiar de
+escena y el nivel inicia con 10000 Snitches. Al desactivarlo, los niveles
+vuelven a utilizar su saldo inicial configurado.
+
+El tamaño de la oleada intermedia se ajusta al valor de las defensas mediante
+límites configurables por nivel. En el Nivel 1, la oleada intermedia contiene
+3 enemigos y la final contiene 4. Los enemigos de ambas oleadas se instancian
+en el hilo principal, pero se distribuyen temporalmente con un intervalo de
+0,25 segundos para evitar que aparezcan todos juntos. Los niveles que no
+sobrescriben estos valores conservan el rango general de 10 a 20 enemigos
+intermedios y una oleada final de al menos 25 enemigos.

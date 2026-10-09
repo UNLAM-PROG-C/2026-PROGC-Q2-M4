@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://cpc5lnjbkueb1"]
 
 [ext_resource type="Script" uid="uid://ba15euv2u7aem" path="res://snitch.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Imagenes/Personajes_Snitch.png" id="2_texture"]
+[ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Images/snitch.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iqije"]
-size = Vector2(128, 34)
+size = Vector2(176, 57)
 
 [node name="Snitch" type="Area2D" unique_id=2137711152]
 collision_layer = 8
@@ -16,7 +16,7 @@ position = Vector2(3.8146973e-06, 0)
 texture = ExtResource("2_texture")
 hframes = 4
 
-[node name="ParticulasEscape" type="CPUParticles2D" parent="." unique_id=1118267278]
+[node name="EscapeParticles" type="CPUParticles2D" parent="." unique_id=1118267278]
 emitting = false
 amount = 15
 lifetime = 0.5
@@ -36,9 +36,9 @@ color = Color(1, 0.9, 0.2, 1)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=459639053]
 shape = SubResource("RectangleShape2D_iqije")
 
-[node name="TimerAnimacion" type="Timer" parent="." unique_id=230132648]
+[node name="AnimationTimer" type="Timer" parent="." unique_id=230132648]
 wait_time = 0.1
 autostart = true
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]
-[connection signal="timeout" from="TimerAnimacion" to="." method="_on_timer_animacion_timeout"]
+[connection signal="timeout" from="AnimationTimer" to="." method="_on_animation_timer_timeout"]

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AllyCard" format=3]
+
+[ext_resource type="Script" path="res://ally_card.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://harry.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Harry"
+scene = ExtResource("2_scene")
+cost = 100
+cooldown = 0.0

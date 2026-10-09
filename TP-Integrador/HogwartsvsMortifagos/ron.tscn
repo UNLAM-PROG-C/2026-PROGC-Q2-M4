@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://ron_scene_uid_001"]
+
+[ext_resource type="Script" path="res://ron.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bvc4jsxppev0x" path="res://Images/ron.png" id="2_texture"]
+[ext_resource type="PackedScene" uid="uid://bwxniwtn2vxfv" path="res://projectile.tscn" id="3_projectile"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="4_damage_flash"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(148, 112)
+
+[node name="Ron" type="Area2D" unique_id=815921001 groups=["allies"]]
+collision_mask = 0
+script = ExtResource("1_script")
+projectile_scene = ExtResource("3_projectile")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=815921002]
+position = Vector2(19.5, -10.5)
+scale = Vector2(1.4384617, 1.4384617)
+texture = ExtResource("2_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=815921003]
+position = Vector2(-2, 0)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="ShootPoint" type="Marker2D" parent="." unique_id=815921004]
+position = Vector2(104, -40)
+
+[node name="ShootTimer" type="Timer" parent="." unique_id=815921005]
+
+[node name="DamageFlash" parent="." unique_id=815921006 node_paths=PackedStringArray("target") instance=ExtResource("4_damage_flash")]
+target = NodePath("../Sprite2D")
+cooldown = 0.5
+
+[connection signal="timeout" from="ShootTimer" to="." method="_on_shoot_timer_timeout"]

@@ -1,0 +1,190 @@
+[gd_scene format=3 uid="uid://c0vgnide3ben3"]
+
+[ext_resource type="Script" uid="uid://cf8kvc6i25h1g" path="res://level_select_menu.gd" id="1_menu"]
+[ext_resource type="Shader" uid="uid://yhsfd3dl7nwn" path="res://parchment.gdshader" id="2_shader"]
+[ext_resource type="PackedScene" uid="uid://cro1qg23bp5oe" path="res://level_1.tscn" id="3_level_1"]
+[ext_resource type="Texture2D" uid="uid://5sbjudpqy5l2" path="res://Images/main_menu_background.jpeg" id="4_map_background"]
+[ext_resource type="PackedScene" uid="uid://c8yjskdqci0c" path="res://level_2.tscn" id="5_level_2"]
+[ext_resource type="PackedScene" uid="uid://cgnrtwx0y8g6e" path="res://level_3.tscn" id="6_level_3"]
+[ext_resource type="PackedScene" uid="uid://n1vel4acc1o" path="res://level_4.tscn" id="8_level_4"]
+[ext_resource type="PackedScene" path="res://level_5.tscn" id="9_level_5"]
+[ext_resource type="PackedScene" path="res://level_6.tscn" id="10_level_6"]
+[ext_resource type="PackedScene" path="res://level_7.tscn" id="11_level_7"]
+[ext_resource type="PackedScene" path="res://level_8.tscn" id="12_level_8"]
+[ext_resource type="PackedScene" path="res://level_9.tscn" id="13_level_9"]
+[ext_resource type="Theme" uid="uid://d3vmh1juddnit" path="res://level_button_theme.tres" id="7_button_theme"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_parchment"]
+shader = ExtResource("2_shader")
+shader_parameter/parchment_top_color = Color(0.960784, 0.901961, 0.784314, 1)
+shader_parameter/parchment_middle_color = Color(0.909804, 0.835294, 0.639216, 1)
+shader_parameter/parchment_bottom_color = Color(0.788235, 0.662745, 0.431373, 1)
+shader_parameter/ink_color = Color(0.172549, 0.0941176, 0.0627451, 1)
+shader_parameter/stain_color = Color(0.545098, 0.352941, 0.168627, 1)
+shader_parameter/map_texture = ExtResource("4_map_background")
+shader_parameter/map_opacity = 0.15
+shader_parameter/map_scale = Vector2(2.66667, 1)
+shader_parameter/map_offset = Vector2(0, 0)
+shader_parameter/ink_contrast = 1.2
+shader_parameter/vignette_intensity = 0.45
+shader_parameter/vignette_radius = 0.75
+shader_parameter/stain_intensity = 0.25
+shader_parameter/grain_intensity = 0.035
+
+[sub_resource type="Curve2D" id="Curve2D_path"]
+_data = {
+"points": PackedVector2Array(-80, 20, 80, -20, 200, 880, -105.35353, -112.828255, 105.35353, 112.828255, 520, 840, -80, -20, 80, 20, 860, 880, -80, 20, 80, -20, 1220, 830, -50, 80, 50, -80, 1560, 700, 60, 60, -60, -60, 1500, 480, 80, 10, -80, -10, 1160, 440, 80, -15, -80, 15, 800, 460, 60, 70, -60, -70, 440, 380, -90, 80, 90, -80, 960, 180)
+}
+point_count = 10
+
+[node name="LevelSelectMenu" type="Control" unique_id=1114716460]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+level_scenes = Array[PackedScene]([ExtResource("3_level_1"), ExtResource("5_level_2"), ExtResource("6_level_3"), ExtResource("8_level_4"), ExtResource("9_level_5"), ExtResource("10_level_6"), ExtResource("11_level_7"), ExtResource("12_level_8"), ExtResource("13_level_9")])
+level_button_theme = ExtResource("7_button_theme")
+
+[node name="ParchmentBackground" type="ColorRect" parent="." unique_id=421504520]
+material = SubResource("ShaderMaterial_parchment")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AmbientFootprintsLayer" type="Node2D" parent="." unique_id=55666371]
+z_index = 1
+z_as_relative = false
+
+[node name="LevelPath" type="Path2D" parent="." unique_id=326981068]
+curve = SubResource("Curve2D_path")
+
+[node name="PathFootprintsLayer" type="Node2D" parent="." unique_id=799260346]
+z_index = 2
+z_as_relative = false
+
+[node name="Title" type="Label" parent="." unique_id=74551436]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 40.0
+offset_right = 400.0
+offset_bottom = 100.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.235294, 0.141176, 0.0823529, 1)
+theme_override_colors/font_shadow_color = Color(0.835294, 0.690196, 0.443137, 0.5)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 40
+text = "MAPA DEL MERODEADOR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Subtitle" type="Label" parent="." unique_id=1140117222]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 95.0
+offset_right = 300.0
+offset_bottom = 130.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.388235, 0.258824, 0.168627, 0.9)
+theme_override_font_sizes/font_size = 20
+text = "Juro solemnemente que mis intenciones no son buenas"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LevelButtons" type="Node2D" parent="." unique_id=2066262230]
+z_index = 10
+z_as_relative = false
+
+[node name="Level1" type="Button" parent="LevelButtons" unique_id=88615336]
+offset_left = 120.0
+offset_top = 847.0
+offset_right = 280.0
+offset_bottom = 912.0
+text = "Nivel 1"
+
+[node name="Level2" type="Button" parent="LevelButtons" unique_id=170665027]
+offset_left = 440.0
+offset_top = 807.0
+offset_right = 600.0
+offset_bottom = 872.0
+text = "Nivel 2"
+
+[node name="Level3" type="Button" parent="LevelButtons" unique_id=1350338834]
+offset_left = 780.0
+offset_top = 847.0
+offset_right = 940.0
+offset_bottom = 912.0
+text = "Nivel 3"
+
+[node name="Level4" type="Button" parent="LevelButtons" unique_id=1485647288]
+offset_left = 1140.0
+offset_top = 797.0
+offset_right = 1300.0
+offset_bottom = 862.0
+text = "Nivel 4"
+
+[node name="Level5" type="Button" parent="LevelButtons" unique_id=2107252911]
+offset_left = 1480.0
+offset_top = 667.0
+offset_right = 1640.0
+offset_bottom = 732.0
+text = "Nivel 5"
+
+[node name="Level6" type="Button" parent="LevelButtons" unique_id=402479040]
+offset_left = 1420.0
+offset_top = 447.0
+offset_right = 1580.0
+offset_bottom = 512.0
+text = "Nivel 6"
+
+[node name="Level7" type="Button" parent="LevelButtons" unique_id=568908389]
+offset_left = 1080.0
+offset_top = 407.0
+offset_right = 1240.0
+offset_bottom = 472.0
+text = "Nivel 7"
+
+[node name="Level8" type="Button" parent="LevelButtons" unique_id=948794531]
+offset_left = 720.0
+offset_top = 427.0
+offset_right = 880.0
+offset_bottom = 492.0
+text = "Nivel 8"
+
+[node name="Level9" type="Button" parent="LevelButtons" unique_id=195910309]
+offset_left = 360.0
+offset_top = 347.0
+offset_right = 520.0
+offset_bottom = 412.0
+text = "Nivel 9"
+
+[node name="Level10" type="Button" parent="LevelButtons" unique_id=1372928396]
+offset_left = 880.0
+offset_top = 147.0
+offset_right = 1040.0
+offset_bottom = 212.0
+text = "Nivel 10"
+
+[node name="DebugModeCheckButton" type="CheckButton" parent="." unique_id=1372928397]
+offset_left = 1530.0
+offset_top = 980.0
+offset_right = 1840.0
+offset_bottom = 1035.0
+theme_override_font_sizes/font_size = 20
+text = "Modo debug (10000 Snitches)"
+
+[node name="AmbientFootprintsTimer" type="Timer" parent="." unique_id=1084068347]
+wait_time = 1.088

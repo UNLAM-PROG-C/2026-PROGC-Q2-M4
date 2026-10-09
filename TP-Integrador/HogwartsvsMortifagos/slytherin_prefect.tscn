@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://slytherin_prefect.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://Images/slytherin_protego.png" id="2_walk_texture"]
+[ext_resource type="Texture2D" path="res://Images/slytherin_hurt.png" id="3_hurt_texture"]
+[ext_resource type="Texture2D" path="res://Images/slytherin_attacking.png" id="4_attacking_texture"]
+[ext_resource type="Texture2D" path="res://Images/slytherin_attacking_hurt.png" id="5_hurt_attacking_texture"]
+[ext_resource type="PackedScene" path="res://enemy_projectile.tscn" id="6_projectile"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="7_damage_flash"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(68, 160)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
+size = Vector2(54, 160)
+
+[node name="SlytherinPrefect" type="Area2D" groups=["enemies"]]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_script")
+projectile_scene = ExtResource("6_projectile")
+hurt_texture = ExtResource("3_hurt_texture")
+walk_texture = ExtResource("2_walk_texture")
+attacking_texture = ExtResource("4_attacking_texture")
+hurt_attacking_texture = ExtResource("5_hurt_attacking_texture")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -16)
+scale = Vector2(1.4, 1.4)
+texture = ExtResource("2_walk_texture")
+hframes = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-10, -8)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+position = Vector2(-20, 0)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+position = Vector2(-1, -8)
+shape = SubResource("RectangleShape2D_detection")
+
+[node name="AnimationTimer" type="Timer" parent="."]
+wait_time = 0.25
+autostart = true
+
+[node name="ShootTimer" type="Timer" parent="."]
+wait_time = 3.5
+
+[node name="ShootPoint" type="Marker2D" parent="."]
+position = Vector2(-40, -10)
+
+[node name="DamageFlash" parent="." node_paths=PackedStringArray("target") instance=ExtResource("7_damage_flash")]
+target = NodePath("../Sprite2D")
+duration = 0.15
+fade_out = true
+
+[connection signal="area_entered" from="DetectionArea" to="." method="_on_detection_area_area_entered"]
+[connection signal="area_exited" from="DetectionArea" to="." method="_on_detection_area_area_exited"]
+[connection signal="timeout" from="AnimationTimer" to="." method="_on_animation_timer_timeout"]
+[connection signal="timeout" from="ShootTimer" to="." method="_on_shoot_timer_timeout"]

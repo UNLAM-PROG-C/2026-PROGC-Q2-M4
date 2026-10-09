@@ -1,40 +1,39 @@
 class_name Protego
-extends Area2D
+extends Ally
 
-## Señal emitida cuando Protego pierde toda su salud.
-signal derrotado(entidad: Node2D)
+## Wall-nut ally: only absorbs damage. Its health is set in protego.tscn.
 
-## Costo en Snitches para plantar un Protego.
-@export var coste: int = 50
-## Segundos de recarga de la carta después de plantarlo.
-@export var tiempo_recarga: float = 12.0
-## Salud de la barrera. Mucho mayor que la de un mago.
-@export var salud: float = 4000.0
+const FRAME_COUNT: int = 3
+const MAX_HEALTH: float = 1000.0
+const MEDIUM_HEALTH_RATIO: float = 2.0 / 3.0
+const CRITICAL_HEALTH_RATIO: float = 1.0 / 3.0
 
-var _tiempo_flash: float = 0.0
-var _cooldown_flash: float = 0.0
+@onready var sprite: Sprite2D = $Sprite2D
 
 
 func _ready() -> void:
-	add_to_group("aliados")
+	_update_damage_state()
 
 
-func _process(delta: float) -> void:
-	if _cooldown_flash > 0.0:
-		_cooldown_flash -= delta
-	if _tiempo_flash > 0.0:
-		_tiempo_flash -= delta
-		if _tiempo_flash <= 0.0:
-			$Visual.modulate = Color(1.0, 1.0, 1.0)
-
-
-## Absorbe daño sin atacar. Llamado por los enemigos al colisionar.
-func recibir_danio(cantidad: float) -> void:
-	salud -= cantidad
-	if _cooldown_flash <= 0.0:
-		$Visual.modulate = Color(1.0, 0.3, 0.3)
-		_tiempo_flash = 0.1
-		_cooldown_flash = 0.5
-	if salud <= 0.0:
-		derrotado.emit(self)
+func take_damage(amount: float) -> void:
+	health = maxf(health - amount, 0.0)
+	_update_damage_state()
+	damage_flash.flash()
+	if health <= 0.0:
+		defeated.emit(self)
 		queue_free()
+
+
+func _update_damage_state() -> void:
+	if health <= 0.0:
+		sprite.frame = FRAME_COUNT - 1
+	elif health <= max_health() * CRITICAL_HEALTH_RATIO:
+		sprite.frame = 2
+	elif health <= max_health() * MEDIUM_HEALTH_RATIO:
+		sprite.frame = 1
+	else:
+		sprite.frame = 0
+
+
+func max_health() -> float:
+	return MAX_HEALTH
