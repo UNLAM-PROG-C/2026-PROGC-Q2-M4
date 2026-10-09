@@ -4,6 +4,8 @@ import logging
 import threading
 from abc import ABC, abstractmethod
 
+import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,9 +18,17 @@ class BaseWorker(threading.Thread, ABC):
   shutdown signal (fail-fast), so no thread ever dies silently.
   """
 
-  def __init__(self, name: str, stop_event: threading.Event) -> None:
+  def __init__(
+      self,
+      name: str,
+      stop_event: threading.Event,
+      maintenance_event: threading.Event | None = None,
+  ) -> None:
     super().__init__(name=name, daemon=False)
     self._stop_event = stop_event
+    self._maintenance_event = (
+        maintenance_event if maintenance_event is not None
+        else threading.Event())
     self._error: Exception | None = None
 
   @property
@@ -51,6 +61,16 @@ class BaseWorker(threading.Thread, ABC):
     Implementations must never block indefinitely: every blocking call needs
     a timeout so the stop event is re-checked periodically.
     """
+
+  def _wait_while_paused(self) -> None:
+    """Blocks while a maintenance pause (`maintenance_event` set) is active.
+
+    `threading.Event` cannot wait for a *clear*, so the flag is polled with a
+    bounded wait on the stop event: a shutdown request always overrides the
+    pause, and a stuck flag can never deadlock the worker or the drain phase.
+    """
+    while self._maintenance_event.is_set() and not self._stop_event.is_set():
+      self._stop_event.wait(config.MAINTENANCE_POLL_SECONDS)
 
   def _on_stop(self) -> None:
     """Hook for resource cleanup. Runs always, even after a failure."""
