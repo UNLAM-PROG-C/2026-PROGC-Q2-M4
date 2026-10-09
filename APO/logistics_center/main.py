@@ -7,6 +7,7 @@ import threading
 import config
 from core.inventory import Inventory
 from core.package import Package
+from ui.dashboard import Dashboard
 from workers.base import BaseWorker
 from workers.operator import Operator
 from workers.truck import Truck
@@ -67,12 +68,18 @@ def report(inventory: Inventory, dock: "queue.Queue[Package]") -> None:
 
 
 def shutdown(
-    trucks: list[Truck],
+    first_phase: list[BaseWorker],
     operators: list[Operator],
     producers_finished: threading.Event,
 ) -> None:
-  """Two-phase shutdown: stop producers, then let consumers drain the dock."""
-  join_all(trucks, config.JOIN_TIMEOUT_SECONDS)
+  """Two-phase shutdown: stop producers/readers, then drain the dock.
+
+  Args:
+    first_phase: Workers driven only by the stop event (trucks, dashboard).
+    operators: Consumers that keep running until the dock is empty.
+    producers_finished: Signal that no more packages will be enqueued.
+  """
+  join_all(first_phase, config.JOIN_TIMEOUT_SECONDS)
   producers_finished.set()
   logger.info("Producers stopped, draining dock")
   join_all(operators, config.DRAIN_TIMEOUT_SECONDS)
@@ -87,10 +94,11 @@ def main() -> None:
   inventory = Inventory()
   trucks = build_trucks(dock, stop_event)
   operators = build_operators(dock, inventory, stop_event, producers_finished)
-  for worker in [*trucks, *operators]:
+  dashboard = Dashboard("Dashboard", inventory, dock, stop_event)
+  for worker in [*trucks, *operators, dashboard]:
     worker.start()
   wait_for_shutdown(stop_event)
-  shutdown(trucks, operators, producers_finished)
+  shutdown([*trucks, dashboard], operators, producers_finished)
   report(inventory, dock)
 
 
