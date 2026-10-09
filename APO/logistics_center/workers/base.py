@@ -30,7 +30,7 @@ class BaseWorker(threading.Thread, ABC):
     """Runs `_step()` until shutdown is requested or a failure occurs."""
     logger.info("Started")
     try:
-      while not self._stop_event.is_set():
+      while not self._should_stop():
         self._step()
     except Exception as exc:  # pylint: disable=broad-except
       self._error = exc
@@ -39,6 +39,10 @@ class BaseWorker(threading.Thread, ABC):
     finally:
       self._on_stop()
       logger.info("Stopped")
+
+  def _should_stop(self) -> bool:
+    """Exit condition of the run loop. Subclasses may extend it."""
+    return self._stop_event.is_set()
 
   @abstractmethod
   def _step(self) -> None:
