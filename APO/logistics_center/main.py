@@ -25,9 +25,11 @@ def build_operators(
     dock: "queue.Queue[Package]",
     inventory: Inventory,
     stop_event: threading.Event,
+    producers_finished: threading.Event,
 ) -> list[Operator]:
   """Creates the consumer/writer threads."""
-  return [Operator(f"Operator-{index}", dock, inventory, stop_event)
+  return [Operator(f"Operator-{index}", dock, inventory, stop_event,
+                   producers_finished)
           for index in range(1, config.OPERATOR_COUNT + 1)]
 
 
@@ -45,10 +47,10 @@ def wait_for_shutdown(stop_event: threading.Event) -> None:
     stop_event.set()
 
 
-def join_all(workers: list[BaseWorker]) -> None:
-  """Joins producers first, then consumers, each with a bounded timeout."""
+def join_all(workers: list[BaseWorker], timeout: float) -> None:
+  """Joins the given workers, each with a bounded timeout."""
   for worker in workers:
-    worker.join(timeout=config.JOIN_TIMEOUT_SECONDS)
+    worker.join(timeout=timeout)
     if worker.is_alive():
       logger.warning("%s did not stop within timeout", worker.name)
     elif worker.error is not None:
@@ -64,20 +66,31 @@ def report(inventory: Inventory, dock: "queue.Queue[Package]") -> None:
               dock.qsize())
 
 
+def shutdown(
+    trucks: list[Truck],
+    operators: list[Operator],
+    producers_finished: threading.Event,
+) -> None:
+  """Two-phase shutdown: stop producers, then let consumers drain the dock."""
+  join_all(trucks, config.JOIN_TIMEOUT_SECONDS)
+  producers_finished.set()
+  logger.info("Producers stopped, draining dock")
+  join_all(operators, config.DRAIN_TIMEOUT_SECONDS)
+
+
 def main() -> None:
   """Runs the logistics center simulation."""
   logging.basicConfig(level=logging.INFO, format=config.LOG_FORMAT)
   stop_event = threading.Event()
+  producers_finished = threading.Event()
   dock: "queue.Queue[Package]" = queue.Queue(maxsize=config.QUEUE_MAX_SIZE)
   inventory = Inventory()
-  workers: list[BaseWorker] = [
-      *build_trucks(dock, stop_event),
-      *build_operators(dock, inventory, stop_event),
-  ]
-  for worker in workers:
+  trucks = build_trucks(dock, stop_event)
+  operators = build_operators(dock, inventory, stop_event, producers_finished)
+  for worker in [*trucks, *operators]:
     worker.start()
   wait_for_shutdown(stop_event)
-  join_all(workers)
+  shutdown(trucks, operators, producers_finished)
   report(inventory, dock)
 
 
