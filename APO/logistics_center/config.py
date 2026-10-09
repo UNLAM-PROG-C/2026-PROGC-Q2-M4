@@ -8,6 +8,7 @@ OPERATOR_COUNT: Final[int] = 3
 QUEUE_MAX_SIZE: Final[int] = 50
 QUEUE_TIMEOUT_SECONDS: Final[float] = 0.5
 JOIN_TIMEOUT_SECONDS: Final[float] = 5.0
+DRAIN_TIMEOUT_SECONDS: Final[float] = 15.0
 MAIN_LOOP_WAIT_SECONDS: Final[float] = 0.5
 
 TRUCK_ARRIVAL_INTERVAL_SECONDS: Final[float] = 1.0
