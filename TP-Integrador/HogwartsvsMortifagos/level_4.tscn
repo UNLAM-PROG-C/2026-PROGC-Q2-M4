@@ -17,6 +17,12 @@
 [ext_resource type="PackedScene" path="res://projectile.tscn" id="19_projectile"]
 [ext_resource type="Script" path="res://wave_director.gd" id="20_wave_director"]
 [ext_resource type="Script" path="res://accio_button.gd" id="21_accio_button"]
+[ext_resource type="PackedScene" path="res://accio_cursor.tscn" id="22_accio_cursor"]
+[ext_resource type="Texture2D" uid="uid://csm7y60tocuv8" path="res://Images/elder_wand.png" id="23_wand_texture"]
+[ext_resource type="Texture2D" uid="uid://bydhk7drs4isj" path="res://Images/seed_harry.png" id="ext_seed_harry"]
+[ext_resource type="Texture2D" uid="uid://dymbg17ppci62" path="res://Images/seed_snitch_box.png" id="ext_seed_snitch_box"]
+[ext_resource type="Texture2D" uid="uid://wqrjixlbwefe" path="res://Images/seed_remembrall.png" id="ext_seed_remembrall"]
+[ext_resource type="Texture2D" uid="uid://3jilxgven0xv" path="res://Images/seed_protego.png" id="ext_seed_protego"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -49,19 +55,28 @@ shadow_size = 10
 shadow_offset = Vector2(4, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
-bg_color = Color(0.921569, 0.862745, 0.698039, 1)
+bg_color = Color(0.18, 0.14, 0.28, 0.9)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.235294, 0.141176, 0.0823529, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0.235, 0.141, 0.082, 0.25)
-shadow_size = 3
-shadow_offset = Vector2(2, 2)
+border_color = Color(0.85, 0.75, 0.35, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
+bg_color = Color(0.28, 0.22, 0.42, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.9, 0.5, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="Level4" type="Node2D" unique_id=1917860157]
 script = ExtResource("3_script")
@@ -74,6 +89,7 @@ spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawner
 dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
 next_level_to_unlock = 5
 is_special_level = false
+wave_kill_thresholds = Array[int]([25, 30])
 
 [node name="Grid" type="Node2D" parent="." unique_id=2109126223]
 top_level = true
@@ -158,7 +174,7 @@ position = Vector2(1760, 752)
 position = Vector2(1760, 912)
 
 [node name="EnemySpawnTimer" type="Timer" parent="." unique_id=1162641464]
-wait_time = 8.0
+wait_time = 12.0
 autostart = true
 
 [node name="SnitchSpawnTimer" type="Timer" parent="." unique_id=2049164940]
@@ -176,71 +192,74 @@ theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
 
 [node name="PoolDebugLabel" type="Label" parent="HUD"]
-offset_left = 10.0
-offset_top = 60.0
-offset_right = 430.0
-offset_bottom = 120.0
+offset_left = 18.0
+offset_top = 212.0
+offset_right = 438.0
+offset_bottom = 272.0
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 theme_override_font_sizes/font_size = 18
 text = "DEBUG | Disparos consecutivos: 0\nPool: 50 | Activos: 0 | Disponibles: 50"
 
 [node name="HarryCardButton" type="Button" parent="HUD" unique_id=1005889825]
+offset_left = 264.0
+offset_top = 7.0
+offset_right = 396.0
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_harry")
+flat = true
+expand_icon = true
 script = ExtResource("13_card_button")
 card = ExtResource("14_harry_card")
-offset_left = 250.0
-offset_top = 10.0
-offset_right = 430.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Harry (100)"
 
 [node name="SnitchBoxCardButton" type="Button" parent="HUD" unique_id=2122149562]
+offset_left = 418.8
+offset_top = 7.0
+offset_right = 550.8
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_snitch_box")
+flat = true
+expand_icon = true
 script = ExtResource("13_card_button")
 card = ExtResource("15_snitch_box_card")
-offset_left = 440.0
-offset_top = 10.0
-offset_right = 620.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Caja Snitch (50)"
 
 [node name="RemembrallCardButton" type="Button" parent="HUD" unique_id=1303248469]
+offset_left = 573.6
+offset_top = 7.0
+offset_right = 705.6
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_remembrall")
+flat = true
+expand_icon = true
 script = ExtResource("13_card_button")
 card = ExtResource("16_remembrall_card")
-offset_left = 630.0
-offset_top = 10.0
-offset_right = 850.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Recordadora (150)"
 
 [node name="ProtegoCardButton" type="Button" parent="HUD" unique_id=1400000000]
+offset_left = 728.4
+offset_top = 7.0
+offset_right = 860.4
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_protego")
+flat = true
+expand_icon = true
 script = ExtResource("13_card_button")
 card = ExtResource("17_protego_card")
-offset_left = 860.0
-offset_top = 10.0
-offset_right = 1080.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Protego (50)"
 
 [node name="AccioButton" type="Button" parent="HUD" unique_id=1500000000]
+offset_left = 1775.0
+offset_top = 944.0
+offset_right = 1918.0
+offset_bottom = 1087.0
+flat = true
+icon = ExtResource("23_wand_texture")
+expand_icon = true
 script = ExtResource("21_accio_button")
-offset_left = 1120.0
-offset_top = 10.0
-offset_right = 1260.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Accio"
 
-[node name="AccioCursor" type="ColorRect" parent="HUD" unique_id=1500000001]
+[node name="AccioCursor" parent="HUD" instance=ExtResource("22_accio_cursor")]
 visible = false
-mouse_filter = 2
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 16.0
-offset_bottom = 16.0
-color = Color(1, 0, 1, 0.8)
 
 [node name="StatusLabel" type="Label" parent="HUD" unique_id=461003767]
 visible = false
@@ -340,25 +359,37 @@ alignment = 1
 [node name="NextLevelButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=1007129947]
 custom_minimum_size = Vector2(170, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
 text = "Siguiente Nivel"
 
 [node name="RetryButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=1747888044]
 custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
 text = "Reintentar"
 
 [node name="BackToMapButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=214647230]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
 text = "Volver al Mapa"
 
 [node name="WaveDirector" type="Node" parent="."]

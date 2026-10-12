@@ -16,16 +16,13 @@ collision_mask = 0
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=997140244]
-position = Vector2(-20, 0)
 texture = ExtResource("2_texture")
 hframes = 7
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2001559161]
-position = Vector2(-20, 0)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="ExplosionArea" type="Area2D" parent="." unique_id=1948798448]
-position = Vector2(-20, 0)
 collision_layer = 0
 collision_mask = 2
 

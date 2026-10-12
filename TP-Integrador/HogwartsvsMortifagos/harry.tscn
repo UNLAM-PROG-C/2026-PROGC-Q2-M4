@@ -23,7 +23,7 @@ position = Vector2(-2, 0)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="ShootPoint" type="Marker2D" parent="." unique_id=1061187823]
-position = Vector2(104, -40)
+position = Vector2(112, -43)
 
 [node name="ShootTimer" type="Timer" parent="." unique_id=1649040163]
 

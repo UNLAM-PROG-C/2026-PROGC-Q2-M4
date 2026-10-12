@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://djfbaxel5n31e"
-path="res://.godot/imported/Personajes_Medidor 2 oleadas.png-8ef12fa42c33713829b35edcaf419c0b.ctex"
+uid="uid://03nidtbp83i8"
+path="res://.godot/imported/seed_ron.png-5e5252b04ba6ab0b7e963ce7b020eb87.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Images/Personajes_Medidor 2 oleadas.png"
-dest_files=["res://.godot/imported/Personajes_Medidor 2 oleadas.png-8ef12fa42c33713829b35edcaf419c0b.ctex"]
+source_file="res://Images/seed_ron.png"
+dest_files=["res://.godot/imported/seed_ron.png-5e5252b04ba6ab0b7e963ce7b020eb87.ctex"]
 
 [params]
 

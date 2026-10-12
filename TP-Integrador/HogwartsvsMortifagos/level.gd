@@ -32,10 +32,28 @@ const DEMENTOR_X: float = 160.0
 const SKY_SNITCH_MIN_X: float = 300.0
 const SKY_SNITCH_MAX_X: float = 1150.0
 const SKY_SNITCH_Y: float = -20.0
+const DEFAULT_SNITCH_ROW: int = 4
+const FIRST_GRID_ROW_INDEX: int = 2
+const GRID_SAMPLE_COLUMN: int = 2
 ## TileMapLayer source id of a cell without a tile.
 const EMPTY_CELL_SOURCE: int = -1
 ## Initial delay in seconds before the first enemy spawns in any level.
 const INITIAL_ENEMY_DELAY: float = 30.0
+const MIN_ENEMY_SPAWN_INTERVAL: float = 3.0
+const SPAWN_INTERVAL_DECREMENT: float = 0.2
+const WAVE_PROGRESS_BAR_SCENE: PackedScene = preload("res://wave_progress_bar.tscn")
+const WAVE_METER_2_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_2_waves.png")
+const WAVE_METER_3_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_3_waves.png")
+const METER_POSITION: Vector2 = Vector2(30.0, 800.0)
+const BOSS_WIN_MESSAGE_TEXT: String = "¡Has derrotado al Profesor Quirrell y salvado a Hogwarts!"
+const BOSS_HEALTH_BAR_POSITION: Vector2 = Vector2(640.0, 16.0)
+const BOSS_GRID_COLUMN: int = 10
+const CRUSH_DAMAGE: float = 9999.0
+const BOSS_TELEPORT_FADE_DURATION: float = 0.8
+const BOSS_SHADOW_Y_OFFSET: float = 132.0
+const BOSS_FALLBACK_X: float = 1704.0
+const FINAL_LEVEL_NUMBER: int = 10
+const NEXT_LEVEL_SCENE_TEMPLATE: String = "res://level_%d.tscn"
 
 ## Snitches the player starts with.
 @export var starting_snitches: int = 150
@@ -56,6 +74,8 @@ const INITIAL_ENEMY_DELAY: float = 30.0
 @export var spawn_points: Array[NodePath] = []
 @export var dementor_row_cells: Array[int] = []
 @export var dementor_cells: Array[Vector2i] = []
+## Current level number (if 0, inferred from next_level_to_unlock or is_boss_level).
+@export var current_level_number: int = 0
 ## Level unlocked on the map when this level is won.
 @export var next_level_to_unlock: int = 2
 @export var is_special_level: bool = false
@@ -64,21 +84,32 @@ const INITIAL_ENEMY_DELAY: float = 30.0
 @export var final_wave_min: int = 25
 @export var final_wave_bonus_min: int = 5
 @export var final_wave_bonus_max: int = 10
+## Kill thresholds per wave.
+@export var wave_kill_thresholds: Array[int] = [15, 20]
+## Texture for the wave meter hourglass frame.
+@export var wave_meter_texture: Texture2D
+@export var is_boss_level: bool = false
+@export var boss_scene: PackedScene
 
 var _snitches: int = 0
 ## Card chosen in the HUD, or null when nothing is selected.
 var _selected_card: AllyCard = null
 var _occupied_cells: Dictionary[Vector2i, Node2D] = {}
 var _is_removing: bool = false
+var _boss: Quirrell = null
+var _boss_offset: Vector2 = Vector2.ZERO
+var _boss_health_bar: BossHealthBar = null
 var _hovered_ally: Ally = null
 var _accio_button: AccioButton = null
 var _accio_cursor: CanvasItem = null
 var _spawned_enemies: int = 0
 var _defeated_enemies: int = 0
-var _regular_defeated_enemies: int = 0
+var _phase_defeated_enemies: int = 0
+var _total_defeated_enemies: int = 0
+var _current_phase_index: int = 0
+var _total_level_kills: int = 0
 var _active_enemies: int = 0
 var _wave_state: int = STATE_SPAWNING_NORMAL
-var _wave_threshold_index: int = 0
 var _intermediate_wave_size: int = 10
 var _final_wave_active: bool = false
 var _level_generation: int = 1
@@ -86,7 +117,8 @@ var _pending_request_id: int = 0
 var _defeated_enemy_ids: Dictionary[int, bool] = {}
 var _regular_enemy_ids: Dictionary[int, bool] = {}
 var _is_level_over: bool = false
-var _enemy_spawn_interval: float = 8.0
+var _enemy_spawn_interval: float = 12.0
+var _wave_progress_bar: WaveProgressBar = null
 
 @onready var tile_map: TileMapLayer = _find_tile_map()
 @onready var entity_layer: Node2D = $Entities
@@ -121,14 +153,163 @@ func _init_level_state() -> void:
 	level_end_panel.visible = false
 	wave_announcement.visible = false
 	_intermediate_wave_size = intermediate_wave_min
-	wave_director.result_ready.connect(_on_wave_result)
+	_calculate_total_level_kills()
+	if not is_boss_level and is_instance_valid(wave_director):
+		wave_director.result_ready.connect(_on_wave_result)
+
+
+func _calculate_total_level_kills() -> void:
+	_total_level_kills = 0
+	for threshold: int in wave_kill_thresholds:
+		_total_level_kills += threshold
 
 
 func _init_hud_and_cards() -> void:
 	for button: AllyCardButton in _card_buttons():
 		button.card_pressed.connect(_on_card_pressed)
 		button.cooldown_finished.connect(_refresh_hud)
+	_setup_level_hud()
 	_refresh_hud()
+
+
+func _setup_level_hud() -> void:
+	if is_boss_level:
+		_setup_boss_hud()
+	else:
+		_setup_wave_progress_bar()
+
+
+func _setup_boss_hud() -> void:
+	_boss_health_bar = hud.get_node_or_null("BossHealthBar") as BossHealthBar
+	if _boss_health_bar == null:
+		var scene: PackedScene = preload("res://boss_health_bar.tscn")
+		_boss_health_bar = scene.instantiate() as BossHealthBar
+		_boss_health_bar.position = BOSS_HEALTH_BAR_POSITION
+		hud.add_child(_boss_health_bar)
+	_setup_boss_entity()
+
+
+func _setup_boss_entity() -> void:
+	_boss = get_node_or_null("Entities/Quirrell") as Quirrell
+	if _boss == null:
+		_boss = get_node_or_null("Quirrell") as Quirrell
+	if _boss != null:
+		_connect_boss_signals()
+		_init_boss_position()
+
+
+func _init_boss_position() -> void:
+	var base_pos: Vector2 = _get_boss_cell_position(_boss.get_current_cell())
+	if _boss.global_position != Vector2.ZERO:
+		_boss_offset = _boss.global_position - base_pos
+	_place_boss_at_cell(_boss.get_current_cell())
+
+
+func _get_boss_cell_position(cell: Vector2i) -> Vector2:
+	if tile_map != null:
+		return tile_map.to_global(tile_map.map_to_local(cell))
+	return Vector2(BOSS_FALLBACK_X, _get_row_center_y(cell.y))
+
+
+func _connect_boss_signals() -> void:
+	_boss.health_changed.connect(_on_boss_health_changed)
+	_boss.teleported.connect(_on_boss_teleported)
+	_boss.shadow_spawn_requested.connect(_on_boss_shadow_spawn_requested)
+	_boss.mass_shadow_spawn_requested.connect(_on_boss_mass_shadow_spawn_requested)
+	_boss.defeated.connect(_on_boss_defeated)
+
+
+func _place_boss_at_cell(cell: Vector2i) -> void:
+	if _boss != null:
+		_boss.global_position = _get_boss_cell_position(cell) + _boss_offset
+
+
+func _on_boss_health_changed(current: float, _max_val: float) -> void:
+	if _boss_health_bar != null:
+		_boss_health_bar.set_health(current)
+
+
+func _on_boss_teleported(from_cell: Vector2i, to_cell: Vector2i) -> void:
+	_spawn_teleport_shadow(from_cell)
+	_place_boss_at_cell(to_cell)
+	_crush_ally_at_cell(to_cell)
+
+
+func _spawn_teleport_shadow(cell: Vector2i) -> void:
+	if tile_map == null:
+		return
+	var sprite: Sprite2D = _create_shadow_sprite(cell)
+	entity_layer.add_child(sprite)
+	var tween: Tween = create_tween()
+	tween.tween_property(sprite, "modulate:a", 0.0, BOSS_TELEPORT_FADE_DURATION)
+	tween.tween_callback(sprite.queue_free)
+
+
+func _create_shadow_sprite(cell: Vector2i) -> Sprite2D:
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.texture = preload("res://Images/character_shadow.png")
+	sprite.hframes = 2
+	sprite.frame = 0
+	sprite.modulate = Color(0.0, 0.0, 0.0, 0.6)
+	sprite.global_position = _get_boss_cell_position(cell) + _boss_offset + Vector2(0.0, BOSS_SHADOW_Y_OFFSET)
+	return sprite
+
+
+func _crush_ally_at_cell(cell: Vector2i) -> void:
+	if not _occupied_cells.has(cell):
+		return
+	var ally: Node2D = _occupied_cells[cell]
+	_occupied_cells.erase(cell)
+	if is_instance_valid(ally):
+		if ally.has_method("take_damage"):
+			ally.take_damage(CRUSH_DAMAGE)
+		else:
+			ally.queue_free()
+
+
+func _on_boss_shadow_spawn_requested(spawn_pos: Vector2, _lane_y: float) -> void:
+	var shadow_scene: PackedScene = preload("res://shadow_enemy.tscn")
+	var shadow: ShadowEnemy = shadow_scene.instantiate() as ShadowEnemy
+	var true_lane_y: float = _get_row_center_y(_boss.current_row) if _boss != null else _lane_y
+	shadow.global_position = Vector2(spawn_pos.x, true_lane_y)
+	shadow.defeated.connect(_on_enemy_defeated)
+	shadow.garden_invaded.connect(_on_garden_invaded)
+	entity_layer.add_child(shadow)
+	_active_enemies += 1
+
+
+func _on_boss_mass_shadow_spawn_requested() -> void:
+	for row_idx: int in active_rows:
+		var pos_x: float = _boss.global_position.x if _boss != null else BOSS_FALLBACK_X
+		var lane_y: float = _get_row_center_y(row_idx)
+		_spawn_mass_shadow(Vector2(pos_x, lane_y))
+
+
+func _spawn_mass_shadow(pos: Vector2) -> void:
+	_on_boss_shadow_spawn_requested(pos, pos.y)
+
+
+func _on_boss_defeated(_entity: Node2D) -> void:
+	_defeat_all_active_enemies()
+	_win()
+
+
+func _defeat_all_active_enemies() -> void:
+	for enemy: Node in get_tree().get_nodes_in_group(Groups.ENEMIES):
+		if is_instance_valid(enemy) and enemy != _boss:
+			enemy.queue_free()
+
+
+func _setup_wave_progress_bar() -> void:
+	_wave_progress_bar = hud.get_node_or_null("WaveProgressBar") as WaveProgressBar
+	if _wave_progress_bar == null:
+		_wave_progress_bar = WAVE_PROGRESS_BAR_SCENE.instantiate() as WaveProgressBar
+		_wave_progress_bar.position = METER_POSITION
+		hud.add_child(_wave_progress_bar)
+	var meter_tex: Texture2D = wave_meter_texture
+	if meter_tex == null:
+		meter_tex = WAVE_METER_3_WAVES_TEXTURE if wave_kill_thresholds.size() == 3 else WAVE_METER_2_WAVES_TEXTURE
+	_wave_progress_bar.setup(_total_level_kills, meter_tex)
 
 
 func _init_pool_and_defense() -> void:
@@ -148,6 +329,12 @@ func _init_accio_nodes() -> void:
 	if _accio_button != null:
 		_accio_button.accio_toggled.connect(_on_accio_toggled)
 	_accio_cursor = hud.get_node_or_null("AccioCursor") as CanvasItem
+	if _accio_cursor == null and _accio_button != null:
+		var scene: PackedScene = load("res://accio_cursor.tscn") as PackedScene
+		if scene != null:
+			_accio_cursor = scene.instantiate() as CanvasItem
+			_accio_cursor.name = "AccioCursor"
+			hud.add_child(_accio_cursor)
 	if _accio_cursor != null:
 		_accio_cursor.visible = false
 
@@ -164,11 +351,17 @@ func _process(_delta: float) -> void:
 
 
 func _update_accio_process() -> void:
-	if not _is_removing:
+	if not _is_removing and not _is_accio_glowing():
 		return
 	if _accio_cursor != null:
 		_accio_cursor.global_position = get_viewport().get_mouse_position()
-	_update_hovered_ally(_cell_under_mouse())
+	if _is_removing:
+		_update_hovered_ally(_cell_under_mouse())
+
+
+func _is_accio_glowing() -> bool:
+	var cursor: AccioCursor = _accio_cursor as AccioCursor
+	return cursor != null and cursor.is_glowing()
 
 
 func _find_tile_map() -> TileMapLayer:
@@ -181,23 +374,32 @@ func _find_tile_map() -> TileMapLayer:
 ## Spawns a protective Dementor on each row left of the garden.
 func _spawn_dementors() -> void:
 	if not dementor_cells.is_empty():
-		for cell: Vector2i in dementor_cells:
-			var dementor: Dementor = dementor_scene.instantiate() as Dementor
-			dementor.global_position = tile_map.to_global(tile_map.map_to_local(cell))
-			entity_layer.add_child(dementor)
-		return
+		_spawn_dementors_from_cells()
+	elif not dementor_row_cells.is_empty():
+		_spawn_dementors_from_row_cells()
+	else:
+		_spawn_default_dementors()
 
-	if not dementor_row_cells.is_empty():
-		var first_column_center: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, dementor_row_cells[0])))
-		var cell_width: float = tile_map.tile_set.tile_size.x * tile_map.global_scale.x
-		var dementor_x: float = first_column_center.x - cell_width
-		for row: int in dementor_row_cells:
-			var configured_dementor: Dementor = dementor_scene.instantiate() as Dementor
-			var row_center: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, row)))
-			configured_dementor.global_position = Vector2(dementor_x, row_center.y)
-			entity_layer.add_child(configured_dementor)
-		return
 
+func _spawn_dementors_from_cells() -> void:
+	for cell: Vector2i in dementor_cells:
+		var dementor: Dementor = dementor_scene.instantiate() as Dementor
+		dementor.global_position = tile_map.to_global(tile_map.map_to_local(cell))
+		entity_layer.add_child(dementor)
+
+
+func _spawn_dementors_from_row_cells() -> void:
+	var first_col: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, dementor_row_cells[0])))
+	var cell_width: float = tile_map.tile_set.tile_size.x * tile_map.global_scale.x
+	var dementor_x: float = first_col.x - cell_width
+	for row: int in dementor_row_cells:
+		var dementor: Dementor = dementor_scene.instantiate() as Dementor
+		var row_center: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, row)))
+		dementor.global_position = Vector2(dementor_x, row_center.y)
+		entity_layer.add_child(dementor)
+
+
+func _spawn_default_dementors() -> void:
 	for row_y: float in DEMENTOR_ROWS_Y:
 		var dementor: Dementor = dementor_scene.instantiate() as Dementor
 		dementor.position = Vector2(DEMENTOR_X, row_y)
@@ -258,9 +460,17 @@ func _set_cursor_mode(is_removing: bool) -> void:
 	Input.set_mouse_mode(mode)
 	if not is_removing:
 		_clear_hovered_ally()
+		_stop_accio_glow()
+
+
+func _stop_accio_glow() -> void:
+	var cursor: AccioCursor = _accio_cursor as AccioCursor
+	if cursor != null:
+		cursor.stop_glow()
 
 
 func _cancel_accio() -> void:
+	_stop_accio_glow()
 	_set_cursor_mode(false)
 
 
@@ -325,9 +535,24 @@ func _try_remove_ally(cell: Vector2i) -> void:
 	var ally: Ally = _occupied_cells[cell] as Ally
 	_occupied_cells.erase(cell)
 	_clear_hovered_ally()
-	_set_cursor_mode(false)
+	_finish_accio_removal()
 	if is_instance_valid(ally):
 		ally.queue_free()
+
+
+func _finish_accio_removal() -> void:
+	_is_removing = false
+	if _accio_button != null:
+		_accio_button.set_active(false)
+	var cursor: AccioCursor = _accio_cursor as AccioCursor
+	if cursor != null:
+		cursor.play_tip_glow(_on_accio_glow_completed)
+	else:
+		_set_cursor_mode(false)
+
+
+func _on_accio_glow_completed() -> void:
+	_set_cursor_mode(false)
 
 
 ## Tries to place the selected ally on the cell under the cursor.
@@ -344,6 +569,8 @@ func _cell_under_mouse() -> Vector2i:
 ## The cell must be on an active row, have a tile and be free.
 func _can_place_at(cell: Vector2i) -> bool:
 	if not cell.y in active_rows or _occupied_cells.has(cell):
+		return false
+	if is_boss_level and _boss != null and cell == _boss.get_current_cell():
 		return false
 	return tile_map.get_cell_source_id(cell) != EMPTY_CELL_SOURCE
 
@@ -414,9 +641,25 @@ func _on_snitch_spawn_timer_timeout() -> void:
 	if _is_level_over:
 		return
 	var snitch: Snitch = snitch_scene.instantiate() as Snitch
+	var target_row: int = _pick_random_snitch_row()
+	var target_y: float = _get_row_center_y(target_row)
+	snitch.setup_sky_fall(target_y)
 	snitch.position = Vector2(randf_range(SKY_SNITCH_MIN_X, SKY_SNITCH_MAX_X), SKY_SNITCH_Y)
 	entity_layer.add_child(snitch)
 	snitch.collected.connect(_on_snitch_collected)
+
+
+func _pick_random_snitch_row() -> int:
+	if active_rows.is_empty():
+		return DEFAULT_SNITCH_ROW
+	return active_rows.pick_random()
+
+
+func _get_row_center_y(row: int) -> float:
+	if tile_map != null:
+		return tile_map.to_global(tile_map.map_to_local(Vector2i(GRID_SAMPLE_COLUMN, row))).y
+	var index: int = clampi(row - FIRST_GRID_ROW_INDEX, 0, DEMENTOR_ROWS_Y.size() - 1)
+	return DEMENTOR_ROWS_Y[index]
 
 
 ## Callback when the player clicks and collects a Snitch.
@@ -425,18 +668,21 @@ func _on_snitch_collected(amount: int) -> void:
 	_refresh_hud()
 
 
-## EnemySpawnTimer callback. Spawns a new enemy until total_enemies is reached.
+## EnemySpawnTimer callback. Spawns regular enemies with accelerating difficulty.
 func _on_enemy_spawn_timer_timeout() -> void:
 	if _is_level_over or _wave_state != STATE_SPAWNING_NORMAL:
 		return
-	if enemy_spawn_timer.wait_time != _enemy_spawn_interval:
-		enemy_spawn_timer.wait_time = _enemy_spawn_interval
-		enemy_spawn_timer.start()
-	if _spawned_enemies >= total_enemies:
-		enemy_spawn_timer.stop()
-		_try_prepare_final_wave()
-		return
+	_accelerate_spawn_cadence()
 	_spawn_enemy(enemy_scenes.pick_random(), true)
+
+
+func _accelerate_spawn_cadence() -> void:
+	_enemy_spawn_interval = maxf(
+		MIN_ENEMY_SPAWN_INTERVAL,
+		_enemy_spawn_interval - SPAWN_INTERVAL_DECREMENT
+	)
+	enemy_spawn_timer.wait_time = _enemy_spawn_interval
+	enemy_spawn_timer.start()
 
 
 func _spawn_enemy(scene: PackedScene, counts_as_regular: bool) -> void:
@@ -456,17 +702,24 @@ func _pick_spawn_position() -> Vector2:
 	return spawn_point.global_position
 
 
-## Callback when an enemy is defeated. Checks the victory condition.
+## Callback when an enemy is defeated. Tracks kills and updates wave progress.
 func _on_enemy_defeated(entity: Node2D) -> void:
 	var enemy_id: int = entity.get_instance_id()
 	if _defeated_enemy_ids.has(enemy_id):
 		return
 	_defeated_enemy_ids[enemy_id] = true
 	_defeated_enemies += 1
-	if _regular_enemy_ids.get(enemy_id, false):
-		_regular_defeated_enemies += 1
+	_total_defeated_enemies += 1
+	_phase_defeated_enemies += 1
 	_active_enemies = maxi(_active_enemies - 1, 0)
+	_update_hud_meter()
+	_check_wave_threshold()
 	_update_wave_progress()
+
+
+func _update_hud_meter() -> void:
+	if is_instance_valid(_wave_progress_bar):
+		_wave_progress_bar.update_progress(_total_defeated_enemies)
 
 
 ## Callback when an enemy invades the garden. Triggers the defeat.
@@ -474,61 +727,62 @@ func _on_garden_invaded() -> void:
 	_lose()
 
 
-## Triggers the victory once every enemy has been defeated.
+func _check_wave_threshold() -> void:
+	if is_boss_level or _wave_state != STATE_SPAWNING_NORMAL:
+		return
+	if _current_phase_index >= wave_kill_thresholds.size():
+		return
+	var required_kills: int = wave_kill_thresholds[_current_phase_index]
+	if _phase_defeated_enemies < required_kills:
+		return
+	_trigger_phase_wave()
+
+
+func _trigger_phase_wave() -> void:
+	_phase_defeated_enemies = 0
+	_current_phase_index += 1
+	var is_final: bool = _current_phase_index >= wave_kill_thresholds.size()
+	_wave_state = STATE_FINAL_WAVE_PREPARATION if is_final else STATE_WAVE_PREPARATION
+	if is_instance_valid(enemy_spawn_timer):
+		enemy_spawn_timer.stop()
+	_request_wave(is_final)
+
+
+## Triggers wave completion or next wave check when enemies are cleared.
 func _update_wave_progress() -> void:
-	if _active_enemies > 0:
+	if is_boss_level or _active_enemies > 0:
 		return
 	if _wave_state == STATE_WAITING_FOR_CLEAR:
 		_resume_after_wave()
-		return
-	if _wave_state == STATE_SPAWNING_NORMAL:
-		_try_prepare_intermediate_wave()
-		if _wave_state == STATE_SPAWNING_NORMAL:
-			_try_prepare_final_wave()
-
-
-func _try_prepare_intermediate_wave() -> void:
-	var next_index: int = _wave_threshold_index + 1
-	var threshold_ratio: float = STANDARD_WAVE_RATIO
-	if is_special_level:
-		threshold_ratio = SPECIAL_FIRST_WAVE_RATIO if next_index == 1 else SPECIAL_SECOND_WAVE_RATIO
-	var threshold: int = maxi(1, ceili(float(total_enemies) * threshold_ratio))
-	var max_intermediate_waves: int = 2 if is_special_level else 1
-	if next_index > max_intermediate_waves:
-		return
-	if _regular_defeated_enemies < threshold:
-		return
-	_wave_threshold_index = next_index
-	_wave_state = STATE_WAVE_PREPARATION
-	enemy_spawn_timer.stop()
-	_request_wave(false)
-
-
-func _try_prepare_final_wave() -> void:
-	if _spawned_enemies < total_enemies or _active_enemies > 0:
-		return
-	var required_thresholds: int = 2 if is_special_level else 1
-	if _wave_state == STATE_LEVEL_COMPLETE or _wave_threshold_index < required_thresholds:
-		return
-	_wave_state = STATE_FINAL_WAVE_PREPARATION
-	_request_wave(true)
 
 
 func _request_wave(is_final: bool) -> void:
+	if not is_instance_valid(wave_director):
+		return
 	var snapshot: RefCounted = _build_snapshot()
 	_pending_request_id = wave_director.request_plan(snapshot, is_final)
 
 
 func _build_snapshot() -> RefCounted:
 	var snapshot: RefCounted = BOARD_SNAPSHOT_SCRIPT.new()
+	_fill_snapshot_base(snapshot)
+	_fill_snapshot_wave_params(snapshot)
+	return snapshot
+
+
+func _fill_snapshot_base(snapshot: RefCounted) -> void:
+	var budget: int = maxi(total_enemies, _total_level_kills)
 	snapshot.set("level_generation", _level_generation)
 	snapshot.set("state", _wave_state)
-	snapshot.set("regular_defeated", _regular_defeated_enemies)
-	snapshot.set("regular_budget", total_enemies)
+	snapshot.set("regular_defeated", mini(_total_defeated_enemies, budget))
+	snapshot.set("regular_budget", budget)
 	snapshot.set("active_enemies", _active_enemies)
 	snapshot.set("defense_value", _defense_value())
 	snapshot.set("is_special_level", is_special_level)
-	snapshot.set("threshold_index", _wave_threshold_index)
+	snapshot.set("threshold_index", _current_phase_index)
+
+
+func _fill_snapshot_wave_params(snapshot: RefCounted) -> void:
 	snapshot.set("intermediate_wave_size", _intermediate_wave_size)
 	snapshot.set("intermediate_wave_min", intermediate_wave_min)
 	snapshot.set("intermediate_wave_max", intermediate_wave_max)
@@ -536,7 +790,6 @@ func _build_snapshot() -> RefCounted:
 	snapshot.set("final_wave_bonus_min", final_wave_bonus_min)
 	snapshot.set("final_wave_bonus_max", final_wave_bonus_max)
 	snapshot.set("row_indices", active_rows)
-	return snapshot
 
 
 func _defense_value() -> float:
@@ -601,20 +854,64 @@ func _resume_after_wave() -> void:
 		_wave_state = STATE_LEVEL_COMPLETE
 		_win()
 		return
-	if _spawned_enemies >= total_enemies:
-		_try_prepare_final_wave()
-		return
 	_wave_state = STATE_SPAWNING_NORMAL
-	enemy_spawn_timer.start()
+	enemy_spawn_timer.start(_enemy_spawn_interval)
 
 
-## Wins the level, unlocks the next one and shows the end panel.
+## Wins the level, unlocks the next one and shows reward or end panel.
 func _win() -> void:
 	_stop_level()
+	_unlock_next_level()
+	if _should_show_reward_unlock():
+		_show_reward_unlock()
+	else:
+		_show_victory_panel()
+
+
+func _unlock_next_level() -> void:
 	var game_manager: Node = get_node_or_null("/root/GameManager")
 	if game_manager != null and game_manager.has_method("unlock_level"):
 		game_manager.call("unlock_level", next_level_to_unlock)
-	_show_end_panel(WIN_TITLE_TEXT, WIN_MESSAGE_TEXT % next_level_to_unlock, true)
+
+
+func _get_current_level_num() -> int:
+	if current_level_number > 0:
+		return current_level_number
+	return FINAL_LEVEL_NUMBER if is_boss_level else next_level_to_unlock - 1
+
+
+func _should_show_reward_unlock() -> bool:
+	var level_num: int = _get_current_level_num()
+	var reward_data: RewardCatalog.RewardData = RewardCatalog.get_reward_for_level(level_num)
+	if reward_data == null:
+		return false
+	var game_manager: Node = get_node_or_null("/root/GameManager")
+	if game_manager != null and game_manager.has_method("is_reward_claimed"):
+		return not bool(game_manager.call("is_reward_claimed", level_num))
+	return true
+
+
+func _show_reward_unlock() -> void:
+	var level_num: int = _get_current_level_num()
+	var reward_data: RewardCatalog.RewardData = RewardCatalog.get_reward_for_level(level_num)
+	var screen_scene: PackedScene = preload("res://reward_unlock_screen.tscn")
+	var screen: RewardUnlockScreen = screen_scene.instantiate() as RewardUnlockScreen
+	screen.reward_dismissed.connect(_on_reward_dismissed)
+	hud.add_child(screen)
+	screen.setup(level_num, reward_data.texture, reward_data.description_text)
+
+
+func _on_reward_dismissed(level_num: int) -> void:
+	var game_manager: Node = get_node_or_null("/root/GameManager")
+	if game_manager != null and game_manager.has_method("claim_reward"):
+		game_manager.call("claim_reward", level_num)
+	_show_victory_panel()
+
+
+func _show_victory_panel() -> void:
+	var win_message: String = BOSS_WIN_MESSAGE_TEXT if is_boss_level else WIN_MESSAGE_TEXT % next_level_to_unlock
+	var has_next: bool = not is_boss_level and _get_current_level_num() < FINAL_LEVEL_NUMBER
+	_show_end_panel(WIN_TITLE_TEXT, win_message, has_next)
 
 
 ## Loses the level and shows the end panel.
@@ -658,7 +955,12 @@ func _show_end_panel(title: String, message: String, show_next: bool) -> void:
 
 ## Callbacks of the interactive level end panel
 func _on_next_level_button_pressed() -> void:
-	_go_to_map()
+	var next_num: int = _get_current_level_num() + 1
+	var next_path: String = NEXT_LEVEL_SCENE_TEMPLATE % next_num
+	if next_num <= FINAL_LEVEL_NUMBER and ResourceLoader.exists(next_path):
+		get_tree().change_scene_to_file(next_path)
+	else:
+		_go_to_map()
 
 
 func _on_back_to_map_button_pressed() -> void:

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://csm7y60tocuv8"
-path="res://.godot/imported/Personajes_Varita de Sauco.png-2e08ed8182fa0588c2a8faa93fb2119d.ctex"
+uid="uid://e1hkjnwwaciy"
+path="res://.godot/imported/seed_mcgonagall.png-2a949cc74b42ee506d779839b85d744a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Images/Personajes_Varita de Sauco.png"
-dest_files=["res://.godot/imported/Personajes_Varita de Sauco.png-2e08ed8182fa0588c2a8faa93fb2119d.ctex"]
+source_file="res://Images/seed_mcgonagall.png"
+dest_files=["res://.godot/imported/seed_mcgonagall.png-2a949cc74b42ee506d779839b85d744a.ctex"]
 
 [params]
 

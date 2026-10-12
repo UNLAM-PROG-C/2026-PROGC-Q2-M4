@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cmi0fghef52y3"
-path="res://.godot/imported/Personajes_Medidor 3 oleadas.png-58f7c9295055e63880f5d48b5a9cd2df.ctex"
+uid="uid://rsqmtk5pgie2"
+path="res://.godot/imported/quirrell.png-543a417a261ba52e899764f9253bb571.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Images/Personajes_Medidor 3 oleadas.png"
-dest_files=["res://.godot/imported/Personajes_Medidor 3 oleadas.png-58f7c9295055e63880f5d48b5a9cd2df.ctex"]
+source_file="res://Images/quirrell.png"
+dest_files=["res://.godot/imported/quirrell.png-543a417a261ba52e899764f9253bb571.ctex"]
 
 [params]
 

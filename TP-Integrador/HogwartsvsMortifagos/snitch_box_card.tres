@@ -8,4 +8,4 @@ script = ExtResource("1_script")
 display_name = "Caja Snitch"
 scene = ExtResource("2_scene")
 cost = 50
-cooldown = 0.0
+cooldown = 5.0

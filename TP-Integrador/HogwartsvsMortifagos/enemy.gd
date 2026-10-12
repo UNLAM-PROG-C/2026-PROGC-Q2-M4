@@ -43,17 +43,23 @@ var _slow_factor: float = 1.0
 var _base_modulate: Color = Color.WHITE
 var _slow_timer: Timer
 
-@onready var sprite: Sprite2D = $Sprite2D
+var sprite: Sprite2D = null
+
 @onready var damage_flash: DamageFlash = $DamageFlash
 
 
 func _ready() -> void:
+	_init_sprite()
 	_health = max_health
 	if walk_texture != null:
 		sprite.texture = walk_texture
 	# Random starting frame so not every enemy walks in sync.
 	sprite.frame = randi() % TOTAL_FRAMES
 	_init_slow_timer()
+
+
+func _init_sprite() -> void:
+	sprite = get_node_or_null("Sprite2D") as Sprite2D
 
 
 func _init_slow_timer() -> void:
@@ -144,8 +150,8 @@ func _apply_next_texture(next_texture: Texture2D, frame_count: int) -> void:
 
 func _frame_size(texture: Texture2D, frame_count: int) -> Vector2:
 	return Vector2(
-		texture.get_width() / frame_count,
-		texture.get_height()
+		float(texture.get_width()) / float(frame_count),
+		float(texture.get_height())
 	)
 
 

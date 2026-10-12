@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://wave_progress_bar.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://Images/wave_meter_red_progress.png" id="2_progress_texture"]
+
+[node name="WaveProgressBar" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 70.0
+offset_bottom = 243.0
+script = ExtResource("1_script")
+
+[node name="ProgressBar" type="TextureProgressBar" parent="."]
+layout_mode = 0
+offset_right = 294.0
+offset_bottom = 1014.0
+scale = Vector2(0.24, 0.24)
+fill_mode = 3
+texture_progress = ExtResource("2_progress_texture")

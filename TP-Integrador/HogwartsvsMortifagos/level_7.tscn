@@ -22,6 +22,15 @@
 [ext_resource type="PackedScene" path="res://projectile.tscn" id="23_projectile"]
 [ext_resource type="Script" path="res://wave_director.gd" id="24_wave_director"]
 [ext_resource type="Script" path="res://accio_button.gd" id="25_accio_button"]
+[ext_resource type="PackedScene" path="res://accio_cursor.tscn" id="26_accio_cursor"]
+[ext_resource type="Texture2D" uid="uid://csm7y60tocuv8" path="res://Images/elder_wand.png" id="27_wand_texture"]
+[ext_resource type="Texture2D" uid="uid://bydhk7drs4isj" path="res://Images/seed_harry.png" id="ext_seed_harry"]
+[ext_resource type="Texture2D" uid="uid://dymbg17ppci62" path="res://Images/seed_snitch_box.png" id="ext_seed_snitch_box"]
+[ext_resource type="Texture2D" uid="uid://03nidtbp83i8" path="res://Images/seed_ron.png" id="ext_seed_ron"]
+[ext_resource type="Texture2D" uid="uid://wqrjixlbwefe" path="res://Images/seed_remembrall.png" id="ext_seed_remembrall"]
+[ext_resource type="Texture2D" uid="uid://3jilxgven0xv" path="res://Images/seed_protego.png" id="ext_seed_protego"]
+[ext_resource type="Texture2D" uid="uid://ct0mjgrpndq61" path="res://Images/seed_broomstick.png" id="ext_seed_broomstick"]
+[ext_resource type="Texture2D" uid="uid://sy6dadu3igl6" path="res://Images/seed_hermione.png" id="ext_seed_hermione"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_grass")
@@ -54,19 +63,28 @@ shadow_size = 10
 shadow_offset = Vector2(4, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
-bg_color = Color(0.921569, 0.862745, 0.698039, 1)
+bg_color = Color(0.18, 0.14, 0.28, 0.9)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.235294, 0.141176, 0.0823529, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0.235, 0.141, 0.082, 0.25)
-shadow_size = 3
-shadow_offset = Vector2(2, 2)
+border_color = Color(0.85, 0.75, 0.35, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
+bg_color = Color(0.28, 0.22, 0.42, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.9, 0.5, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="Level7" type="Node2D"]
 script = ExtResource("3_script")
@@ -79,6 +97,7 @@ active_rows = Array[int]([2, 3, 4, 5, 6])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4"), NodePath("Spawners/Marker2D5")])
 dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
 next_level_to_unlock = 8
+wave_kill_thresholds = Array[int]([30, 30])
 
 [node name="Grid" type="Node2D" parent="."]
 top_level = true
@@ -125,7 +144,7 @@ position = Vector2(1760, 752)
 position = Vector2(1760, 912)
 
 [node name="EnemySpawnTimer" type="Timer" parent="."]
-wait_time = 4.0
+wait_time = 6.0
 autostart = true
 
 [node name="SnitchSpawnTimer" type="Timer" parent="."]
@@ -143,102 +162,111 @@ theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
 
 [node name="PoolDebugLabel" type="Label" parent="HUD"]
-offset_left = 10.0
-offset_top = 60.0
-offset_right = 430.0
-offset_bottom = 120.0
+offset_left = 18.0
+offset_top = 212.0
+offset_right = 438.0
+offset_bottom = 272.0
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 theme_override_font_sizes/font_size = 18
 text = "DEBUG | Disparos consecutivos: 0
 Pool: 50 | Activos: 0 | Disponibles: 50"
 
 [node name="HarryCardButton" type="Button" parent="HUD"]
-offset_left = 220.0
-offset_top = 10.0
-offset_right = 350.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Harry (100)"
+offset_left = 264.0
+offset_top = 7.0
+offset_right = 396.0
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_harry")
+flat = true
+expand_icon = true
 script = ExtResource("14_card_button")
 card = ExtResource("15_harry_card")
 
 [node name="SnitchBoxCardButton" type="Button" parent="HUD"]
-offset_left = 360.0
-offset_top = 10.0
-offset_right = 500.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Caja Snitch (50)"
+offset_left = 418.8
+offset_top = 7.0
+offset_right = 550.8
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_snitch_box")
+flat = true
+expand_icon = true
 script = ExtResource("14_card_button")
 card = ExtResource("16_snitch_box_card")
 
 [node name="RonCardButton" type="Button" parent="HUD"]
-offset_left = 510.0
-offset_top = 10.0
-offset_right = 630.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Ron (125)"
+offset_left = 573.6
+offset_top = 7.0
+offset_right = 705.6
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_ron")
+flat = true
+expand_icon = true
 script = ExtResource("14_card_button")
 card = ExtResource("17_ron_card")
 
 [node name="RemembrallCardButton" type="Button" parent="HUD"]
-offset_left = 640.0
-offset_top = 10.0
-offset_right = 800.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Recordadora (150)"
+offset_left = 728.4
+offset_top = 7.0
+offset_right = 860.4
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_remembrall")
+flat = true
+expand_icon = true
 script = ExtResource("14_card_button")
 card = ExtResource("18_remembrall_card")
 
 [node name="ProtegoCardButton" type="Button" parent="HUD"]
-offset_left = 810.0
-offset_top = 10.0
-offset_right = 930.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Protego (50)"
+offset_left = 883.2
+offset_top = 7.0
+offset_right = 1015.2
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_protego")
+flat = true
+expand_icon = true
 script = ExtResource("14_card_button")
 card = ExtResource("19_protego_card")
 
 [node name="BroomstickCardButton" type="Button" parent="HUD"]
-offset_left = 940.0
-offset_top = 10.0
-offset_right = 1070.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Escoba (125)"
+offset_left = 1038.0
+offset_top = 7.0
+offset_right = 1170.0
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_broomstick")
+flat = true
+expand_icon = true
 script = ExtResource("14_card_button")
 card = ExtResource("20_broomstick_card")
 
 [node name="HermioneCardButton" type="Button" parent="HUD"]
-offset_left = 1080.0
-offset_top = 10.0
-offset_right = 1220.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Hermione (125)"
+offset_left = 1192.8
+offset_top = 7.0
+offset_right = 1324.8
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_hermione")
+flat = true
+expand_icon = true
 script = ExtResource("14_card_button")
 card = ExtResource("21_hermione_card")
 
 [node name="AccioButton" type="Button" parent="HUD"]
-offset_left = 1230.0
-offset_top = 10.0
-offset_right = 1330.0
-offset_bottom = 55.0
-theme_override_font_sizes/font_size = 18
-text = "Accio"
+offset_left = 1775.0
+offset_top = 944.0
+offset_right = 1918.0
+offset_bottom = 1087.0
+flat = true
+icon = ExtResource("27_wand_texture")
+expand_icon = true
 script = ExtResource("25_accio_button")
 
-[node name="AccioCursor" type="ColorRect" parent="HUD"]
+[node name="AccioCursor" parent="HUD" instance=ExtResource("26_accio_cursor")]
 visible = false
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 16.0
-offset_bottom = 16.0
-mouse_filter = 2
-color = Color(1, 0, 1, 0.8)
 
 [node name="StatusLabel" type="Label" parent="HUD"]
 visible = false
@@ -338,25 +366,37 @@ alignment = 1
 [node name="NextLevelButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow"]
 custom_minimum_size = Vector2(170, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
 text = "Siguiente Nivel"
 
 [node name="RetryButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow"]
 custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
 text = "Reintentar"
 
 [node name="BackToMapButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
 text = "Volver al Mapa"
 
 [node name="WaveDirector" type="Node" parent="."]
