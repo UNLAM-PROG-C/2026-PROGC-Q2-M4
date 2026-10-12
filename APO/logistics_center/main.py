@@ -10,15 +10,20 @@ from core.package import Package
 from ui.dashboard import Dashboard
 from workers.base import BaseWorker
 from workers.operator import Operator
+from workers.supervisor import Supervisor
 from workers.truck import Truck
 
 logger = logging.getLogger("main")
 
 
 def build_trucks(
-    dock: "queue.Queue[Package]", stop_event: threading.Event) -> list[Truck]:
+    dock: "queue.Queue[Package]",
+    stop_event: threading.Event,
+    maintenance_event: threading.Event,
+) -> list[Truck]:
   """Creates the producer threads."""
-  return [Truck(f"Truck-{index}", dock, stop_event)
+  return [Truck(f"Truck-{index}", dock, stop_event,
+                maintenance_event=maintenance_event)
           for index in range(1, config.TRUCK_COUNT + 1)]
 
 
@@ -27,10 +32,11 @@ def build_operators(
     inventory: Inventory,
     stop_event: threading.Event,
     producers_finished: threading.Event,
+    maintenance_event: threading.Event,
 ) -> list[Operator]:
   """Creates the consumer/writer threads."""
   return [Operator(f"Operator-{index}", dock, inventory, stop_event,
-                   producers_finished)
+                   producers_finished, maintenance_event=maintenance_event)
           for index in range(1, config.OPERATOR_COUNT + 1)]
 
 
@@ -75,7 +81,8 @@ def shutdown(
   """Two-phase shutdown: stop producers/readers, then drain the dock.
 
   Args:
-    first_phase: Workers driven only by the stop event (trucks, dashboard).
+    first_phase: Workers driven only by the stop event (trucks, dashboard,
+      supervisor). Stopping the supervisor clears any active maintenance.
     operators: Consumers that keep running until the dock is empty.
     producers_finished: Signal that no more packages will be enqueued.
   """
@@ -90,15 +97,19 @@ def main() -> None:
   logging.basicConfig(level=logging.INFO, format=config.LOG_FORMAT)
   stop_event = threading.Event()
   producers_finished = threading.Event()
+  maintenance_event = threading.Event()
   dock: "queue.Queue[Package]" = queue.Queue(maxsize=config.QUEUE_MAX_SIZE)
   inventory = Inventory()
-  trucks = build_trucks(dock, stop_event)
-  operators = build_operators(dock, inventory, stop_event, producers_finished)
+  trucks = build_trucks(dock, stop_event, maintenance_event)
+  operators = build_operators(dock, inventory, stop_event, producers_finished,
+                              maintenance_event)
   dashboard = Dashboard("Dashboard", inventory, dock, stop_event)
-  for worker in [*trucks, *operators, dashboard]:
+  supervisor = Supervisor("Supervisor", stop_event, maintenance_event)
+  first_phase: list[BaseWorker] = [*trucks, dashboard, supervisor]
+  for worker in [*first_phase, *operators]:
     worker.start()
   wait_for_shutdown(stop_event)
-  shutdown([*trucks, dashboard], operators, producers_finished)
+  shutdown(first_phase, operators, producers_finished)
   report(inventory, dock)
 
 

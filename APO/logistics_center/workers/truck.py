@@ -22,18 +22,27 @@ class Truck(BaseWorker):
       dock: "queue.Queue[Package]",
       stop_event: threading.Event,
       rng: random.Random | None = None,
+      maintenance_event: threading.Event | None = None,
+      arrival_seconds: float = config.TRUCK_ARRIVAL_INTERVAL_SECONDS,
   ) -> None:
-    super().__init__(name=name, stop_event=stop_event)
+    super().__init__(name=name, stop_event=stop_event,
+                     maintenance_event=maintenance_event)
     self._dock = dock
     self._rng = rng or random.Random()
+    self._arrival_seconds = arrival_seconds
     self._batch_counter = itertools.count(start=1)
 
   def _step(self) -> None:
-    """Unloads one batch, then waits (interruptibly) for the next arrival."""
+    """Unloads one batch, then waits (interruptibly) for the next arrival.
+
+    The dock is closed during maintenance, so the truck holds before
+    unloading; a batch already being unloaded is always completed.
+    """
+    self._wait_while_paused()
     batch = self._build_batch()
     delivered = sum(1 for package in batch if self._enqueue(package))
     logger.info("Delivered %d/%d packages", delivered, len(batch))
-    self._stop_event.wait(config.TRUCK_ARRIVAL_INTERVAL_SECONDS)
+    self._stop_event.wait(self._arrival_seconds)
 
   def _build_batch(self) -> list[Package]:
     """Creates a random batch of packages."""

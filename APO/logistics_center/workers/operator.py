@@ -28,8 +28,10 @@ class Operator(BaseWorker):
       stop_event: threading.Event,
       producers_finished: threading.Event,
       processing_seconds: float = config.OPERATOR_PROCESSING_SECONDS,
+      maintenance_event: threading.Event | None = None,
   ) -> None:
-    super().__init__(name=name, stop_event=stop_event)
+    super().__init__(name=name, stop_event=stop_event,
+                     maintenance_event=maintenance_event)
     self._dock = dock
     self._inventory = inventory
     self._producers_finished = producers_finished
@@ -44,7 +46,12 @@ class Operator(BaseWorker):
     return self._producers_finished.is_set() and self._dock.empty()
 
   def _step(self) -> None:
-    """Processes one package, or returns on timeout to re-check shutdown."""
+    """Processes one package, or returns on timeout to re-check shutdown.
+
+    Holds before taking a package while maintenance is active, so a package
+    is never left half-processed: once taken, it is always registered.
+    """
+    self._wait_while_paused()
     try:
       package = self._dock.get(timeout=config.QUEUE_TIMEOUT_SECONDS)
     except queue.Empty:
