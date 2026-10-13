@@ -104,6 +104,7 @@ dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
 next_level_to_unlock = 10
 is_special_level = true
 wave_kill_thresholds = Array[int]([30, 40, 70])
+troll_delay_waves = 1
 
 [node name="Grid" type="Node2D" parent="." unique_id=887263288]
 top_level = true

@@ -25,6 +25,8 @@ const MIN_SLOW_FACTOR: float = 0.70
 @export var speed: float = 32.0
 ## Damage dealt per second while attacking an ally.
 @export var damage_per_second: float = 30.0
+## Damage dealt per attack cycle once the attack animation loop finishes.
+@export var damage_per_attack: float = 30.0
 ## Animation sheet used once hurt.
 @export var hurt_texture: Texture2D
 ## Walking animation sheet.
@@ -42,6 +44,8 @@ var _is_attacking: bool = false
 var _slow_factor: float = 1.0
 var _base_modulate: Color = Color.WHITE
 var _slow_timer: Timer
+var _animation_timer: Timer = null
+var _base_animation_interval: float = 0.25
 
 var sprite: Sprite2D = null
 
@@ -56,6 +60,7 @@ func _ready() -> void:
 	# Random starting frame so not every enemy walks in sync.
 	sprite.frame = randi() % TOTAL_FRAMES
 	_init_slow_timer()
+	_init_animation_timer()
 
 
 func _init_sprite() -> void:
@@ -67,6 +72,12 @@ func _init_slow_timer() -> void:
 	_slow_timer.one_shot = true
 	_slow_timer.timeout.connect(_on_slow_timer_timeout)
 	add_child(_slow_timer)
+
+
+func _init_animation_timer() -> void:
+	_animation_timer = get_node_or_null("AnimationTimer") as Timer
+	if _animation_timer != null:
+		_base_animation_interval = _animation_timer.wait_time
 
 
 func _process(delta: float) -> void:
@@ -86,10 +97,9 @@ func _update_target_state() -> void:
 
 func _process_actions(delta: float) -> void:
 	if is_instance_valid(_target_ally):
-		_target_ally.take_damage(damage_per_second * _slow_factor * delta)
-	else:
-		_target_ally = null
-		position.x -= speed * _slow_factor * delta
+		return
+	_target_ally = null
+	position.x -= speed * _slow_factor * delta
 
 
 func apply_slow(factor: float, duration: float) -> void:
@@ -97,6 +107,8 @@ func apply_slow(factor: float, duration: float) -> void:
 	_base_modulate = SLOW_TINT_COLOR
 	sprite.modulate = _base_modulate
 	sprite.set_meta(&"base_modulate", _base_modulate)
+	if _animation_timer != null and _slow_factor > 0.0:
+		_animation_timer.wait_time = _base_animation_interval / _slow_factor
 	_slow_timer.start(duration)
 
 
@@ -105,6 +117,8 @@ func _on_slow_timer_timeout() -> void:
 	_base_modulate = Color.WHITE
 	sprite.modulate = _base_modulate
 	sprite.set_meta(&"base_modulate", _base_modulate)
+	if _animation_timer != null:
+		_animation_timer.wait_time = _base_animation_interval
 
 
 ## Called by projectiles, the Remembrall and Dementors.
@@ -143,7 +157,7 @@ func _apply_next_texture(next_texture: Texture2D, frame_count: int) -> void:
 	var previous_left_edge: float = sprite.position.x - previous_frame_size.x * absf(sprite.scale.x) * 0.5
 	sprite.texture = next_texture
 	sprite.hframes = frame_count
-	sprite.frame = sprite.frame % frame_count
+	sprite.frame = 0 if _is_attacking else (sprite.frame % frame_count)
 	var next_frame_size: Vector2 = _frame_size(next_texture, frame_count)
 	sprite.position.x = previous_left_edge + next_frame_size.x * absf(sprite.scale.x) * 0.5
 
@@ -165,8 +179,21 @@ func _die() -> void:
 
 
 ## Advances to the next frame of the animation sheet.
+## Deals attack damage only upon finishing the attack animation loop.
 func _on_animation_timer_timeout() -> void:
-	sprite.frame = (sprite.frame + 1) % sprite.hframes
+	if sprite == null or sprite.hframes <= 0:
+		return
+	var next_frame: int = (sprite.frame + 1) % sprite.hframes
+	var loop_finished: bool = (next_frame == 0)
+	sprite.frame = next_frame
+	if _is_attacking and loop_finished:
+		_deal_attack_damage()
+
+
+func _deal_attack_damage() -> void:
+	if is_instance_valid(_target_ally) and _target_ally.has_method(&"take_damage"):
+		var damage_amount: float = damage_per_attack if damage_per_attack > 0.0 else damage_per_second
+		_target_ally.take_damage(damage_amount)
 
 
 ## DetectionArea callback. Targets allies that enter attack range.

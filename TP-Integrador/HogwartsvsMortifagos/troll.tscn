@@ -212,7 +212,7 @@ tracks/6/keys = {
 [sub_resource type="Animation" id="Animation_rfb57"]
 resource_name = "attack"
 length = 2.0
-loop_mode = 1
+loop_mode = 0
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true

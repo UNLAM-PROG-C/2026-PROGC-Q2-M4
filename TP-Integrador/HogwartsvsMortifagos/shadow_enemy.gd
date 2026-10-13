@@ -12,10 +12,12 @@ func _ready() -> void:
 	speed = SHADOW_SPEED
 	max_health = SHADOW_MAX_HEALTH
 	damage_per_second = SHADOW_DAMAGE_PER_SECOND
+	damage_per_attack = 15.0
 	_health = max_health
 	_init_sprite()
 	_setup_shadow_sprite()
 	_init_slow_timer()
+	_init_animation_timer()
 
 
 func _setup_shadow_sprite() -> void:
@@ -27,8 +29,7 @@ func _setup_shadow_sprite() -> void:
 
 
 func _on_animation_timer_timeout() -> void:
-	if sprite != null and sprite.hframes > 1:
-		sprite.frame = (sprite.frame + 1) % sprite.hframes
+	super._on_animation_timer_timeout()
 
 
 func _update_animation_texture() -> void:

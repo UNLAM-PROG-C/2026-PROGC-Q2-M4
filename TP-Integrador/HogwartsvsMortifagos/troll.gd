@@ -7,17 +7,16 @@ extends Enemy
 const DEFAULT_MAX_HEALTH: float = 3600.0
 const DEFAULT_SPEED: float = 20.0
 const INSTAKILL_DAMAGE: float = 9999.0
-const SMASH_HIT_DELAY: float = 1.0
-const ATTACK_TOTAL_DURATION: float = 1.6
 const FRONT_REACH_X: float = 140.0
 const MIN_REACH_X: float = -40.0
+const ATTACK_COOLDOWN: float = 1.0
 const ATTACK_ANIM_NAME: StringName = &"attack"
 const WALK_ANIM_NAME: StringName = &"Walk"
 
 @export var damage_instakill: float = INSTAKILL_DAMAGE
+@export var attack_cooldown: float = ATTACK_COOLDOWN
 
-var _attack_timer: float = 0.0
-var _has_smashed: bool = false
+var _attack_cooldown_remaining: float = 0.0
 
 @onready var animation_player: AnimationPlayer = $Animation
 @onready var detection_area: Area2D = $DetectionArea
@@ -28,8 +27,19 @@ func _ready() -> void:
 	speed = DEFAULT_SPEED
 	sprite = $Troll_Body
 	_health = max_health
+	_attack_cooldown_remaining = 0.0
 	_init_slow_timer()
+	_init_animation()
 	animation_player.play(WALK_ANIM_NAME)
+
+
+func _init_animation() -> void:
+	if animation_player.has_animation(ATTACK_ANIM_NAME):
+		var attack_anim: Animation = animation_player.get_animation(ATTACK_ANIM_NAME)
+		if attack_anim != null:
+			attack_anim.loop_mode = Animation.LOOP_NONE
+	if not animation_player.animation_finished.is_connected(_on_animation_finished):
+		animation_player.animation_finished.connect(_on_animation_finished)
 
 
 func _process(delta: float) -> void:
@@ -38,9 +48,12 @@ func _process(delta: float) -> void:
 
 
 func _update_combat(delta: float) -> void:
+	if _attack_cooldown_remaining > 0.0:
+		_attack_cooldown_remaining -= delta
 	if _is_attacking:
-		_process_attack_cycle(delta)
-	elif _has_allies_in_front():
+		# Attack animation in progress. Instakill triggers when attack animation finishes.
+		return
+	if _attack_cooldown_remaining <= 0.0 and _has_allies_in_front():
 		_start_attack()
 	else:
 		_process_movement(delta)
@@ -50,33 +63,25 @@ func _process_movement(delta: float) -> void:
 	position.x -= speed * _slow_factor * delta
 
 
-func _process_attack_cycle(delta: float) -> void:
-	_attack_timer += delta
-	if not _has_smashed and _attack_timer >= SMASH_HIT_DELAY:
-		_has_smashed = true
-		_execute_instakill_all()
-	if _attack_timer >= ATTACK_TOTAL_DURATION:
-		_finish_attack()
-
-
 func _start_attack() -> void:
 	_is_attacking = true
-	_attack_timer = 0.0
-	_has_smashed = false
+	animation_player.stop()
 	animation_player.play(ATTACK_ANIM_NAME)
 
 
-func _finish_attack() -> void:
-	if _has_allies_in_front():
-		_start_attack()
-	else:
+## Called when the Godot animation finishes.
+## Delivers instakill and immediately returns to Walk mode so the Troll keeps moving forward.
+func _on_animation_finished(anim_name: StringName) -> void:
+	if anim_name == ATTACK_ANIM_NAME:
+		_execute_instakill_all()
 		_is_attacking = false
+		_attack_cooldown_remaining = attack_cooldown
 		animation_player.play(WALK_ANIM_NAME)
 
 
 func _execute_instakill_all() -> void:
 	for ally: Ally in _get_allies_in_front():
-		if is_instance_valid(ally) and ally.has_method(&"take_damage"):
+		if is_instance_valid(ally) and not ally.is_queued_for_deletion() and ally.has_method(&"take_damage"):
 			ally.take_damage(damage_instakill)
 
 
@@ -101,18 +106,21 @@ func _collect_overlapping_allies(result: Array[Ally], seen: Dictionary) -> void:
 
 func _collect_lane_allies(result: Array[Ally], seen: Dictionary) -> void:
 	for ally_node: Node in get_tree().get_nodes_in_group(Groups.ALLIES):
-		if ally_node is Ally and is_instance_valid(ally_node):
+		if ally_node is Ally and is_instance_valid(ally_node) and not ally_node.is_queued_for_deletion():
 			var ally: Ally = ally_node as Ally
 			if _is_ally_in_hit_box(ally):
 				_try_add_ally(ally, result, seen)
 
 
 func _try_add_ally(node: Node, result: Array[Ally], seen: Dictionary) -> void:
-	if node != null and node.is_in_group(Groups.ALLIES) and is_instance_valid(node):
-		var id: int = node.get_instance_id()
-		if not seen.has(id) and node is Ally:
-			seen[id] = true
-			result.append(node as Ally)
+	if node != null and is_instance_valid(node) and not node.is_queued_for_deletion():
+		if node.is_in_group(Groups.ALLIES) and node is Ally:
+			var ally: Ally = node as Ally
+			if ally.health > 0.0:
+				var id: int = ally.get_instance_id()
+				if not seen.has(id):
+					seen[id] = true
+					result.append(ally)
 
 
 func _is_ally_in_hit_box(ally: Ally) -> bool:
@@ -123,8 +131,22 @@ func _is_ally_in_hit_box(ally: Ally) -> bool:
 
 
 func _on_detection_area_area_entered(area: Area2D) -> void:
-	if not _is_attacking and area.is_in_group(Groups.ALLIES):
-		_start_attack()
+	if not _is_attacking and _attack_cooldown_remaining <= 0.0 and area.is_in_group(Groups.ALLIES):
+		var ally: Ally = area as Ally
+		if ally != null and is_instance_valid(ally) and not ally.is_queued_for_deletion() and ally.health > 0.0:
+			_start_attack()
+
+
+func apply_slow(factor: float, duration: float) -> void:
+	super.apply_slow(factor, duration)
+	if animation_player != null:
+		animation_player.speed_scale = _slow_factor
+
+
+func _on_slow_timer_timeout() -> void:
+	super._on_slow_timer_timeout()
+	if animation_player != null:
+		animation_player.speed_scale = 1.0
 
 
 func _check_garden_invasion() -> void:

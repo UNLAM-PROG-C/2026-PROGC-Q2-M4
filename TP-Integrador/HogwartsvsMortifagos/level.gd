@@ -90,6 +90,8 @@ const NEXT_LEVEL_SCENE_TEMPLATE: String = "res://level_%d.tscn"
 @export var wave_meter_texture: Texture2D
 @export var is_boss_level: bool = false
 @export var boss_scene: PackedScene
+## Number of completed waves before Trolls are allowed to spawn.
+@export var troll_delay_waves: int = 0
 
 var _snitches: int = 0
 ## Card chosen in the HUD, or null when nothing is selected.
@@ -107,6 +109,7 @@ var _defeated_enemies: int = 0
 var _phase_defeated_enemies: int = 0
 var _total_defeated_enemies: int = 0
 var _current_phase_index: int = 0
+var _completed_waves: int = 0
 var _total_level_kills: int = 0
 var _active_enemies: int = 0
 var _wave_state: int = STATE_SPAWNING_NORMAL
@@ -153,6 +156,7 @@ func _init_level_state() -> void:
 	level_end_panel.visible = false
 	wave_announcement.visible = false
 	_intermediate_wave_size = intermediate_wave_min
+	_completed_waves = 0
 	_calculate_total_level_kills()
 	if not is_boss_level and is_instance_valid(wave_director):
 		wave_director.result_ready.connect(_on_wave_result)
@@ -668,12 +672,39 @@ func _on_snitch_collected(amount: int) -> void:
 	_refresh_hud()
 
 
+func _is_troll_scene(scene: PackedScene) -> bool:
+	if scene == null:
+		return false
+	return scene.resource_path.get_file() == "troll.tscn"
+
+
+func _are_trolls_allowed() -> bool:
+	var required_waves: int = troll_delay_waves
+	if required_waves <= 0 and (_get_current_level_num() == 9 or name == "Level9"):
+		required_waves = 1
+	return _completed_waves >= required_waves
+
+
+func _pick_random_enemy_scene() -> PackedScene:
+	if enemy_scenes.is_empty():
+		return null
+	if _are_trolls_allowed():
+		return enemy_scenes.pick_random()
+	var allowed_scenes: Array[PackedScene] = []
+	for scene: PackedScene in enemy_scenes:
+		if not _is_troll_scene(scene):
+			allowed_scenes.append(scene)
+	if allowed_scenes.is_empty():
+		return enemy_scenes.pick_random()
+	return allowed_scenes.pick_random()
+
+
 ## EnemySpawnTimer callback. Spawns regular enemies with accelerating difficulty.
 func _on_enemy_spawn_timer_timeout() -> void:
 	if _is_level_over or _wave_state != STATE_SPAWNING_NORMAL:
 		return
 	_accelerate_spawn_cadence()
-	_spawn_enemy(enemy_scenes.pick_random(), true)
+	_spawn_enemy(_pick_random_enemy_scene(), true)
 
 
 func _accelerate_spawn_cadence() -> void:
@@ -686,6 +717,8 @@ func _accelerate_spawn_cadence() -> void:
 
 
 func _spawn_enemy(scene: PackedScene, counts_as_regular: bool) -> void:
+	if scene == null:
+		return
 	var enemy: Enemy = scene.instantiate() as Enemy
 	enemy.global_position = _pick_spawn_position()
 	entity_layer.add_child(enemy)
@@ -843,13 +876,14 @@ func _spawn_wave_enemies(plan: RefCounted) -> void:
 			await get_tree().create_timer(spawn_delay).timeout
 		if _is_level_over:
 			return
-		_spawn_enemy(enemy_scenes.pick_random(), false)
+		_spawn_enemy(_pick_random_enemy_scene(), false)
 	_wave_state = STATE_WAITING_FOR_CLEAR
 
 
 func _resume_after_wave() -> void:
 	if _wave_state != STATE_WAITING_FOR_CLEAR:
 		return
+	_completed_waves += 1
 	if _final_wave_active:
 		_wave_state = STATE_LEVEL_COMPLETE
 		_win()

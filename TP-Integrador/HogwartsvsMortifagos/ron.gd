@@ -3,8 +3,8 @@ extends Ally
 
 ## Seconds between shots.
 @export var shot_interval: float = 3.0
-## Damage dealt to the enemy hit by Ron's projectile (1.5x base damage).
-@export var damage: float = 30.0
+## Damage dealt to the enemy hit by Ron's projectile (3x base damage).
+@export var damage: float = 60.0
 ## Fallback projectile scene.
 @export var projectile_scene: PackedScene
 ## Shared projectile pool injected by Level.

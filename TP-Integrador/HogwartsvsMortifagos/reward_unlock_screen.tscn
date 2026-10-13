@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://rewardunlockscreen001"]
+[gd_scene format=3 uid="uid://cffv0rc6gf0ky"]
 
-[ext_resource type="Script" path="res://reward_unlock_screen.gd" id="1_script"]
-[ext_resource type="Shader" path="res://blur_overlay.gdshader" id="2_shader"]
+[ext_resource type="Script" uid="uid://bgf2pqlwlk717" path="res://reward_unlock_screen.gd" id="1_script"]
+[ext_resource type="Shader" uid="uid://duj81r4ummqeu" path="res://blur_overlay.gdshader" id="2_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_blur"]
 shader = ExtResource("2_shader")
@@ -47,20 +47,19 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[node name="RewardUnlockScreen" type="CanvasLayer"]
+[node name="RewardUnlockScreen" type="CanvasLayer" unique_id=1725194626]
 layer = 100
 script = ExtResource("1_script")
 
-[node name="RootControl" type="Control" parent="."]
+[node name="RootControl" type="Control" parent="." unique_id=445326538]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 
-[node name="BlurBackground" type="ColorRect" parent="RootControl"]
+[node name="BlurBackground" type="ColorRect" parent="RootControl" unique_id=1471325615]
 material = SubResource("ShaderMaterial_blur")
 layout_mode = 1
 anchors_preset = 15
@@ -71,7 +70,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.04, 0.04, 0.07, 0.85)
 
-[node name="ModalBox" type="PanelContainer" parent="RootControl"]
+[node name="ModalBox" type="PanelContainer" parent="RootControl" unique_id=1815704395]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -79,7 +78,7 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -450.0
-offset_top = -370.0
+offset_top = -443.0
 offset_right = 450.0
 offset_bottom = 370.0
 grow_horizontal = 2
@@ -87,7 +86,7 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
 
-[node name="SeedAnchor" type="Control" parent="RootControl"]
+[node name="SeedAnchor" type="Control" parent="RootControl" unique_id=752956492]
 layout_mode = 1
 anchors_preset = 0
 offset_left = 960.0
@@ -96,7 +95,7 @@ offset_right = 960.0
 offset_bottom = 310.0
 mouse_filter = 2
 
-[node name="SeedIcon" type="TextureRect" parent="RootControl/SeedAnchor"]
+[node name="SeedIcon" type="TextureRect" parent="RootControl/SeedAnchor" unique_id=822012353]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -113,7 +112,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="DescriptionLabel" type="Label" parent="RootControl"]
+[node name="DescriptionLabel" type="Label" parent="RootControl" unique_id=647925729]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -132,7 +131,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="ContinueButton" type="Button" parent="RootControl"]
+[node name="ContinueButton" type="Button" parent="RootControl" unique_id=394693890]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -146,10 +145,10 @@ offset_bottom = 330.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 26
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
 text = "Continuar"
