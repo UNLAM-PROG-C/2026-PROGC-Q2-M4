@@ -7,6 +7,7 @@
 size = Vector2(176, 57)
 
 [node name="Snitch" type="Area2D" unique_id=2137711152]
+z_index = 1000
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("1_script")
@@ -17,6 +18,7 @@ texture = ExtResource("2_texture")
 hframes = 4
 
 [node name="EscapeParticles" type="CPUParticles2D" parent="." unique_id=1118267278]
+z_index = 1
 emitting = false
 amount = 15
 lifetime = 0.5

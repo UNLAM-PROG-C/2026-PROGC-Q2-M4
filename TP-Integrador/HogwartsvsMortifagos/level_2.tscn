@@ -4,19 +4,19 @@
 [ext_resource type="Texture2D" uid="uid://bo8wd3l4a7t36" path="res://Images/grass_variant.png" id="2_4osvq"]
 [ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://level.gd" id="3_script"]
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
-[ext_resource type="PackedScene" path="res://snitch.tscn" id="7_snitch"]
-[ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
-[ext_resource type="Texture2D" uid="uid://m2225llgru1t" path="res://Images/background.png" id="10_background"]
-[ext_resource type="Script" path="res://ally_card_button.gd" id="13_card_button"]
+[ext_resource type="PackedScene" uid="uid://cpc5lnjbkueb1" path="res://snitch.tscn" id="7_snitch"]
+[ext_resource type="PackedScene" uid="uid://cxajxi1ebmj8h" path="res://dementor.tscn" id="8_dementor"]
+[ext_resource type="Texture2D" uid="uid://cw7pmlyc3xmcf" path="res://Images/level2_background.png" id="10_level2_background"]
+[ext_resource type="Script" uid="uid://daladrauc8hd2" path="res://ally_card_button.gd" id="13_card_button"]
 [ext_resource type="Resource" path="res://harry_card.tres" id="14_harry_card"]
 [ext_resource type="Resource" path="res://snitch_box_card.tres" id="15_snitch_box_card"]
 [ext_resource type="Resource" path="res://remembrall_card.tres" id="16_remembrall_card"]
-[ext_resource type="Script" path="res://projectile_pool.gd" id="18_projectile_pool"]
-[ext_resource type="PackedScene" path="res://projectile.tscn" id="19_projectile"]
-[ext_resource type="Script" path="res://wave_director.gd" id="20_wave_director"]
+[ext_resource type="Script" uid="uid://cf0s6fcetjfwt" path="res://projectile_pool.gd" id="18_projectile_pool"]
+[ext_resource type="PackedScene" uid="uid://bwxniwtn2vxfv" path="res://projectile.tscn" id="19_projectile"]
+[ext_resource type="Script" uid="uid://cwt052j5c5ne1" path="res://wave_director.gd" id="20_wave_director"]
 [ext_resource type="Texture2D" uid="uid://bydhk7drs4isj" path="res://Images/seed_harry.png" id="ext_seed_harry"]
-[ext_resource type="Texture2D" uid="uid://dymbg17ppci62" path="res://Images/seed_snitch_box.png" id="ext_seed_snitch_box"]
 [ext_resource type="Texture2D" uid="uid://wqrjixlbwefe" path="res://Images/seed_remembrall.png" id="ext_seed_remembrall"]
+[ext_resource type="Texture2D" uid="uid://dymbg17ppci62" path="res://Images/seed_snitch_box.png" id="ext_seed_snitch_box"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_44v15")
@@ -82,8 +82,7 @@ active_rows = Array[int]([3, 4, 5])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4")])
 dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
 next_level_to_unlock = 3
-is_special_level = false
-wave_kill_thresholds = Array[int]([20, 25])
+wave_kill_thresholds = Array[int]([20, 20])
 
 [node name="Grid" type="Node2D" parent="." unique_id=2109126223]
 top_level = true
@@ -137,13 +136,13 @@ color = Color(0.1, 0.1, 0.25, 0.6)
 show_behind_parent = true
 position = Vector2(-248, 0)
 scale = Vector2(1.6, 1.6)
-texture = ExtResource("10_background")
+texture = ExtResource("10_level2_background")
 centered = false
 
 [node name="Entities" type="Node2D" parent="." unique_id=605582533]
 z_index = 10
 
-[node name="ProjectilePool" type="Node2D" parent="Entities"]
+[node name="ProjectilePool" type="Node2D" parent="Entities" unique_id=216762270]
 script = ExtResource("18_projectile_pool")
 projectile_scene = ExtResource("19_projectile")
 
@@ -166,7 +165,7 @@ position = Vector2(1760, 752)
 position = Vector2(1760, 912)
 
 [node name="EnemySpawnTimer" type="Timer" parent="." unique_id=1162641464]
-wait_time = 12.0
+wait_time = 9.0
 autostart = true
 
 [node name="SnitchSpawnTimer" type="Timer" parent="." unique_id=2049164940]
@@ -183,14 +182,15 @@ offset_bottom = 50.0
 theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
 
-[node name="PoolDebugLabel" type="Label" parent="HUD"]
+[node name="PoolDebugLabel" type="Label" parent="HUD" unique_id=595910972]
 offset_left = 18.0
 offset_top = 212.0
 offset_right = 438.0
 offset_bottom = 272.0
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 theme_override_font_sizes/font_size = 18
-text = "DEBUG | Disparos consecutivos: 0\nPool: 50 | Activos: 0 | Disponibles: 50"
+text = "DEBUG | Disparos consecutivos: 0
+Pool: 50 | Activos: 0 | Disponibles: 50"
 
 [node name="HarryCardButton" type="Button" parent="HUD" unique_id=1005889825]
 offset_left = 264.0
@@ -238,27 +238,27 @@ theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WaveAnnouncement" type="ColorRect" parent="HUD" unique_id=461003768]
+[node name="WaveAnnouncement" type="PanelContainer" parent="HUD" unique_id=461003768]
 visible = false
-mouse_filter = 2
-offset_left = 420.0
-offset_top = 390.0
-offset_right = 1500.0
-offset_bottom = 570.0
-color = Color(0.055, 0.025, 0.12, 0.94)
-
-[node name="Label" type="Label" parent="HUD/WaveAnnouncement" unique_id=461003769]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -540.0
+offset_top = -80.0
+offset_right = 540.0
+offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.24, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 12
-theme_override_font_sizes/font_size = 52
-text = "¡SE AVECINA UNA OLEADA DE ENEMIGOS!"
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="Label" type="Label" parent="HUD/WaveAnnouncement" unique_id=461003769]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
+theme_override_font_sizes/font_size = 44
+text = "¡SE AVECINA UNA GRAN OLEADA DE MORTÍFAGOS!"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -326,40 +326,40 @@ alignment = 1
 [node name="NextLevelButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=1007129947]
 custom_minimum_size = Vector2(170, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Siguiente Nivel"
 
 [node name="RetryButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=1747888044]
 custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Reintentar"
 
 [node name="BackToMapButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=214647230]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Volver al Mapa"
 
-[node name="WaveDirector" type="Node" parent="."]
+[node name="WaveDirector" type="Node" parent="." unique_id=699621868]
 script = ExtResource("20_wave_director")
 
 [connection signal="timeout" from="EnemySpawnTimer" to="." method="_on_enemy_spawn_timer_timeout"]

@@ -73,52 +73,52 @@ func _test_melee_enemy_attack_loop_damage() -> void:
 func _test_shooting_enemy_stays_stopped_and_shoots() -> void:
 	print("Testing Shooting Enemy (SlytherinPrefect) behavior...")
 	var prefect_scene: PackedScene = load("res://slytherin_prefect.tscn")
-	var ally_scene: PackedScene = load("res://harry.tscn")
 	assert(prefect_scene != null, "Prefect scene must load")
-
 	var prefect: SlytherinPrefect = prefect_scene.instantiate() as SlytherinPrefect
-	var ally: Ally = ally_scene.instantiate() as Ally
 	root.add_child(prefect)
-	root.add_child(ally)
-	prefect.global_position = Vector2(800, 200)
-	ally.global_position = Vector2(400, 200)
+	prefect.global_position = Vector2(1800, 200)
 	await process_frame
-
-	assert(prefect._has_ally_ahead(), "Prefect should detect ally ahead in lane")
-	var initial_x: float = prefect.position.x
-
-	# While ally is ahead, _process should NOT move it forward
-	prefect._process(0.1)
-	assert(prefect.position.x == initial_x, "Shooting enemy MUST stay stopped when ally is ahead!")
-
-	# Trigger shoot timeout: starts ranged attack animation
-	prefect._on_shoot_timer_timeout()
-	assert(prefect._is_shooting, "Prefect should be in shooting casting mode")
-	assert(prefect.sprite.frame == 0, "Casting animation should start at frame 0")
-
-	# Frames 0 -> 1 -> 2 -> 3
-	prefect._on_animation_timer_timeout()
-	assert(prefect.sprite.frame == 1)
-	assert(prefect._is_shooting)
-
-	prefect._on_animation_timer_timeout()
-	assert(prefect.sprite.frame == 2)
-	assert(prefect._is_shooting)
-
-	prefect._on_animation_timer_timeout()
-	assert(prefect.sprite.frame == 3)
-	assert(prefect._is_shooting)
-
-	# Frame 3 -> 0: Loop finishes! Projectile should shoot and _is_shooting ends
-	var child_count_before: int = root.get_child_count()
-	prefect._on_animation_timer_timeout()
-	assert(not prefect._is_shooting, "Prefect should finish shooting cast when animation loop finishes")
-	assert(root.get_child_count() > child_count_before, "Projectile should be spawned into parent")
-
+	_verify_prefect_walking_state(prefect)
+	_verify_prefect_stopping_and_attacking_state(prefect)
+	_verify_prefect_hurt_textures(prefect)
 	prefect.queue_free()
-	ally.queue_free()
 	await process_frame
 	print("Shooting Enemy test PASSED.")
+
+
+func _verify_prefect_walking_state(prefect: SlytherinPrefect) -> void:
+	assert(not prefect.is_stopped(), "Prefect should be walking before stop_x")
+	assert(prefect.sprite.texture == prefect.walk_texture, "Prefect should use walk texture while walking")
+	assert(prefect.sprite.hframes == 8, "Walk texture must have 8 frames")
+	var initial_x: float = prefect.position.x
+	prefect._process(0.1)
+	assert(prefect.position.x < initial_x, "Prefect should advance while walking")
+	var child_count_before: int = root.get_child_count()
+	prefect._on_shoot_timer_timeout()
+	assert(root.get_child_count() > child_count_before, "Prefect must shoot while walking")
+
+
+func _verify_prefect_stopping_and_attacking_state(prefect: SlytherinPrefect) -> void:
+	prefect.global_position.x = prefect.stop_x - 10.0
+	prefect._process(0.1)
+	assert(prefect.is_stopped(), "Prefect must stay stopped at or past stop_x")
+	assert(prefect.global_position.x == prefect.stop_x, "Position should be clamped to stop_x")
+	assert(prefect.sprite.texture == prefect.attacking_texture, "Prefect should use attacking texture when stopped")
+	assert(prefect.sprite.hframes == 1, "Attacking texture must have 1 frame")
+	var stopped_x: float = prefect.position.x
+	prefect._process(0.5)
+	assert(prefect.position.x == stopped_x, "Prefect must remain still after stopping")
+	var child_count_before: int = root.get_child_count()
+	prefect._on_shoot_timer_timeout()
+	assert(root.get_child_count() > child_count_before, "Prefect must continue shooting when stopped")
+
+
+func _verify_prefect_hurt_textures(prefect: SlytherinPrefect) -> void:
+	prefect.take_damage(prefect.max_health * 0.6)
+	assert(prefect.sprite.texture == prefect.hurt_attacking_texture, "Should use hurt attacking texture when stopped")
+	prefect._is_stopped = false
+	prefect._update_animation_texture()
+	assert(prefect.sprite.texture == prefect.hurt_texture, "Should use hurt walk texture when walking")
 
 
 func _test_troll_instakill_and_resumes_walking() -> void:

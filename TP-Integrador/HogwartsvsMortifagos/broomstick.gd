@@ -58,3 +58,7 @@ func _try_damage_node(enemy_node: Node2D) -> void:
 	_damaged_enemies[enemy_id] = true
 	if enemy_node.has_method("take_damage"):
 		enemy_node.call("take_damage", sweep_damage)
+
+
+func take_damage(_amount: float) -> void:
+	pass

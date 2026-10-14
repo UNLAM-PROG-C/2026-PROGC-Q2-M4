@@ -70,6 +70,11 @@ func _ready() -> void:
 		_stop_animation()
 	_time_left = AIR_FALL_TIMEOUT if not _is_on_ground else lifetime
 	_start_x = position.x
+	update_row_z_index()
+
+
+func update_row_z_index() -> void:
+	z_index = Lane.get_snitch_z_index()
 
 
 func _stop_animation() -> void:
@@ -86,6 +91,7 @@ func setup_sky_fall(target_ground_y: float, stay_duration: float = GROUND_LIFETI
 	ground_duration = stay_duration
 	_is_on_ground = false
 	_time_left = AIR_FALL_TIMEOUT
+	update_row_z_index()
 
 
 ## Returns whether the snitch is currently landed on the ground.
@@ -102,6 +108,7 @@ func setup_from_box(origin: Vector2) -> void:
 	escape_distance = 0.0
 	_start_x = origin.x + randf_range(-BOX_DROP_SPREAD, BOX_DROP_SPREAD)
 	global_position = origin
+	update_row_z_index()
 	_animate_box_pop(origin)
 
 

@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" uid="uid://cpc5lnjbkueb1" path="res://snitch.tscn" id="7_snitch"]
 [ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
-[ext_resource type="Texture2D" uid="uid://m2225llgru1t" path="res://Images/background.png" id="10_gyffv"]
+[ext_resource type="Texture2D" uid="uid://dv05sv2jg8pbh" path="res://Images/level1_background.png" id="10_level1_background"]
 [ext_resource type="Script" uid="uid://daladrauc8hd2" path="res://ally_card_button.gd" id="13_card_button"]
 [ext_resource type="Resource" path="res://harry_card.tres" id="14_harry_card"]
 [ext_resource type="Resource" path="res://snitch_box_card.tres" id="15_snitch_box_card"]
@@ -85,7 +85,7 @@ intermediate_wave_max = 3
 final_wave_min = 4
 final_wave_bonus_min = 0
 final_wave_bonus_max = 0
-wave_kill_thresholds = Array[int]([15, 20])
+wave_kill_thresholds = Array[int]([15, 15])
 
 [node name="Grid" type="Node2D" parent="." unique_id=2109126223]
 top_level = true
@@ -141,7 +141,7 @@ metadata/_edit_use_anchors_ = true
 show_behind_parent = true
 position = Vector2(-248, 0)
 scale = Vector2(1.6, 1.6)
-texture = ExtResource("10_gyffv")
+texture = ExtResource("10_level1_background")
 centered = false
 
 [node name="Entities" type="Node2D" parent="." unique_id=605582533]
@@ -231,27 +231,28 @@ theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WaveAnnouncement" type="ColorRect" parent="HUD" unique_id=360801786]
+[node name="WaveAnnouncement" type="PanelContainer" parent="HUD" unique_id=360801786]
 visible = false
-mouse_filter = 2
-offset_left = 420.0
-offset_top = 390.0
-offset_right = 1500.0
-offset_bottom = 570.0
-color = Color(0.055, 0.025, 0.12, 0.94)
-
-[node name="Label" type="Label" parent="HUD/WaveAnnouncement" unique_id=360801787]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -540.0
+offset_top = -80.0
+offset_right = 540.0
+offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.24, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 12
-theme_override_font_sizes/font_size = 52
-text = "¡SE AVECINA UNA OLEADA DE ENEMIGOS!"
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="Label" type="Label" parent="HUD/WaveAnnouncement" unique_id=360801787]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
+theme_override_font_sizes/font_size = 44
+text = "¡SE AVECINA UNA GRAN OLEADA DE MORTÍFAGOS!"
 horizontal_alignment = 1
 vertical_alignment = 1
 

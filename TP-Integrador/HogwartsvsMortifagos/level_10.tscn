@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://level.gd" id="3_script"]
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" uid="uid://cpc5lnjbkueb1" path="res://snitch.tscn" id="7_snitch"]
-[ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
+[ext_resource type="PackedScene" uid="uid://cxajxi1ebmj8h" path="res://dementor.tscn" id="8_dementor"]
 [ext_resource type="Texture2D" uid="uid://jj6ar5mjl8vn" path="res://Images/final_background.png" id="10_final_background"]
 [ext_resource type="PackedScene" uid="uid://deqnbfjd6va" path="res://draco.tscn" id="11_draco"]
 [ext_resource type="PackedScene" uid="uid://cedp8csk1uyy" path="res://protego_student.tscn" id="12_protego_student"]
@@ -95,7 +95,7 @@ corner_radius_bottom_left = 12
 
 [node name="Level10" type="Node2D" unique_id=1578365]
 script = ExtResource("3_script")
-starting_snitches = 250
+starting_snitches = 1500
 total_enemies = 999
 enemy_scenes = Array[PackedScene]([ExtResource("6_slytherin"), ExtResource("11_draco"), ExtResource("12_protego_student"), ExtResource("13_slytherin_prefect"), ExtResource("14_troll")])
 snitch_scene = ExtResource("7_snitch")
@@ -105,9 +105,8 @@ active_rows = Array[int]([2, 3, 4, 5, 6])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4"), NodePath("Spawners/Marker2D5")])
 dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
 next_level_to_unlock = 10
-is_special_level = false
-is_boss_level = true
 wave_kill_thresholds = Array[int]([])
+is_boss_level = true
 boss_scene = ExtResource("40_quirrell")
 
 [node name="Grid" type="Node2D" parent="." unique_id=797438989]
@@ -186,10 +185,10 @@ text = "DEBUG | Disparos consecutivos: 0
 Pool: 50 | Activos: 0 | Disponibles: 50"
 
 [node name="BossHealthBar" parent="HUD" unique_id=190428772 instance=ExtResource("41_boss_health_bar")]
-offset_left = 640.0
-offset_top = 196.0
-offset_right = 1280.0
-offset_bottom = 252.0
+offset_left = 25.0
+offset_top = 280.0
+offset_right = 125.0
+offset_bottom = 1040.0
 
 [node name="HarryCardButton" type="Button" parent="HUD" unique_id=1204406920]
 offset_left = 264.0
@@ -322,26 +321,26 @@ theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WaveAnnouncement" type="ColorRect" parent="HUD" unique_id=83820271]
+[node name="WaveAnnouncement" type="PanelContainer" parent="HUD" unique_id=83820271]
 visible = false
-offset_left = 420.0
-offset_top = 390.0
-offset_right = 1500.0
-offset_bottom = 570.0
-mouse_filter = 2
-color = Color(0.055, 0.025, 0.12, 0.94)
-
-[node name="Label" type="Label" parent="HUD/WaveAnnouncement" unique_id=101322686]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -540.0
+offset_top = -80.0
+offset_right = 540.0
+offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.24, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 12
-theme_override_font_sizes/font_size = 52
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="Label" type="Label" parent="HUD/WaveAnnouncement" unique_id=101322686]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.235, 0.141, 0.082, 1)
+theme_override_font_sizes/font_size = 44
 text = "¡SE AVECINA UNA GRAN OLEADA DE MORTÍFAGOS!"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -411,37 +410,37 @@ alignment = 1
 visible = false
 custom_minimum_size = Vector2(170, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Siguiente Nivel"
 
 [node name="RetryButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=282579866]
 custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Reintentar"
 
 [node name="BackToMapButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=1323078819]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Volver al Mapa"
 
 [node name="WaveDirector" type="Node" parent="." unique_id=2128875510]

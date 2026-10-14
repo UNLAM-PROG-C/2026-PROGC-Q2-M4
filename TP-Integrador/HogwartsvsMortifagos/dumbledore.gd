@@ -33,6 +33,8 @@ func _shoot() -> void:
 		return
 	get_parent().add_child(projectile)
 	projectile.global_position = shoot_point.global_position
+	if projectile.has_method(&"update_row_z_index"):
+		projectile.call(&"update_row_z_index")
 
 
 func _has_enemy_in_lane() -> bool:

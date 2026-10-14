@@ -13,10 +13,14 @@ signal defeated(entity: Node2D)
 @onready var damage_flash: DamageFlash = $DamageFlash
 
 
+func update_row_z_index() -> void:
+  z_index = Lane.get_ally_z_index(global_position.y)
+
+
 ## Called by enemies while attacking.
 func take_damage(amount: float) -> void:
-	health -= amount
-	damage_flash.flash()
-	if health <= 0.0:
-		defeated.emit(self)
-		queue_free()
+  health -= amount
+  damage_flash.flash()
+  if health <= 0.0:
+    defeated.emit(self)
+    queue_free()

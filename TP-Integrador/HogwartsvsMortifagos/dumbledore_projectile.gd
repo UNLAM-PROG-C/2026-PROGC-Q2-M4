@@ -6,7 +6,7 @@ extends Area2D
 
 const IMPACT_EXPLOSION_SCENE: PackedScene = preload("res://impact_explosion.tscn")
 const DEFAULT_SPEED: float = 350.0
-const DEFAULT_SPLASH_DAMAGE: float = 20.0
+const DEFAULT_SPLASH_DAMAGE: float = 40.0
 const HALF_SPLASH_WIDTH: float = 240.0
 const HALF_SPLASH_HEIGHT: float = 240.0
 const EXIT_X: float = 1950.0
@@ -23,7 +23,11 @@ var _animation_elapsed: float = 0.0
 
 
 func _ready() -> void:
-	pass
+	update_row_z_index()
+
+
+func update_row_z_index() -> void:
+	z_index = Lane.get_projectile_z_index(global_position.y)
 
 
 func _process(delta: float) -> void:
@@ -109,3 +113,4 @@ func _spawn_impact_effect() -> void:
 	var explosion: Node2D = IMPACT_EXPLOSION_SCENE.instantiate() as Node2D
 	parent_node.add_child(explosion)
 	explosion.global_position = global_position
+	explosion.z_index = z_index

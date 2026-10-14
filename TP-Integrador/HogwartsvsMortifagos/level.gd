@@ -3,6 +3,7 @@ extends Node2D
 
 const BOARD_SNAPSHOT_SCRIPT: Script = preload("res://board_snapshot.gd")
 const DEFENSE_SNAPSHOT_SCRIPT: Script = preload("res://defense_snapshot.gd")
+const WAVE_PLAN_SCRIPT: Script = preload("res://wave_plan.gd")
 const STATE_SPAWNING_NORMAL: int = 0
 const STATE_WAVE_PREPARATION: int = 1
 const STATE_WAVE_ACTIVE: int = 2
@@ -15,6 +16,8 @@ const SPECIAL_SECOND_WAVE_RATIO: float = 0.66
 const WAVE_ANNOUNCEMENT_TEXT: String = "¡SE AVECINA UNA GRAN OLEADA DE MORTÍFAGOS!"
 const FINAL_WAVE_ANNOUNCEMENT_TEXT: String = "¡OLEADA FINAL!"
 const WAVE_ANNOUNCEMENT_DURATION: float = 2.0
+const PARCHMENT_TEXT_COLOR: Color = Color(0.235, 0.141, 0.082, 1.0)
+const WAVE_ANNOUNCEMENT_FONT_SIZE: int = 44
 const DEBUG_SNITCHES: int = 10000
 ## A playable level: places allies from the HUD cards on the grid, spawns
 ## enemies, runs the Snitch economy and shows the win/lose end panel.
@@ -41,12 +44,22 @@ const EMPTY_CELL_SOURCE: int = -1
 const INITIAL_ENEMY_DELAY: float = 30.0
 const MIN_ENEMY_SPAWN_INTERVAL: float = 3.0
 const SPAWN_INTERVAL_DECREMENT: float = 0.2
+const SINGLE_SPAWN_COUNT: int = 1
+const DOUBLE_SPAWN_COUNT: int = 2
+const TRIPLE_SPAWN_COUNT: int = 3
+const MULTI_SPAWN_TRIPLE_CHANCE: float = 0.10
+const MULTI_SPAWN_DOUBLE_CHANCE: float = 0.25
+const SECOND_ENEMY_SPAWN_DELAY: float = 0.010
+const THIRD_ENEMY_SPAWN_DELAY: float = 0.030
 const WAVE_PROGRESS_BAR_SCENE: PackedScene = preload("res://wave_progress_bar.tscn")
 const WAVE_METER_2_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_2_waves.png")
 const WAVE_METER_3_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_3_waves.png")
+const WAVE_CHARGE_1_WAVE_TEXTURE: Texture2D = preload("res://Images/wave_charge_1_wave.png")
+const WAVE_CHARGE_2_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_charge_2_waves.png")
 const METER_POSITION: Vector2 = Vector2(30.0, 800.0)
 const BOSS_WIN_MESSAGE_TEXT: String = "¡Has derrotado al Profesor Quirrell y salvado a Hogwarts!"
-const BOSS_HEALTH_BAR_POSITION: Vector2 = Vector2(640.0, 16.0)
+const BOSS_HEALTH_BAR_POSITION: Vector2 = Vector2(25.0, 280.0)
+const DARK_MARK_CUTSCENE_SCENE: PackedScene = preload("res://dark_mark_cutscene.tscn")
 const BOSS_GRID_COLUMN: int = 10
 const CRUSH_DAMAGE: float = 9999.0
 const BOSS_TELEPORT_FADE_DURATION: float = 0.8
@@ -85,9 +98,11 @@ const NEXT_LEVEL_SCENE_TEMPLATE: String = "res://level_%d.tscn"
 @export var final_wave_bonus_min: int = 5
 @export var final_wave_bonus_max: int = 10
 ## Kill thresholds per wave.
-@export var wave_kill_thresholds: Array[int] = [15, 20]
+@export var wave_kill_thresholds: Array[int] = [15, 15]
 ## Texture for the wave meter hourglass frame.
 @export var wave_meter_texture: Texture2D
+## Texture for the wave meter fill charge.
+@export var wave_charge_texture: Texture2D
 @export var is_boss_level: bool = false
 @export var boss_scene: PackedScene
 ## Number of completed waves before Trolls are allowed to spawn.
@@ -117,6 +132,7 @@ var _intermediate_wave_size: int = 10
 var _final_wave_active: bool = false
 var _level_generation: int = 1
 var _pending_request_id: int = 0
+var _pending_wave_plan: RefCounted = null
 var _defeated_enemy_ids: Dictionary[int, bool] = {}
 var _regular_enemy_ids: Dictionary[int, bool] = {}
 var _is_level_over: bool = false
@@ -133,7 +149,7 @@ var _wave_progress_bar: WaveProgressBar = null
 @onready var snitches_label: Label = $HUD/SnitchesLabel
 @onready var status_label: Label = $HUD/StatusLabel
 @onready var pool_debug_label: Label = $HUD/PoolDebugLabel
-@onready var wave_announcement: ColorRect = $HUD/WaveAnnouncement
+@onready var wave_announcement: Control = $HUD/WaveAnnouncement
 @onready var wave_announcement_label: Label = $HUD/WaveAnnouncement/Label
 @onready var level_end_panel: Control = $HUD/LevelEndPanel
 @onready var end_title_label: Label = $HUD/LevelEndPanel/ModalBox/VBox/TitleLabel
@@ -157,6 +173,10 @@ func _init_level_state() -> void:
 	wave_announcement.visible = false
 	_intermediate_wave_size = intermediate_wave_min
 	_completed_waves = 0
+	_current_phase_index = 0
+	_phase_defeated_enemies = 0
+	_total_defeated_enemies = 0
+	_pending_wave_plan = null
 	_calculate_total_level_kills()
 	if not is_boss_level and is_instance_valid(wave_director):
 		wave_director.result_ready.connect(_on_wave_result)
@@ -166,6 +186,8 @@ func _calculate_total_level_kills() -> void:
 	_total_level_kills = 0
 	for threshold: int in wave_kill_thresholds:
 		_total_level_kills += threshold
+	if _total_level_kills <= 0:
+		_total_level_kills = total_enemies
 
 
 func _init_hud_and_cards() -> void:
@@ -177,10 +199,20 @@ func _init_hud_and_cards() -> void:
 
 
 func _setup_level_hud() -> void:
+	_init_wave_announcement_format()
 	if is_boss_level:
 		_setup_boss_hud()
 	else:
 		_setup_wave_progress_bar()
+
+
+func _init_wave_announcement_format() -> void:
+	if wave_announcement_label == null:
+		return
+	wave_announcement_label.add_theme_color_override(&"font_color", PARCHMENT_TEXT_COLOR)
+	wave_announcement_label.add_theme_font_size_override(&"font_size", WAVE_ANNOUNCEMENT_FONT_SIZE)
+	wave_announcement_label.remove_theme_color_override(&"font_outline_color")
+	wave_announcement_label.remove_theme_constant_override(&"outline_size")
 
 
 func _setup_boss_hud() -> void:
@@ -188,8 +220,8 @@ func _setup_boss_hud() -> void:
 	if _boss_health_bar == null:
 		var scene: PackedScene = preload("res://boss_health_bar.tscn")
 		_boss_health_bar = scene.instantiate() as BossHealthBar
-		_boss_health_bar.position = BOSS_HEALTH_BAR_POSITION
 		hud.add_child(_boss_health_bar)
+	_boss_health_bar.position = BOSS_HEALTH_BAR_POSITION
 	_setup_boss_entity()
 
 
@@ -218,14 +250,42 @@ func _get_boss_cell_position(cell: Vector2i) -> Vector2:
 func _connect_boss_signals() -> void:
 	_boss.health_changed.connect(_on_boss_health_changed)
 	_boss.teleported.connect(_on_boss_teleported)
-	_boss.shadow_spawn_requested.connect(_on_boss_shadow_spawn_requested)
+	_boss.shadow_spawn_requested.connect(_on_boss_single_shadow_spawn_requested)
 	_boss.mass_shadow_spawn_requested.connect(_on_boss_mass_shadow_spawn_requested)
 	_boss.defeated.connect(_on_boss_defeated)
+	_boss.phase_two_started.connect(_on_boss_phase_two_started)
+
+
+func _on_boss_single_shadow_spawn_requested(spawn_pos: Vector2, _ignored_y: float) -> void:
+	var row_idx: int = _get_boss_shadow_spawn_row()
+	var lane_y: float = _get_row_center_y(row_idx)
+	_on_boss_shadow_spawn_requested(spawn_pos, lane_y)
+
+
+func _get_boss_shadow_spawn_row() -> int:
+	if _boss == null:
+		return DEFAULT_SNITCH_ROW
+	var candidates: Array[int] = []
+	if active_rows.has(_boss.current_row):
+		candidates.append(_boss.current_row)
+	if active_rows.has(_boss.current_row - 1):
+		candidates.append(_boss.current_row - 1)
+	if candidates.is_empty():
+		return _boss.current_row
+	return candidates.pick_random()
+
+
+
+func _on_boss_phase_two_started(boss_pos: Vector2) -> void:
+	var cutscene: CanvasLayer = DARK_MARK_CUTSCENE_SCENE.instantiate() as CanvasLayer
+	hud.add_child(cutscene)
+	cutscene.call(&"play", boss_pos)
 
 
 func _place_boss_at_cell(cell: Vector2i) -> void:
 	if _boss != null:
 		_boss.global_position = _get_boss_cell_position(cell) + _boss_offset
+		_boss.update_row_z_index()
 
 
 func _on_boss_health_changed(current: float, _max_val: float) -> void:
@@ -271,14 +331,15 @@ func _crush_ally_at_cell(cell: Vector2i) -> void:
 			ally.queue_free()
 
 
-func _on_boss_shadow_spawn_requested(spawn_pos: Vector2, _lane_y: float) -> void:
+func _on_boss_shadow_spawn_requested(spawn_pos: Vector2, lane_y: float) -> void:
 	var shadow_scene: PackedScene = preload("res://shadow_enemy.tscn")
 	var shadow: ShadowEnemy = shadow_scene.instantiate() as ShadowEnemy
-	var true_lane_y: float = _get_row_center_y(_boss.current_row) if _boss != null else _lane_y
-	shadow.global_position = Vector2(spawn_pos.x, true_lane_y)
+	var spawn_y: float = lane_y if lane_y != 0.0 else (_get_row_center_y(_boss.current_row) if _boss != null else spawn_pos.y)
+	shadow.global_position = Vector2(spawn_pos.x, spawn_y)
 	shadow.defeated.connect(_on_enemy_defeated)
 	shadow.garden_invaded.connect(_on_garden_invaded)
 	entity_layer.add_child(shadow)
+	shadow.update_row_z_index()
 	_active_enemies += 1
 
 
@@ -305,15 +366,23 @@ func _defeat_all_active_enemies() -> void:
 
 
 func _setup_wave_progress_bar() -> void:
+	_ensure_wave_progress_bar_instance()
+	var is_3_waves: bool = wave_kill_thresholds.size() == 3
+	var meter_tex: Texture2D = wave_meter_texture
+	if meter_tex == null:
+		meter_tex = WAVE_METER_3_WAVES_TEXTURE if is_3_waves else WAVE_METER_2_WAVES_TEXTURE
+	var charge_tex: Texture2D = wave_charge_texture
+	if charge_tex == null:
+		charge_tex = WAVE_CHARGE_2_WAVES_TEXTURE if is_3_waves else WAVE_CHARGE_1_WAVE_TEXTURE
+	_wave_progress_bar.setup(_total_level_kills, meter_tex, charge_tex)
+
+
+func _ensure_wave_progress_bar_instance() -> void:
 	_wave_progress_bar = hud.get_node_or_null("WaveProgressBar") as WaveProgressBar
 	if _wave_progress_bar == null:
 		_wave_progress_bar = WAVE_PROGRESS_BAR_SCENE.instantiate() as WaveProgressBar
 		_wave_progress_bar.position = METER_POSITION
 		hud.add_child(_wave_progress_bar)
-	var meter_tex: Texture2D = wave_meter_texture
-	if meter_tex == null:
-		meter_tex = WAVE_METER_3_WAVES_TEXTURE if wave_kill_thresholds.size() == 3 else WAVE_METER_2_WAVES_TEXTURE
-	_wave_progress_bar.setup(_total_level_kills, meter_tex)
 
 
 func _init_pool_and_defense() -> void:
@@ -584,6 +653,7 @@ func _place_ally(card: AllyCard, cell: Vector2i) -> void:
 	ally.global_position = tile_map.to_global(tile_map.map_to_local(cell))
 	_init_placed_ally(ally)
 	entity_layer.add_child(ally)
+	ally.update_row_z_index()
 	_register_placed_ally(ally, cell)
 	_finalize_ally_placement(card)
 
@@ -637,6 +707,7 @@ func _on_ally_removed(cell: Vector2i) -> void:
 ## Callback when a Snitch Box drops a physical Snitch to be collected.
 func _on_snitch_dropped(snitch: Snitch) -> void:
 	entity_layer.add_child(snitch)
+	snitch.update_row_z_index()
 	snitch.collected.connect(_on_snitch_collected)
 
 
@@ -704,7 +775,40 @@ func _on_enemy_spawn_timer_timeout() -> void:
 	if _is_level_over or _wave_state != STATE_SPAWNING_NORMAL:
 		return
 	_accelerate_spawn_cadence()
-	_spawn_enemy(_pick_random_enemy_scene(), true)
+	_spawn_regular_enemies()
+
+
+func _determine_enemy_spawn_count() -> int:
+	var roll: float = randf()
+	if roll < MULTI_SPAWN_TRIPLE_CHANCE:
+		return TRIPLE_SPAWN_COUNT
+	if roll < MULTI_SPAWN_TRIPLE_CHANCE + MULTI_SPAWN_DOUBLE_CHANCE:
+		return DOUBLE_SPAWN_COUNT
+	return SINGLE_SPAWN_COUNT
+
+
+func _spawn_regular_enemies() -> void:
+	var count: int = _determine_enemy_spawn_count()
+	var points: Array[NodePath] = spawn_points.duplicate()
+	points.shuffle()
+	for i: int in range(count):
+		if _is_level_over:
+			return
+		await _wait_for_multi_spawn_delay(i)
+		if _is_level_over or not is_inside_tree():
+			return
+		var path: NodePath = points[i % points.size()] if not points.is_empty() else NodePath()
+		_spawn_enemy(_pick_random_enemy_scene(), true, path)
+
+
+func _wait_for_multi_spawn_delay(index: int) -> void:
+	var delay: float = 0.0
+	if index == 1:
+		delay = SECOND_ENEMY_SPAWN_DELAY
+	elif index == 2:
+		delay = THIRD_ENEMY_SPAWN_DELAY
+	if delay > 0.0 and is_inside_tree():
+		await get_tree().create_timer(delay).timeout
 
 
 func _accelerate_spawn_cadence() -> void:
@@ -716,12 +820,13 @@ func _accelerate_spawn_cadence() -> void:
 	enemy_spawn_timer.start()
 
 
-func _spawn_enemy(scene: PackedScene, counts_as_regular: bool) -> void:
+func _spawn_enemy(scene: PackedScene, counts_as_regular: bool, spawn_path: NodePath = NodePath()) -> void:
 	if scene == null:
 		return
 	var enemy: Enemy = scene.instantiate() as Enemy
-	enemy.global_position = _pick_spawn_position()
+	enemy.global_position = _pick_spawn_position(spawn_path)
 	entity_layer.add_child(enemy)
+	enemy.update_row_z_index()
 	if counts_as_regular:
 		_spawned_enemies += 1
 	_active_enemies += 1
@@ -730,8 +835,11 @@ func _spawn_enemy(scene: PackedScene, counts_as_regular: bool) -> void:
 	enemy.garden_invaded.connect(_on_garden_invaded)
 
 
-func _pick_spawn_position() -> Vector2:
-	var spawn_point: Node2D = get_node(spawn_points.pick_random()) as Node2D
+func _pick_spawn_position(custom_path: NodePath = NodePath()) -> Vector2:
+	var path: NodePath = custom_path
+	if path.is_empty():
+		path = spawn_points.pick_random()
+	var spawn_point: Node2D = get_node(path) as Node2D
 	return spawn_point.global_position
 
 
@@ -741,18 +849,49 @@ func _on_enemy_defeated(entity: Node2D) -> void:
 	if _defeated_enemy_ids.has(enemy_id):
 		return
 	_defeated_enemy_ids[enemy_id] = true
-	_defeated_enemies += 1
-	_total_defeated_enemies += 1
-	_phase_defeated_enemies += 1
+	var is_regular: bool = _regular_enemy_ids.get(enemy_id, false)
 	_active_enemies = maxi(_active_enemies - 1, 0)
+	if is_regular:
+		_process_regular_enemy_kill()
+	_update_wave_lifecycle()
+
+
+func _process_regular_enemy_kill() -> void:
+	if _wave_state != STATE_SPAWNING_NORMAL:
+		return
+	_phase_defeated_enemies += 1
+	_total_defeated_enemies += 1
+	_defeated_enemies = _total_defeated_enemies
 	_update_hud_meter()
 	_check_wave_threshold()
-	_update_wave_progress()
 
 
 func _update_hud_meter() -> void:
 	if is_instance_valid(_wave_progress_bar):
-		_wave_progress_bar.update_progress(_total_defeated_enemies)
+		_wave_progress_bar.update_progress(_get_current_meter_progress())
+
+
+func _get_current_meter_progress() -> int:
+	var base_kills: int = 0
+	for i: int in range(_current_phase_index):
+		base_kills += _get_phase_threshold(i)
+	var current_quota: int = _get_phase_threshold(_current_phase_index)
+	return base_kills + mini(_phase_defeated_enemies, current_quota)
+
+
+func _get_phase_threshold(phase_index: int) -> int:
+	if wave_kill_thresholds.is_empty() or phase_index < 0 or phase_index >= wave_kill_thresholds.size():
+		return 0
+	var wave_count: int = wave_kill_thresholds.size()
+	if wave_count == 2:
+		var half: int = _total_level_kills / 2
+		return half if phase_index == 0 else (_total_level_kills - half)
+	elif wave_count == 3:
+		var third: int = roundi(float(_total_level_kills) / 3.0)
+		if phase_index == 0 or phase_index == 1:
+			return third
+		return _total_level_kills - (third * 2)
+	return wave_kill_thresholds[phase_index]
 
 
 ## Callback when an enemy invades the garden. Triggers the defeat.
@@ -765,35 +904,58 @@ func _check_wave_threshold() -> void:
 		return
 	if _current_phase_index >= wave_kill_thresholds.size():
 		return
-	var required_kills: int = wave_kill_thresholds[_current_phase_index]
-	if _phase_defeated_enemies < required_kills:
-		return
-	_trigger_phase_wave()
+	var required_kills: int = _get_phase_threshold(_current_phase_index)
+	if _phase_defeated_enemies >= required_kills:
+		_reach_wave_threshold()
 
 
-func _trigger_phase_wave() -> void:
-	_phase_defeated_enemies = 0
-	_current_phase_index += 1
-	var is_final: bool = _current_phase_index >= wave_kill_thresholds.size()
-	_wave_state = STATE_FINAL_WAVE_PREPARATION if is_final else STATE_WAVE_PREPARATION
+func _reach_wave_threshold() -> void:
 	if is_instance_valid(enemy_spawn_timer):
 		enemy_spawn_timer.stop()
+	var is_final: bool = (_current_phase_index + 1) >= wave_kill_thresholds.size()
+	_wave_state = STATE_FINAL_WAVE_PREPARATION if is_final else STATE_WAVE_PREPARATION
 	_request_wave(is_final)
+	_check_wave_readiness()
 
 
-## Triggers wave completion or next wave check when enemies are cleared.
-func _update_wave_progress() -> void:
-	if is_boss_level or _active_enemies > 0:
+func _check_wave_readiness() -> void:
+	if _wave_state != STATE_WAVE_PREPARATION and _wave_state != STATE_FINAL_WAVE_PREPARATION:
 		return
-	if _wave_state == STATE_WAITING_FOR_CLEAR:
+	if _active_enemies > 0:
+		return
+	if _pending_wave_plan == null:
+		return
+	_start_prepared_wave()
+
+
+func _update_wave_lifecycle() -> void:
+	if is_boss_level:
+		return
+	if _wave_state == STATE_WAVE_PREPARATION or _wave_state == STATE_FINAL_WAVE_PREPARATION:
+		_check_wave_readiness()
+	elif _wave_state == STATE_WAITING_FOR_CLEAR and _active_enemies == 0:
 		_resume_after_wave()
 
 
 func _request_wave(is_final: bool) -> void:
-	if not is_instance_valid(wave_director):
-		return
-	var snapshot: RefCounted = _build_snapshot()
-	_pending_request_id = wave_director.request_plan(snapshot, is_final)
+	if is_instance_valid(wave_director):
+		var snapshot: RefCounted = _build_snapshot()
+		_pending_request_id = wave_director.request_plan(snapshot, is_final)
+	else:
+		_create_fallback_wave(is_final)
+
+
+func _create_fallback_wave(is_final: bool) -> void:
+	var plan: RefCounted = WAVE_PLAN_SCRIPT.new()
+	plan.set("level_generation", _level_generation)
+	plan.set("request_id", 1)
+	plan.set("wave_number", _current_phase_index + 1)
+	plan.set("is_final", is_final)
+	plan.set("enemy_count", final_wave_min if is_final else intermediate_wave_min)
+	plan.set("spawn_delay", 0.25)
+	plan.set("row_indices", active_rows.duplicate())
+	_pending_wave_plan = plan
+	_check_wave_readiness()
 
 
 func _build_snapshot() -> RefCounted:
@@ -843,16 +1005,17 @@ func _on_wave_result(result: RefCounted) -> void:
 	var plan: RefCounted = result.get("plan")
 	if plan == null:
 		return
-	_apply_wave_plan(plan)
+	_pending_wave_plan = plan
+	_check_wave_readiness()
 
 
-func _apply_wave_plan(plan: RefCounted) -> void:
-	if _wave_state != STATE_WAVE_PREPARATION and _wave_state != STATE_FINAL_WAVE_PREPARATION:
-		return
+func _start_prepared_wave() -> void:
+	var plan: RefCounted = _pending_wave_plan
+	_pending_wave_plan = null
+	_wave_state = STATE_WAVE_ACTIVE
 	_final_wave_active = bool(plan.get("is_final"))
 	if not _final_wave_active:
 		_intermediate_wave_size = plan.get("enemy_count")
-	_wave_state = STATE_WAVE_ACTIVE
 	await _show_wave_announcement()
 	_spawn_wave_enemies(plan)
 
@@ -878,6 +1041,7 @@ func _spawn_wave_enemies(plan: RefCounted) -> void:
 			return
 		_spawn_enemy(_pick_random_enemy_scene(), false)
 	_wave_state = STATE_WAITING_FOR_CLEAR
+	_update_wave_lifecycle()
 
 
 func _resume_after_wave() -> void:
@@ -888,6 +1052,12 @@ func _resume_after_wave() -> void:
 		_wave_state = STATE_LEVEL_COMPLETE
 		_win()
 		return
+	_advance_to_next_regular_phase()
+
+
+func _advance_to_next_regular_phase() -> void:
+	_current_phase_index += 1
+	_phase_defeated_enemies = 0
 	_wave_state = STATE_SPAWNING_NORMAL
 	enemy_spawn_timer.start(_enemy_spawn_interval)
 
@@ -960,6 +1130,7 @@ func _stop_level() -> void:
 	if _is_removing:
 		_set_cursor_mode(false)
 	_is_level_over = true
+	_pending_wave_plan = null
 	_level_generation += 1
 	enemy_spawn_timer.stop()
 	snitch_spawn_timer.stop()

@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cxajxi1ebmj8h"]
 
 [ext_resource type="Script" uid="uid://dh8ovl7c03dh3" path="res://dementor.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://u1d7w1x8fds" path="res://Images/dementor.png" id="2_texture"]
@@ -6,21 +6,19 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dementor"]
 size = Vector2(80, 110)
 
-[node name="Dementor" type="Area2D" groups=["dementors"]]
-collision_layer = 1
+[node name="Dementor" type="Area2D" unique_id=351637934 groups=["dementors"]]
 collision_mask = 2
-monitoring = true
-monitorable = true
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=556743204]
 texture = ExtResource("2_texture")
 hframes = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=130780631]
 shape = SubResource("RectangleShape2D_dementor")
 
-[node name="AnimationTimer" type="Timer" parent="."]
+[node name="AnimationTimer" type="Timer" parent="." unique_id=750024092]
 wait_time = 0.15
+autostart = true
 
 [connection signal="timeout" from="AnimationTimer" to="." method="_on_animation_timer_timeout"]

@@ -9,27 +9,43 @@ const FILL_MODE_BOTTOM_TO_TOP: int = 3
 
 
 func _get_bar() -> TextureProgressBar:
-  if progress_bar == null:
-    progress_bar = get_node_or_null("ProgressBar") as TextureProgressBar
-  return progress_bar
+	if progress_bar == null:
+		progress_bar = get_node_or_null("ProgressBar") as TextureProgressBar
+	return progress_bar
 
 
-func setup(max_kills: int, frame_texture: Texture2D) -> void:
-  var bar: TextureProgressBar = _get_bar()
-  if is_instance_valid(bar):
-    bar.max_value = float(max_kills)
-    bar.value = 0.0
-    bar.texture_over = frame_texture
+func setup(max_kills: int, frame_texture: Texture2D, progress_texture: Texture2D = null) -> void:
+	var bar: TextureProgressBar = _get_bar()
+	if is_instance_valid(bar):
+		bar.max_value = float(max_kills)
+		bar.value = 0.0
+		bar.texture_over = frame_texture
+		if progress_texture != null:
+			bar.texture_progress = progress_texture
+
+
+func get_progress_texture() -> Texture2D:
+	var bar: TextureProgressBar = _get_bar()
+	if is_instance_valid(bar):
+		return bar.texture_progress
+	return null
+
+
+func get_frame_texture() -> Texture2D:
+	var bar: TextureProgressBar = _get_bar()
+	if is_instance_valid(bar):
+		return bar.texture_over
+	return null
 
 
 func update_progress(current_kills: int) -> void:
-  var bar: TextureProgressBar = _get_bar()
-  if is_instance_valid(bar):
-    bar.value = clampf(float(current_kills), 0.0, bar.max_value)
+	var bar: TextureProgressBar = _get_bar()
+	if is_instance_valid(bar):
+		bar.value = clampf(float(current_kills), 0.0, bar.max_value)
 
 
 func get_progress_value() -> float:
-  var bar: TextureProgressBar = _get_bar()
-  if is_instance_valid(bar):
-    return bar.value
-  return 0.0
+	var bar: TextureProgressBar = _get_bar()
+	if is_instance_valid(bar):
+		return bar.value
+	return 0.0

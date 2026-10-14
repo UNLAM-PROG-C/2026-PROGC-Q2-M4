@@ -8,7 +8,7 @@
 size = Vector2(120, 80)
 
 [node name="Broomstick" type="Area2D" groups=["allies"]]
-collision_layer = 1
+collision_layer = 0
 collision_mask = 2
 script = ExtResource("1_script")
 

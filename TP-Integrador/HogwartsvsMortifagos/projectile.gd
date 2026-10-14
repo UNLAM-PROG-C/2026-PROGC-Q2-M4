@@ -2,7 +2,8 @@ class_name Projectile
 extends Area2D
 
 const IMPACT_EXPLOSION_SCENE: PackedScene = preload("res://impact_explosion.tscn")
-const SLOW_TINT_COLOR: Color = Color(0.3, 0.6, 1.0)
+const DEFAULT_TEXTURE: Texture2D = preload("res://Images/projectile_effect.png")
+const FROST_SHOT_TEXTURE: Texture2D = preload("res://Images/frost_shot.png")
 
 ## Travel speed in pixels per second.
 @export var speed: float = 400.0
@@ -36,16 +37,22 @@ func _process(delta: float) -> void:
 
 func activate(spawn_position: Vector2, slows_target: bool = false) -> void:
 	global_position = spawn_position
+	update_row_z_index()
 	slows = slows_target
 	_has_hit = false
 	_animation_elapsed = 0.0
 	_is_active = true
 	sprite.frame = 0
-	sprite.modulate = SLOW_TINT_COLOR if slows else Color.WHITE
+	sprite.texture = FROST_SHOT_TEXTURE if slows else DEFAULT_TEXTURE
+	sprite.modulate = Color.WHITE
 	visible = true
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
 	set_process(true)
+
+
+func update_row_z_index() -> void:
+	z_index = Lane.get_projectile_z_index(global_position.y)
 
 
 func deactivate() -> void:
@@ -54,6 +61,7 @@ func deactivate() -> void:
 	slows = false
 	_animation_elapsed = 0.0
 	visible = false
+	sprite.texture = DEFAULT_TEXTURE
 	sprite.modulate = Color.WHITE
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
@@ -89,6 +97,7 @@ func _spawn_impact_explosion() -> void:
 	var explosion: Node2D = IMPACT_EXPLOSION_SCENE.instantiate() as Node2D
 	parent_node.add_child(explosion)
 	explosion.global_position = global_position
+	explosion.z_index = z_index
 
 
 ## VisibleOnScreenNotifier2D callback. Returns itself when leaving the screen.

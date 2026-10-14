@@ -15,6 +15,7 @@ const WARNING_COLOR: Color = Color(1.0, 0.5, 0.5, 1.0)
 const WARNING_DURATION: float = 0.3
 const ANIMATION_FRAME_COUNT: int = 7
 const FUSE_DURATION: float = 1.5
+const EXPLOSION_EFFECT_SCENE: PackedScene = preload("res://remembrall_explosion.tscn")
 
 ## Damage dealt to every enemy inside ExplosionArea.
 @export var explosion_damage: float = 1800.0
@@ -52,10 +53,22 @@ func _on_fuse_timer_timeout() -> void:
 	tween.chain().tween_callback(detonate)
 
 
-## Damages every enemy inside ExplosionArea and frees itself.
+## Damages every enemy inside ExplosionArea, spawns smoke effect and frees itself.
 func detonate() -> void:
 	for area: Area2D in explosion_area.get_overlapping_areas():
 		if area.is_in_group(Groups.ENEMIES):
 			(area as Enemy).take_damage(explosion_damage)
+	_spawn_smoke_explosion()
 	detonated.emit(self)
 	queue_free()
+
+
+func _spawn_smoke_explosion() -> void:
+	if EXPLOSION_EFFECT_SCENE == null:
+		return
+	var effect: Node2D = EXPLOSION_EFFECT_SCENE.instantiate() as Node2D
+	effect.global_position = global_position
+	var parent_node: Node = get_parent()
+	if parent_node != null:
+		parent_node.add_child(effect)
+

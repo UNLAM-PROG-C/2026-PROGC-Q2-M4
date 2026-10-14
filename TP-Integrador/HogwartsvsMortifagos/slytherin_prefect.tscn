@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://b5h06sniq4n71"]
 
 [ext_resource type="Script" uid="uid://d014rgekac6p4" path="res://slytherin_prefect.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dp7k3qol5au76" path="res://Images/slytherin_protego.png" id="2_walk_texture"]
-[ext_resource type="Texture2D" uid="uid://dh0xk0hpq0hji" path="res://Images/slytherin_hurt.png" id="3_hurt_texture"]
-[ext_resource type="Texture2D" uid="uid://clsrad7h3txg5" path="res://Images/slytherin_attacking.png" id="4_attacking_texture"]
-[ext_resource type="Texture2D" uid="uid://cmjm87vo8sfi1" path="res://Images/slytherin_attacking_hurt.png" id="5_hurt_attacking_texture"]
+[ext_resource type="Texture2D" uid="uid://ro104j8o5mth" path="res://Images/slytherin_prefect.png" id="2_walk_texture"]
+[ext_resource type="Texture2D" uid="uid://b75whgtl88o3q" path="res://Images/slytherin_prefect_hurt.png" id="3_hurt_texture"]
+[ext_resource type="Texture2D" uid="uid://bu350ubing12v" path="res://Images/slytherin_prefect_attacking.png" id="4_attacking_texture"]
+[ext_resource type="Texture2D" uid="uid://dgnlkj5le2jk4" path="res://Images/slytherin_prefect_attacking_hurt.png" id="5_hurt_attacking_texture"]
 [ext_resource type="PackedScene" path="res://damage_flash.tscn" id="7_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]

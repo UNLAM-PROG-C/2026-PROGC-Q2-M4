@@ -5,6 +5,7 @@ signal health_changed(current_health: float, max_health: float)
 signal shadow_spawn_requested(spawn_position: Vector2, lane_y: float)
 signal mass_shadow_spawn_requested()
 signal teleported(from_cell: Vector2i, to_cell: Vector2i)
+signal phase_two_started(boss_global_position: Vector2)
 
 const BOSS_MAX_HEALTH: float = 36000.0
 const PHASE_THRESHOLD_HEALTH: float = 18000.0
@@ -79,6 +80,8 @@ func _enter_phase_2() -> void:
 	if invocation_timer != null:
 		invocation_timer.wait_time = INVOCATION_INTERVAL_PHASE_2
 		invocation_timer.start()
+	phase_two_started.emit(global_position)
+
 
 
 func _on_teleport_timer_timeout() -> void:
@@ -105,10 +108,8 @@ func _on_invocation_timer_timeout() -> void:
 	if current_phase == 1:
 		shadow_spawn_requested.emit(global_position, global_position.y)
 		return
-	if randf() < ULTIMATE_ATTACK_CHANCE:
-		mass_shadow_spawn_requested.emit()
-	else:
-		shadow_spawn_requested.emit(global_position, global_position.y)
+	mass_shadow_spawn_requested.emit()
+
 
 
 func _die() -> void:
@@ -125,3 +126,9 @@ func get_current_cell() -> Vector2i:
 
 func apply_slow(_factor: float, _duration: float) -> void:
 	pass
+
+
+func occupies_lane_y(lane_y: float) -> bool:
+	if super.occupies_lane_y(lane_y):
+		return true
+	return Lane.is_same_lane(global_position.y - Lane.ROW_SPACING, lane_y)

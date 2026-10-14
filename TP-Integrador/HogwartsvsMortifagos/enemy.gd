@@ -58,9 +58,23 @@ func _ready() -> void:
 	if walk_texture != null:
 		sprite.texture = walk_texture
 	# Random starting frame so not every enemy walks in sync.
-	sprite.frame = randi() % TOTAL_FRAMES
+	if sprite != null and TOTAL_FRAMES > 0:
+		sprite.frame = randi() % TOTAL_FRAMES
 	_init_slow_timer()
 	_init_animation_timer()
+	update_row_z_index()
+
+
+func update_row_z_index() -> void:
+	z_index = Lane.get_enemy_z_index(global_position.y, _is_troll_entity())
+
+
+func _is_troll_entity() -> bool:
+	return false
+
+
+func occupies_lane_y(lane_y: float) -> bool:
+	return Lane.is_same_lane(global_position.y, lane_y)
 
 
 func _init_sprite() -> void:
@@ -198,11 +212,15 @@ func _deal_attack_damage() -> void:
 
 ## DetectionArea callback. Targets allies that enter attack range.
 func _on_detection_area_area_entered(area: Area2D) -> void:
+	if area is Broomstick:
+		return
 	if area.is_in_group(Groups.ALLIES):
 		_target_ally = area as Ally
 
 
 ## DetectionArea callback. Releases the target when it leaves range.
 func _on_detection_area_area_exited(area: Area2D) -> void:
+	if area is Broomstick:
+		return
 	if not is_instance_valid(_target_ally) or area == _target_ally:
 		_target_ally = null

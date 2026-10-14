@@ -212,7 +212,6 @@ tracks/6/keys = {
 [sub_resource type="Animation" id="Animation_rfb57"]
 resource_name = "attack"
 length = 2.0
-loop_mode = 0
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -329,13 +328,14 @@ _data = {
 &"attack": SubResource("Animation_rfb57")
 }
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(100, 143)
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
 size = Vector2(80, 140)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(100, 143)
+
 [node name="Troll" type="Area2D" unique_id=1843223953 groups=["enemies"]]
+z_index = 30
 collision_layer = 2
 script = ExtResource("1_script")
 max_health = 3600.0
@@ -398,16 +398,16 @@ offset = Vector2(1.8235292, 19)
 libraries/ = SubResource("AnimationLibrary_f0o8l")
 autoplay = &"Walk"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1257838571]
-position = Vector2(-88, -5)
-shape = SubResource("RectangleShape2D_body")
+[node name="Hitbox" type="CollisionShape2D" parent="." unique_id=376802913]
+position = Vector2(-2, -6)
+shape = SubResource("RectangleShape2D_detection")
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=2123140743]
 collision_layer = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=376802913]
-position = Vector2(-2, -4)
-shape = SubResource("RectangleShape2D_detection")
+[node name="AtackCollisionBox" type="CollisionShape2D" parent="DetectionArea" unique_id=1257838571]
+position = Vector2(-64, -5)
+shape = SubResource("RectangleShape2D_body")
 
 [node name="DamageFlash" parent="." unique_id=675457384 node_paths=PackedStringArray("target") instance=ExtResource("7_damage_flash")]
 target = NodePath("../Troll_Body")

@@ -8,7 +8,7 @@
 size = Vector2(80, 80)
 
 [sub_resource type="RectangleShape2D" id="RectShape"]
-size = Vector2(384, 384)
+size = Vector2(564, 552)
 
 [node name="Remembrall" type="Area2D" unique_id=1746715646 groups=["allies"]]
 position = Vector2(40, 0)

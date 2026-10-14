@@ -20,6 +20,8 @@ var _attack_cooldown_remaining: float = 0.0
 
 @onready var animation_player: AnimationPlayer = $Animation
 @onready var detection_area: Area2D = $DetectionArea
+@onready var hitbox: CollisionShape2D = $Hitbox
+@onready var attack_collision_box: CollisionShape2D = $DetectionArea/AtackCollisionBox
 
 
 func _ready() -> void:
@@ -30,7 +32,27 @@ func _ready() -> void:
 	_attack_cooldown_remaining = 0.0
 	_init_slow_timer()
 	_init_animation()
+	update_row_z_index()
 	animation_player.play(WALK_ANIM_NAME)
+
+
+func _exit_tree() -> void:
+	var tree: SceneTree = get_tree()
+	if tree != null:
+		Lane.update_trolls_z_index_in_lane(tree, global_position.y)
+
+
+func update_row_z_index() -> void:
+	var tree: SceneTree = get_tree()
+	if tree != null:
+		Lane.update_trolls_z_index_in_lane(tree, global_position.y)
+	else:
+		z_index = Lane.get_enemy_z_index(global_position.y, true)
+
+
+func _is_troll_entity() -> bool:
+	return true
+
 
 
 func _init_animation() -> void:
@@ -64,6 +86,7 @@ func _process_movement(delta: float) -> void:
 
 
 func _start_attack() -> void:
+	update_row_z_index()
 	_is_attacking = true
 	animation_player.stop()
 	animation_player.play(ATTACK_ANIM_NAME)
@@ -113,14 +136,15 @@ func _collect_lane_allies(result: Array[Ally], seen: Dictionary) -> void:
 
 
 func _try_add_ally(node: Node, result: Array[Ally], seen: Dictionary) -> void:
-	if node != null and is_instance_valid(node) and not node.is_queued_for_deletion():
-		if node.is_in_group(Groups.ALLIES) and node is Ally:
-			var ally: Ally = node as Ally
-			if ally.health > 0.0:
-				var id: int = ally.get_instance_id()
-				if not seen.has(id):
-					seen[id] = true
-					result.append(ally)
+	if node is Broomstick or not is_instance_valid(node) or node.is_queued_for_deletion():
+		return
+	if node.is_in_group(Groups.ALLIES) and node is Ally:
+		var ally: Ally = node as Ally
+		if ally.health > 0.0:
+			var id: int = ally.get_instance_id()
+			if not seen.has(id):
+				seen[id] = true
+				result.append(ally)
 
 
 func _is_ally_in_hit_box(ally: Ally) -> bool:
@@ -131,6 +155,8 @@ func _is_ally_in_hit_box(ally: Ally) -> bool:
 
 
 func _on_detection_area_area_entered(area: Area2D) -> void:
+	if area is Broomstick:
+		return
 	if not _is_attacking and _attack_cooldown_remaining <= 0.0 and area.is_in_group(Groups.ALLIES):
 		var ally: Ally = area as Ally
 		if ally != null and is_instance_valid(ally) and not ally.is_queued_for_deletion() and ally.health > 0.0:

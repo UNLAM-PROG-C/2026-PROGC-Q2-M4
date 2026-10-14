@@ -11,7 +11,7 @@ const BASE_HEALTH: float = 300.0
 ## Damage dealt by each ice projectile.
 @export var damage: float = BASE_DAMAGE
 ## Fallback projectile scene.
-@export var projectile_scene: PackedScene
+@export var projectile_scene: PackedScene = preload("res://projectile.tscn")
 ## Shared projectile pool injected by Level.
 @export var projectile_pool: ProjectilePool
 

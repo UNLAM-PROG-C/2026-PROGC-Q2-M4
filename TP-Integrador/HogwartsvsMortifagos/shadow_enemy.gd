@@ -18,6 +18,7 @@ func _ready() -> void:
 	_setup_shadow_sprite()
 	_init_slow_timer()
 	_init_animation_timer()
+	update_row_z_index()
 
 
 func _setup_shadow_sprite() -> void:

@@ -24,6 +24,8 @@ const TOTAL_FRAMES: int = 2
 const IDLE_FRAME: int = 0
 ## Maximum cycle for the floating timer before wrapping around.
 const MAX_FLOAT_CYCLE: float = 628.318
+## Fraction of boss maximum health dealt by a Dementor (1/10th).
+const BOSS_DAMAGE_FRACTION: float = 0.10
 
 ## Forward speed once active, in pixels per second.
 @export var speed: float = 800.0
@@ -37,11 +39,12 @@ const MAX_FLOAT_CYCLE: float = 628.318
 @export var float_frequency_x: float = 2.0
 ## Vertical floating frequency in radians per second.
 @export var float_frequency_y: float = 3.0
-## Seconds between frame updates during sweeping.
+## Seconds between frame updates.
 @export var animation_interval: float = 0.15
 
 var _is_active: bool = false
 var _float_time: float = 0.0
+var _hit_enemy_ids: Dictionary = {}
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var animation_timer: Timer = $AnimationTimer
@@ -52,6 +55,8 @@ func _ready() -> void:
 	_float_time = randf_range(0.0, TAU)
 	sprite.frame = IDLE_FRAME
 	animation_timer.wait_time = animation_interval
+	if animation_timer.is_stopped():
+		animation_timer.start()
 
 
 func _process(delta: float) -> void:
@@ -91,7 +96,6 @@ func activate() -> void:
 
 func _start_activation_motion() -> void:
 	sprite.position = Vector2.ZERO
-	animation_timer.start(animation_interval)
 	var tween: Tween = create_tween()
 	tween.tween_property(self, SCALE_PROPERTY, LAUNCH_SCALE, LAUNCH_DURATION)
 	tween.tween_property(self, SCALE_PROPERTY, Vector2.ONE, LAUNCH_DURATION)
@@ -104,10 +108,9 @@ func _on_area_entered(area: Area2D) -> void:
 		_kill_enemy(area as Enemy)
 
 
-## Advances the sweeping animation frame.
+## Advances the animation frame at all times.
 func _on_animation_timer_timeout() -> void:
-	if _is_active:
-		sprite.frame = (sprite.frame + 1) % TOTAL_FRAMES
+	sprite.frame = (sprite.frame + 1) % TOTAL_FRAMES
 
 
 ## Activates when an enemy in the same lane reached the Dementor's position.
@@ -129,7 +132,19 @@ func _sweep_lane() -> void:
 			_kill_enemy(enemy as Enemy)
 
 
-## Kills the enemy with massive damage, guaranteeing its destruction.
+## Damages the enemy: bosses take a tenth of their max health once, regular enemies take instant lethal damage.
 func _kill_enemy(enemy: Enemy) -> void:
-	if is_instance_valid(enemy) and not enemy.is_queued_for_deletion():
-		enemy.take_damage(damage)
+	if not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+		return
+	var enemy_id: int = enemy.get_instance_id()
+	if _hit_enemy_ids.has(enemy_id):
+		return
+	_hit_enemy_ids[enemy_id] = true
+	var damage_amount: float = _calculate_damage_for(enemy)
+	enemy.take_damage(damage_amount)
+
+
+func _calculate_damage_for(enemy: Enemy) -> float:
+	if enemy is Quirrell:
+		return enemy.max_health * BOSS_DAMAGE_FRACTION
+	return damage
