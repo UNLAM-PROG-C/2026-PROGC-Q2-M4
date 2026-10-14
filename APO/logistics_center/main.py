@@ -9,6 +9,7 @@ from core.inventory import Inventory
 from core.package import Package
 from ui.dashboard import Dashboard
 from workers.base import BaseWorker
+from workers.exporter import ExportWorker
 from workers.operator import Operator
 from workers.supervisor import Supervisor
 from workers.truck import Truck
@@ -82,7 +83,8 @@ def shutdown(
 
   Args:
     first_phase: Workers driven only by the stop event (trucks, dashboard,
-      supervisor). Stopping the supervisor clears any active maintenance.
+      exporter, supervisor). Stopping the supervisor clears any active
+      maintenance.
     operators: Consumers that keep running until the dock is empty.
     producers_finished: Signal that no more packages will be enqueued.
   """
@@ -104,12 +106,16 @@ def main() -> None:
   operators = build_operators(dock, inventory, stop_event, producers_finished,
                               maintenance_event)
   dashboard = Dashboard("Dashboard", inventory, dock, stop_event)
+  exporter = ExportWorker("Exporter", inventory, dock, stop_event)
   supervisor = Supervisor("Supervisor", stop_event, maintenance_event)
-  first_phase: list[BaseWorker] = [*trucks, dashboard, supervisor]
+  first_phase: list[BaseWorker] = [*trucks, dashboard, exporter, supervisor]
   for worker in [*first_phase, *operators]:
     worker.start()
   wait_for_shutdown(stop_event)
   shutdown(first_phase, operators, producers_finished)
+  # The periodic exporter is already stopped: persist the drained final state
+  # so the file matches the final report.
+  exporter.export()
   report(inventory, dock)
 
 

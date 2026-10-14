@@ -22,6 +22,13 @@ OPERATOR_PROCESSING_SECONDS: Final[float] = 0.2
 
 DASHBOARD_REFRESH_SECONDS: Final[float] = 0.5
 
+EXPORT_INTERVAL_SECONDS: Final[float] = 5.0
+EXPORT_PATH: Final[str] = "logistics_report.json"
+# Windows refuses os.replace() while a reader holds the target open, so the
+# swap is retried with exponential backoff before skipping the cycle.
+EXPORT_REPLACE_ATTEMPTS: Final[int] = 5
+EXPORT_REPLACE_BACKOFF_SECONDS: Final[float] = 0.01
+
 # Chaos monkey: (min, max) seconds of normal operation / maintenance window.
 SUPERVISOR_UPTIME_RANGE_SECONDS: Final[tuple[float, float]] = (2.0, 5.0)
 SUPERVISOR_PAUSE_RANGE_SECONDS: Final[tuple[float, float]] = (0.5, 2.0)
