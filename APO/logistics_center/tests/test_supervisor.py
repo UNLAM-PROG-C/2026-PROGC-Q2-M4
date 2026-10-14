@@ -38,6 +38,16 @@ class SupervisorTest(unittest.TestCase):
     self._stop(supervisor)
     self.assertFalse(self.maintenance_event.is_set())
 
+  def test_routine_pauses_stay_below_warning(self) -> None:
+    # Warnings reach stderr by default and would break the dashboard.
+    supervisor = self._build_supervisor(FAST_RANGE)
+    with self.assertNoLogs("workers.supervisor", level="WARNING"):
+      supervisor.start()
+      self.assertTrue(wait_until(
+          lambda: supervisor.pause_count >= MIN_EXPECTED_PAUSES,
+          DEADLINE_SECONDS))
+      self._stop(supervisor)
+
   def _build_supervisor(self, pause_range: tuple[float, float]) -> Supervisor:
     return Supervisor("Supervisor-T", self.stop_event, self.maintenance_event,
                       rng=random.Random(SEED), uptime_range=FAST_RANGE,
