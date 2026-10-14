@@ -5,7 +5,7 @@
 - [x] Como jugador quiero que aparezca el "Alumno Slytherin" como enemigo básico.
 
 # Feature 2: Progresión de Defensas (Niveles 2 al 6).
-- [ ] Como jugador quiero expandir la grilla de 3 a 5 líneas.
+- [x] Como jugador quiero expandir la grilla de 3 a 5 líneas.
 - [ ] Como jugador quiero desbloquear "Recordadora" (Costo 150, explosión área) y "Protego" (Costo 50, pared).
 - [ ] Como jugador quiero usar "Accio" para remover aliados de la grilla.
 - [ ] Como jugador quiero que aparezca "Draco" (más vida) y "Alumno con Protego".
@@ -19,15 +19,15 @@
 
 ### Setup de Escenas
 
-- [x] Configurar `TileMapLayer`, `Spawners/Marker2D3` y la conexión de `TimerSpawneoMortifagos` en `NivelPrincipal`.
+- [x] Configurar `TileMapLayer`, `Spawners/Marker2D3` y la conexión de `EnemySpawnTimer` en `level_1.tscn` (`level.gd`).
 - [x] Configurar la línea central como única línea activa y mantener visibles las otras cuatro líneas con bloqueo mágico.
 - [x] Deshabilitar `Marker2D`, `Marker2D2`, `Marker2D4` y `Marker2D5` para plantación y spawneo en Nivel 1.
-- [x] Crear `harry.tscn` con `Area2D` raíz, `CollisionShape2D`, `TimerDisparo` y referencia exportada a `Proyectil.tscn`.
-- [x] Crear `caja_snitch.tscn` con `Area2D` raíz, `CollisionShape2D` y `TimerGeneracionSnitches`.
-- [x] Crear `alumno_slytherin.tscn` con `Area2D` raíz, `CollisionShape2D` y área de detección/ataque.
-- [x] Crear `Proyectil.tscn` con `Area2D` raíz, `CollisionShape2D` y `VisibleOnScreenNotifier2D`.
-- [x] Asignar los grupos `aliados`, `enemigos` y `hechizos` a las escenas correspondientes.
-- [x] Crear `snitch.tscn` y `SpawnerDeSnitches` para la caída y recolección de Snitches del cielo.
+- [x] Crear `harry.tscn` con `Area2D` raíz, `CollisionShape2D`, `ShootTimer` y referencia exportada a `projectile.tscn`.
+- [x] Crear `snitch_box.tscn` con `Area2D` raíz, `CollisionShape2D` y `SnitchTimer`.
+- [x] Crear `slytherin_student.tscn` con `Area2D` raíz, `CollisionShape2D` y área de detección/ataque.
+- [x] Crear `projectile.tscn` con `Area2D` raíz, `CollisionShape2D` y `VisibleOnScreenNotifier2D`.
+- [x] Asignar los grupos `allies`, `enemies` y `spells` a las escenas correspondientes.
+- [x] Crear `snitch.tscn` y `SnitchSpawnTimer` para la caída y recolección de Snitches del cielo.
 
 ### Lógica de Movimiento
 
@@ -39,11 +39,11 @@
 
 ### Detección de Daño
 
-- [x] Configurar detección de `hechizos` sobre `enemigos` mediante `Area2D`.
+- [x] Configurar detección de `spells` sobre `enemies` mediante `Area2D`.
 - [x] Implementar el disparo de Harry cada 1.5 segundos cuando exista un Alumno Slytherin válido en su línea.
 - [x] Aplicar 20 puntos de daño por impacto de proyectil y 200 puntos de vida iniciales al Alumno Slytherin.
 - [x] Validar objetivos con Grupos, `Area2D` e `is_instance_valid()`, sin comparar nombres de nodos.
-- [x] Ignorar impactos de `hechizos` sobre `aliados` y bloquear la interacción jugable en líneas deshabilitadas.
+- [x] Ignorar impactos de `spells` sobre `allies` y bloquear la interacción jugable en líneas deshabilitadas.
 
 ### Economía
 

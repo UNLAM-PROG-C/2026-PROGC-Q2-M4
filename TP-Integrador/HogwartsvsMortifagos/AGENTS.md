@@ -1,5 +1,7 @@
 # AGENTS.md
 
+> El [`AGENTS.md` raíz del repositorio](../../AGENTS.md) (reglas de la cátedra) es la regla superior y prevalece sobre este archivo y sobre la constitución del proyecto (`.specify/memory/constitution.md`).
+
 ## Alcance del proyecto
 
 Este proyecto es un clon de Plants vs. Zombies con temática de Harry Potter.
@@ -10,41 +12,51 @@ Este proyecto es un clon de Plants vs. Zombies con temática de Harry Potter.
 - Renderizador objetivo: Compatibility.
 - Arquitectura: basada estrictamente en Nodos y Escenas de Godot.
 
+## Idioma
+
+- Todo identificador y comentario (scripts, clases, métodos, señales, variables, constantes, nodos, grupos, uniforms) debe estar en inglés, usando la columna "Identificador" del diccionario temático.
+- Los textos visibles para el jugador (botones, HUD, mensajes) se mantienen en español, en constantes con sufijo `_TEXT` o en la propiedad `text` de las escenas.
+
 ## Diccionario temático
 
-Usar siempre estos nombres y equivalencias en el código, las escenas, los grupos y la interfaz del juego.
+Usar siempre estas equivalencias. El nombre en español es el que ve el jugador; el identificador en inglés es el que se usa en el código, las escenas y los grupos.
 
 ### Moneda
 
-- **Snitches**: moneda del juego, equivalente a los Soles.
+| Entidad | Identificador | Rol equivalente |
+| --- | --- | --- |
+| Snitches | `snitch` | Soles |
+
 - Valor de referencia: 25 Snitches.
 
 ### Aliados
 
 Los aliados cumplen el rol de las plantas:
 
-| Entidad | Rol equivalente | Coste |
-| --- | --- | ---: |
-| Harry | Lanzaguisantes | 100 |
-| Caja de Snitch | Girasol | 50 |
-| Ron | Ataque Scabbers | 125 |
-| Hermione | Ralentiza | 125 |
-| Recordadora | Cereza explosiva | 150 |
-| Protego | Nuez | 50 |
-| Escoba | Jalapeño | 125 |
-| McGonagall | Ametralladora | 200 |
-| Accio | Pala | No aplica |
+| Entidad | Identificador | Rol equivalente | Coste |
+| --- | --- | --- | ---: |
+| Harry | `Harry` | Lanzaguisantes | 100 |
+| Caja de Snitch | `SnitchBox` | Girasol | 50 |
+| Ron | `Ron` | Ataque Scabbers | 125 |
+| Hermione | `Hermione` | Ralentiza | 125 |
+| Recordadora | `Remembrall` | Cereza explosiva | 150 |
+| Protego | `Protego` | Nuez | 50 |
+| Escoba | `Broomstick` | Jalapeño | 125 |
+| McGonagall | `McGonagall` | Ametralladora | 200 |
+| Accio | `Accio` | Pala | No aplica |
 
 ### Enemigos
 
 Los enemigos cumplen el rol de los zombies:
 
-- **Alumno Slytherin**: enemigo común.
-- **Draco**: enemigo con cono.
-- **Alumno con Protego**: enemigo con cubo.
-- **Prefecto Slytherin**: rompe defensas.
-- **Troll**: enemigo gigante.
-- **Profesor Quirrell**: jefe final.
+| Entidad | Identificador | Rol equivalente |
+| --- | --- | --- |
+| Alumno Slytherin | `SlytherinStudent` | Enemigo común |
+| Draco | `Draco` | Enemigo con cono |
+| Alumno con Protego | `ProtegoStudent` | Enemigo con cubo |
+| Prefecto Slytherin | `SlytherinPrefect` | Rompe defensas |
+| Troll | `Troll` | Enemigo gigante |
+| Profesor Quirrell | `Quirrell` | Jefe final |
 
 ## Reglas obligatorias de Godot
 
@@ -53,12 +65,12 @@ Los enemigos cumplen el rol de los zombies:
 Usar tipado estricto estático en GDScript siempre. Toda variable, constante, parámetro y retorno debe declarar su tipo cuando corresponda.
 
 ```gdscript
-var salud: int = 100
-var velocidad: float = 120.0
-var objetivo: Node2D
+var health: int = 100
+var speed: float = 120.0
+var target: Node2D
 
-func recibir_danio(cantidad: int) -> void:
-    salud -= cantidad
+func take_damage(amount: int) -> void:
+    health -= amount
 ```
 
 No introducir variables sin tipo explícito salvo que una limitación concreta de la API de Godot lo haga inevitable.
@@ -68,7 +80,7 @@ No introducir variables sin tipo explícito salvo que una limitación concreta d
 - Mantener una arquitectura basada estrictamente en Nodos y Escenas.
 - Usar una escena por entidad.
 - Cada entidad debe tener su propia escena y su propio script.
-- Ejemplos: `harry.tscn` con `harry.gd`, `draco.tscn` con `draco.gd`.
+- Ejemplos: `harry.tscn` con `harry.gd`, `slytherin_student.tscn` con `slytherin_student.gd`.
 - Las escenas deben organizar sus responsabilidades mediante nodos hijos y no mediante lógica global monolítica.
 - Reutilizar entidades instanciando sus escenas en lugar de duplicar nodos o lógica.
 
@@ -82,12 +94,12 @@ No introducir variables sin tipo explícito salvo que una limitación concreta d
 Ejemplo:
 
 ```gdscript
-signal salud_agotada(entidad: Node2D)
+signal health_depleted(entity: Node2D)
 
-func recibir_danio(cantidad: int) -> void:
-    salud -= cantidad
-    if salud <= 0:
-        salud_agotada.emit(self)
+func take_damage(amount: int) -> void:
+    health -= amount
+    if health <= 0:
+        health_depleted.emit(self)
 ```
 
 ### Inspector
@@ -96,24 +108,24 @@ func recibir_danio(cantidad: int) -> void:
 - Mantener el tipo explícito en las variables exportadas.
 
 ```gdscript
-@export var coste: int = 100
-@export var tiempo_recarga: float = 5.0
-@export var escena_proyectil: PackedScene
+@export var cost: int = 100
+@export var cooldown: float = 5.0
+@export var projectile_scene: PackedScene
 ```
 
 ### Colisiones y grupos
 
 - Detectar colisiones usando `Area2D` y señales de colisión de Godot.
-- Usar Grupos para identificar categorías de entidades, como `aliados`, `enemigos` y `hechizos`.
+- Usar Grupos para identificar categorías de entidades, como `allies`, `enemies` y `spells`.
 - Consultar grupos para validar objetivos y evitar comprobaciones frágiles basadas únicamente en nombres de nodos.
 - Usar las capas y máscaras de colisión de forma coherente con los `Area2D` de cada entidad.
 - Las áreas de ataque, daño, recogida y detección deben ser nodos explícitos dentro de las escenas correspondientes.
 
 Grupos mínimos reservados:
 
-- `aliados`
-- `enemigos`
-- `hechizos`
+- `allies`
+- `enemies`
+- `spells`
 
 ## Restricciones de cambios
 

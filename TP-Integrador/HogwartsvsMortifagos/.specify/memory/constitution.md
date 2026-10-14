@@ -1,3 +1,11 @@
+<!--
+Sync Impact Report
+- Versión: 1.0.0 → 1.1.0 (MINOR: se redefinen los principios III y IV)
+- Principios modificados: III (identificadores en inglés), IV (grupos en inglés)
+- Motivo: el AGENTS.md raíz del repositorio (reglas de la cátedra, §7) prevalece
+- Aprobación: equipo, 2026-10-02
+- Artefactos a revisar: AGENTS.md del proyecto (T006), specs/004-refactor-catedra/
+-->
 # Constitución del Proyecto Hogwarts vs. Mortífagos
 
 ## Principios
@@ -10,18 +18,17 @@ El proyecto DEBE usar Godot 4 con el renderizador Compatibility y GDScript con t
 
 La arquitectura DEBE estar basada estrictamente en Nodos y Escenas de Godot. Cada entidad DEBE tener una escena propia y su script correspondiente. Las entidades DEBEN reutilizarse mediante instanciación de escenas, evitando duplicar nodos o lógica.
 
-### III. Vocabulario temático
+### III. Vocabulario temático e idioma del código
 
-El juego DEBE conservar la temática de Harry Potter sobre la estructura de Plants vs. Zombies:
+El [`AGENTS.md` raíz del repositorio](../../../../AGENTS.md) (reglas de la cátedra) es la regla superior y prevalece sobre esta constitución y sobre el `AGENTS.md` del proyecto.
 
-- Los aliados DEBEN llamarse y tratarse como Magos.
-- Los enemigos DEBEN llamarse y tratarse como Mortífagos.
-- La moneda DEBE llamarse `Snitches`.
-- El código, las escenas, los grupos y la interfaz DEBEN respetar el diccionario temático definido en [`AGENTS.md`](../../AGENTS.md).
+- Todo identificador y comentario (scripts, clases, métodos, señales, variables, nodos, grupos, uniforms) DEBE estar en inglés, usando el identificador definido en el diccionario temático de [`AGENTS.md`](../../AGENTS.md).
+- Los textos visibles para el jugador DEBEN conservar la temática de Harry Potter y estar en español (Magos, Mortífagos, Snitches).
+- Los nombres propios del universo se conservan (`Harry`, `Draco`, `Protego`, `Snitch`).
 
 ### IV. Colisiones por áreas y grupos
 
-La detección de colisiones DEBE realizarse mediante `Area2D` y señales de colisión de Godot. Las categorías de entidades DEBEN identificarse mediante Grupos, como `aliados`, `enemigos` y `hechizos`.
+La detección de colisiones DEBE realizarse mediante `Area2D` y señales de colisión de Godot. Las categorías de entidades DEBEN identificarse mediante Grupos: `allies`, `enemies` y `spells`.
 
 Está PROHIBIDO comparar entidades por nombres de nodos. Las validaciones DEBEN consultar Grupos, capas y máscaras de colisión coherentes. Las áreas de ataque, daño, detección y recogida DEBEN existir como nodos explícitos en las escenas correspondientes.
 
@@ -37,6 +44,6 @@ Toda propuesta, implementación, revisión o cambio estructural DEBE verificarse
 
 ## Metadatos
 
-- Versión: 1.0.0
+- Versión: 1.1.0
 - Ratificada: 2026-09-25
-- Última modificación: 2026-09-25
+- Última modificación: 2026-10-02

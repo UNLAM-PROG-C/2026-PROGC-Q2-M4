@@ -51,7 +51,7 @@ specs/002-nivel-2-recordadora/
 ├── spec.md                  # Especificación de requisitos y clarificaciones
 ├── plan.md                  # Plan de arquitectura e implementación (este archivo)
 ├── research.md              # Decisiones técnicas y alternativas evaluadas (Fase 0)
-├── data-model.md            # Entidades, propiedades y máquinas de estado (Fase 1)
+├── data-model.md            # Entities, propiedades y máquinas de estado (Fase 1)
 ├── quickstart.md            # Guía de validación y pruebas de juego (Fase 1)
 ├── contracts/               # Contratos de interfaces y flujos (Fase 1)
 │   ├── recordadora-contract.md

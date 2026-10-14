@@ -2,7 +2,7 @@
 
 En el contexto de esta arquitectura de Godot (basada en Nodos y Duck Typing), los "contratos" definen las firmas de métodos y señales públicas que las entidades deben exponer para que el resto de los sistemas (proyectiles, gestores de nivel, colisiones) interactúen con ellas sin conocer su tipo exacto.
 
-## Contrato de Daño (Entidades Reactivas)
+## Contrato de Daño (Entities Reactivas)
 
 Ambas entidades (Draco y Protego) deben cumplir con el contrato estándar de recepción de daño utilizado por el motor de colisiones y proyectiles del juego.
 

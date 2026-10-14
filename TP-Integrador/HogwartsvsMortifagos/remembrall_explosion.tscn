@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://c8q5x2v4w8m6a"]
+
+[ext_resource type="Script" path="res://remembrall_explosion.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://Images/smoke_puff.png" id="2_smoke_puff"]
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 0.45, 1)
+colors = PackedColorArray(1, 0.3, 0.2, 0.9, 0.85, 0.1, 0.15, 0.7, 0.4, 0.05, 0.08, 0)
+
+[node name="RemembrallExplosion" type="Node2D" unique_id=1849201948]
+script = ExtResource("1_script")
+
+[node name="Particles" type="CPUParticles2D" parent="." unique_id=987654321]
+emitting = false
+amount = 32
+lifetime = 0.8
+one_shot = true
+explosiveness = 0.85
+texture = ExtResource("2_smoke_puff")
+emission_shape = 1
+emission_sphere_radius = 60.0
+direction = Vector2(0, -0.2)
+spread = 180.0
+gravity = Vector2(0, -30)
+initial_velocity_min = 140.0
+initial_velocity_max = 280.0
+damping_min = 90.0
+damping_max = 160.0
+angular_velocity_min = -60.0
+angular_velocity_max = 60.0
+scale_amount_min = 1.0
+scale_amount_max = 2.4
+color_ramp = SubResource("Gradient_smoke")

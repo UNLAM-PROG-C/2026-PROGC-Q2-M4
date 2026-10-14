@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://b1mkm80o652w1"]
+
+[ext_resource type="Script" uid="uid://b5ge3jnq7wa8r" path="res://dark_mark_cutscene.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bcdg2prqvs405" path="res://Images/dark_mark.png" id="2_feyjs"]
+[ext_resource type="Texture2D" uid="uid://cgpwra6myntjj" path="res://Images/dark_mark_skull.png" id="3_uts5c"]
+
+[node name="DarkMarkCutscene" type="CanvasLayer" unique_id=148516325]
+process_mode = 3
+layer = 20
+script = ExtResource("1_script")
+
+[node name="DarkOverlay" type="ColorRect" parent="." unique_id=1602559771]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="MarkPivot" type="Control" parent="." unique_id=1996462328]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="FullMarkClipper" type="Control" parent="MarkPivot" unique_id=1352072988]
+clip_contents = true
+anchors_preset = 0
+offset_left = -362.0
+offset_top = -313.5
+offset_right = 371.0
+offset_bottom = -313.5
+
+[node name="FullMarkTexture" type="TextureRect" parent="MarkPivot/FullMarkClipper" unique_id=996932173]
+layout_mode = 0
+offset_right = 733.0
+offset_bottom = 1392.0
+mouse_filter = 2
+texture = ExtResource("2_feyjs")
+
+[node name="SkullTexture" type="TextureRect" parent="MarkPivot" unique_id=555114009]
+layout_mode = 0
+offset_left = -362.0
+offset_top = -313.5
+offset_right = 371.0
+offset_bottom = 1078.5
+mouse_filter = 2
+texture = ExtResource("3_uts5c")
