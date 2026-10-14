@@ -4,11 +4,13 @@ import argparse
 import logging
 import math
 import queue
+import sys
 import threading
 from dataclasses import dataclass
+from typing import TextIO
 
 import config
-from core.inventory import Inventory
+from core.inventory import Inventory, InventorySnapshot
 from core.package import Package
 from ui.dashboard import Dashboard
 from workers.base import BaseWorker
@@ -31,6 +33,8 @@ CLI_EPILOG = (
     "  python main.py --trucks 4 --operators 2 --queue-size 20 \\\n"
     "      --processing-seconds 0.5 --export-interval 2 --no-chaos \\\n"
     "      --log-level INFO --log-file simulation.log")
+SUMMARY_TITLE = "=== Final Summary ==="
+SUMMARY_EMPTY_STOCK_LINE = "  (no stock)"
 
 
 @dataclass(frozen=True)
@@ -204,13 +208,39 @@ def join_all(workers: list[BaseWorker], timeout: float) -> None:
       logger.error("%s failed: %r", worker.name, worker.error)
 
 
-def report(inventory: Inventory, dock: "queue.Queue[Package]") -> None:
-  """Logs the final state of the simulation."""
+def format_summary(snapshot: InventorySnapshot, dock_size: int) -> str:
+  """Formats the user-facing final summary from already-captured data."""
+  stock_lines = [f"  {sku}: {units}"
+                 for sku, units in sorted(snapshot.stock.items())]
+  lines = [
+      SUMMARY_TITLE,
+      f"Packages registered: {snapshot.packages_received}",
+      f"Units registered: {snapshot.units_received}",
+      f"Packages left in dock: {dock_size}",
+      "Final stock per SKU:",
+      *(stock_lines or [SUMMARY_EMPTY_STOCK_LINE]),
+  ]
+  return "\n".join(lines)
+
+
+def report(
+    inventory: Inventory,
+    dock: "queue.Queue[Package]",
+    output: TextIO | None = None,
+) -> None:
+  """Prints the final summary and also records it in the log.
+
+  The summary is user-facing output, so it always goes to `output`
+  (stdout by default) regardless of the log level; it must run after the
+  dashboard has stopped so no frame overwrites it.
+  """
   snapshot = inventory.snapshot()
+  dock_size = dock.qsize()
+  print(format_summary(snapshot, dock_size), file=output or sys.stdout,
+        flush=True)
   logger.info("Final stock: %s", dict(snapshot.stock))
   logger.info("Packages registered: %d | units: %d | left in dock: %d",
-              snapshot.packages_received, snapshot.units_received,
-              dock.qsize())
+              snapshot.packages_received, snapshot.units_received, dock_size)
 
 
 def shutdown(
