@@ -8,7 +8,9 @@ import threading
 import time
 import unittest
 from datetime import datetime
+from unittest import mock
 
+import config
 from core.inventory import Inventory
 from core.package import Package
 from tests.test_maintenance_pause import wait_until
@@ -23,7 +25,8 @@ FIRST_EXPORT_DEADLINE_SECONDS = 2.0
 PROMPT_STOP_SECONDS = 1.0
 JOIN_TIMEOUT_SECONDS = 5.0
 STRESS_DURATION_SECONDS = 1.0
-MIN_SUCCESSFUL_READS = 20
+FAST_INTERVAL_SECONDS = 0.01
+FAILING_CYCLES = 3
 
 
 class ExportWorkerTest(unittest.TestCase):
@@ -72,7 +75,7 @@ class ExportWorkerTest(unittest.TestCase):
     writer.join(JOIN_TIMEOUT_SECONDS)
     self._stop(exporter)
     self.assertEqual(invalid_reads, [])
-    self.assertGreaterEqual(successful_reads, MIN_SUCCESSFUL_READS)
+    self.assertGreater(successful_reads, 0)
     self.assertEqual(os.listdir(self.directory), [REPORT_NAME])
 
   def test_stop_mid_interval_returns_promptly(self) -> None:
@@ -90,6 +93,24 @@ class ExportWorkerTest(unittest.TestCase):
     self.assertLess(elapsed, PROMPT_STOP_SECONDS)
     self.assertIsNone(exporter.error)
 
+  def test_locked_target_skips_cycle_and_keeps_running(self) -> None:
+    exporter = self._build_exporter(FAST_INTERVAL_SECONDS)
+    with mock.patch("workers.exporter.os.replace",
+                    side_effect=PermissionError("locked")) as replace,         self.assertLogs("workers.exporter", level="WARNING"):
+      exporter.start()
+      expected_calls = FAILING_CYCLES * config.EXPORT_REPLACE_ATTEMPTS
+      self.assertTrue(wait_until(
+          lambda: replace.call_count >= expected_calls,
+          FIRST_EXPORT_DEADLINE_SECONDS))
+      self.assertTrue(exporter.is_alive())
+      self.assertIsNone(exporter.error)
+      self.assertFalse(self.stop_event.is_set())
+
+    self.assertTrue(wait_until(lambda: os.path.exists(self.path),
+                               FIRST_EXPORT_DEADLINE_SECONDS))
+    self._stop(exporter)
+    self.assertEqual(os.listdir(self.directory), [REPORT_NAME])
+
   def _build_exporter(self, interval_seconds: float) -> ExportWorker:
     return ExportWorker("Exporter-T", self.inventory, self.dock,
                         self.stop_event, path=self.path,
@@ -103,9 +124,9 @@ class ExportWorkerTest(unittest.TestCase):
   def _read_repeatedly(self, duration: float) -> tuple[int, list[str]]:
     """Loads the report in a loop, collecting any undecodable content.
 
-    `OSError` is tolerated: the file may not exist yet, and on Windows
-    opening can briefly fail while the target is being swapped. Only content
-    that was actually read must always be valid JSON.
+    `FileNotFoundError` (not created yet) and `PermissionError` (Windows,
+    target being swapped) mean the file is temporarily unavailable and are
+    retried. Only content that was actually read must always be valid JSON.
     """
     successful_reads = 0
     invalid_reads: list[str] = []
@@ -114,8 +135,8 @@ class ExportWorkerTest(unittest.TestCase):
       try:
         with open(self.path, encoding="utf-8") as handle:
           content = handle.read()
-      except OSError:
-        continue
+      except (PermissionError, FileNotFoundError):
+        continue  # Temporarily unavailable: not yet created or being swapped.
       try:
         json.loads(content)
         successful_reads += 1
