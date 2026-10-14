@@ -50,19 +50,26 @@ class ExportWorker(BaseWorker):
     self.export()
     self._stop_event.wait(self._interval_seconds)
 
-  def export(self) -> None:
+  def export(self) -> bool:
     """Captures the current state and writes it atomically to the target.
 
     Safe to call from another thread once this worker has stopped (e.g. for
-    a final export after the dock has been drained).
+    a final export after the dock has been drained). Persistence is a side
+    concern: an I/O failure is logged and the cycle skipped, so it never
+    stops the simulation.
 
-    Raises:
-      OSError: If the report cannot be written or swapped into place.
+    Returns:
+      True if the report was written, False if this cycle was skipped.
     """
     snapshot = self._inventory.snapshot()
     dock_size = self._dock.qsize()
-    write_json_atomic(self._path, build_report(snapshot, dock_size))
+    try:
+      write_json_atomic(self._path, build_report(snapshot, dock_size))
+    except OSError as exc:
+      logger.warning("Export to %s skipped: %r", self._path, exc)
+      return False
     logger.debug("Report exported to %s", self._path)
+    return True
 
 
 def build_report(
@@ -130,12 +137,18 @@ def _replace_with_retry(source: str, target: str) -> None:
 
   On Windows the swap fails with `PermissionError` while another thread or
   process has the target open; the reader closes it quickly, so a short,
-  bounded retry is enough. On POSIX the first attempt always succeeds.
+  bounded exponential backoff is enough. On POSIX the first attempt always
+  succeeds.
+
+  Raises:
+    PermissionError: If the target stays locked after every attempt.
   """
-  for _ in range(config.EXPORT_REPLACE_RETRIES - 1):
+  delay = config.EXPORT_REPLACE_BACKOFF_SECONDS
+  for _ in range(config.EXPORT_REPLACE_ATTEMPTS - 1):
     try:
       os.replace(source, target)
       return
     except PermissionError:
-      time.sleep(config.EXPORT_REPLACE_RETRY_SECONDS)
+      time.sleep(delay)
+      delay *= 2
   os.replace(source, target)

@@ -25,9 +25,9 @@ DASHBOARD_REFRESH_SECONDS: Final[float] = 0.5
 EXPORT_INTERVAL_SECONDS: Final[float] = 5.0
 EXPORT_PATH: Final[str] = "logistics_report.json"
 # Windows refuses os.replace() while a reader holds the target open, so the
-# swap is retried briefly before giving up.
-EXPORT_REPLACE_RETRIES: Final[int] = 50
-EXPORT_REPLACE_RETRY_SECONDS: Final[float] = 0.01
+# swap is retried with exponential backoff before skipping the cycle.
+EXPORT_REPLACE_ATTEMPTS: Final[int] = 5
+EXPORT_REPLACE_BACKOFF_SECONDS: Final[float] = 0.01
 
 # Chaos monkey: (min, max) seconds of normal operation / maintenance window.
 SUPERVISOR_UPTIME_RANGE_SECONDS: Final[tuple[float, float]] = (2.0, 5.0)
