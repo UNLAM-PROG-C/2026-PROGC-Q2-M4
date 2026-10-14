@@ -36,7 +36,10 @@ class Truck(BaseWorker):
     """Unloads one batch, then waits (interruptibly) for the next arrival.
 
     The dock is closed during maintenance, so the truck holds before
-    unloading; a batch already being unloaded is always completed.
+    unloading. Once unloading starts, the batch is completed even if a
+    maintenance pause begins midway. On shutdown, however, the remaining
+    packages of the batch are dropped: they never reached the dock, so no
+    delivered package is lost, and the log reports how many were delivered.
     """
     self._wait_while_paused()
     batch = self._build_batch()
