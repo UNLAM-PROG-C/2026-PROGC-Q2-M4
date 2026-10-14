@@ -35,4 +35,8 @@ SUPERVISOR_PAUSE_RANGE_SECONDS: Final[tuple[float, float]] = (0.5, 2.0)
 
 PRODUCT_SKUS: Final[tuple[str, ...]] = ("SKU-A", "SKU-B", "SKU-C", "SKU-D")
 
+# Logs default to WARNING so INFO chatter does not break the dashboard.
+LOG_LEVEL: Final[str] = "WARNING"
+LOG_LEVEL_CHOICES: Final[tuple[str, ...]] = (
+    "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 LOG_FORMAT: Final[str] = "%(asctime)s [%(threadName)-12s] %(levelname)s %(message)s"

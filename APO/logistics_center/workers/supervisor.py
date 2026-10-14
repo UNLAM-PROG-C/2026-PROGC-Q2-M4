@@ -48,10 +48,10 @@ class Supervisor(BaseWorker):
       return
     self._maintenance_event.set()
     self._pause_count += 1
-    logger.warning("Maintenance started (#%d)", self._pause_count)
+    logger.info("Maintenance started (#%d)", self._pause_count)
     self._stop_event.wait(self._random_seconds(self._pause_range))
     self._maintenance_event.clear()
-    logger.warning("Maintenance finished")
+    logger.info("Maintenance finished")
 
   def _random_seconds(self, seconds_range: SecondsRange) -> float:
     """Draws a uniform random duration within the given range."""
