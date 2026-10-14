@@ -13,6 +13,7 @@ import unittest
 from collections import Counter
 
 import config
+import main
 from core.inventory import Inventory
 from core.package import Package
 from workers.base import BaseWorker
@@ -34,7 +35,6 @@ STUCK_PAUSE_RANGE = (60.0, 60.0)
 STUCK_UPTIME_RANGE = (0.5, 0.5)
 SWITCH_INTERVAL_SECONDS = 1e-5
 BARRIER_TIMEOUT_SECONDS = 10.0
-JOIN_TIMEOUT_SECONDS = 10.0
 PAUSE_DEADLINE_SECONDS = 2.0
 MAX_REPORTED = 10
 
@@ -191,13 +191,11 @@ class ChaosStressTest(unittest.TestCase):
     if stop_during_pause:
       self.assertTrue(scenario.maintenance_event.wait(PAUSE_DEADLINE_SECONDS))
     scenario.stop_event.set()
-    self._join_all(scenario.first_phase)
-    scenario.producers_finished.set()
-    self._join_all(scenario.operators)
+    main.shutdown(scenario.first_phase, scenario.operators,
+                  scenario.producers_finished)
+    self._assert_all_stopped(scenario.all_workers)
 
-  def _join_all(self, workers: list[BaseWorker]) -> None:
-    for worker in workers:
-      worker.join(JOIN_TIMEOUT_SECONDS)
+  def _assert_all_stopped(self, workers: list[BaseWorker]) -> None:
     alive = [worker.name for worker in workers if worker.is_alive()]
     self.assertFalse(alive, f"Deadlock suspected: {alive[:MAX_REPORTED]}")
 
