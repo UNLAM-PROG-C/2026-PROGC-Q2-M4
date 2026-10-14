@@ -6,6 +6,7 @@ moment it enters the dock until it is registered, so the conservation check
 is exact: nothing lost, nothing registered twice.
 """
 
+import itertools
 import queue
 import sys
 import threading
@@ -37,6 +38,7 @@ SWITCH_INTERVAL_SECONDS = 1e-5
 BARRIER_TIMEOUT_SECONDS = 10.0
 PAUSE_DEADLINE_SECONDS = 2.0
 MAX_REPORTED = 10
+LOSSY_DROP_EVERY = 10
 
 PROFILES = {
     "many_trucks_few_operators": (MANY_WORKERS, FEW_WORKERS, DOCK_CAPACITY),
@@ -77,7 +79,14 @@ class RecordingInventory(Inventory):
 
 
 class LossyOperator(Operator):
-  """Negative control: drops the package in hand when maintenance starts."""
+  """Negative control: silently drops every `LOSSY_DROP_EVERY`-th package.
+
+  The drop depends only on how many packages were taken, never on thread
+  timing, so any run that moves at least that many packages loses one.
+  """
+
+  _taken = itertools.count(start=1)
+  _taken_lock = threading.Lock()
 
   def _step(self) -> None:
     try:
@@ -85,7 +94,9 @@ class LossyOperator(Operator):
     except queue.Empty:
       return
     try:
-      if not self._maintenance_event.is_set():
+      with LossyOperator._taken_lock:
+        position = next(LossyOperator._taken)
+      if position % LOSSY_DROP_EVERY != 0:
         self._inventory.register(package)
     finally:
       self._dock.task_done()
@@ -180,6 +191,7 @@ class ChaosStressTest(unittest.TestCase):
     scenario = ChaosScenario(MANY_WORKERS, MANY_WORKERS, DOCK_CAPACITY,
                              operator_cls=GatedLossyOperator)
     self._run(scenario)
+    self.assertGreaterEqual(len(scenario.dock.enqueued), LOSSY_DROP_EVERY)
     with self.assertRaises(AssertionError):
       self._assert_conservation(scenario)
 
