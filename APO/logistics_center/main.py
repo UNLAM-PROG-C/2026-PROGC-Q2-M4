@@ -129,7 +129,14 @@ def parse_args(argv: list[str] | None = None) -> SimulationSettings:
   return SimulationSettings(**vars(namespace))
 
 
+def configure_logging(settings: SimulationSettings) -> None:
+  """Sends logs to `settings.log_file` if given, otherwise to stderr."""
+  logging.basicConfig(level=settings.log_level, format=config.LOG_FORMAT,
+                      filename=settings.log_file)
+
+
 def build_trucks(
+    settings: SimulationSettings,
     dock: "queue.Queue[Package]",
     stop_event: threading.Event,
     maintenance_event: threading.Event,
@@ -137,10 +144,11 @@ def build_trucks(
   """Creates the producer threads."""
   return [Truck(f"Truck-{index}", dock, stop_event,
                 maintenance_event=maintenance_event)
-          for index in range(1, config.TRUCK_COUNT + 1)]
+          for index in range(1, settings.trucks + 1)]
 
 
 def build_operators(
+    settings: SimulationSettings,
     dock: "queue.Queue[Package]",
     inventory: Inventory,
     stop_event: threading.Event,
@@ -149,8 +157,21 @@ def build_operators(
 ) -> list[Operator]:
   """Creates the consumer/writer threads."""
   return [Operator(f"Operator-{index}", dock, inventory, stop_event,
-                   producers_finished, maintenance_event=maintenance_event)
-          for index in range(1, config.OPERATOR_COUNT + 1)]
+                   producers_finished,
+                   processing_seconds=settings.processing_seconds,
+                   maintenance_event=maintenance_event)
+          for index in range(1, settings.operators + 1)]
+
+
+def build_supervisor(
+    settings: SimulationSettings,
+    stop_event: threading.Event,
+    maintenance_event: threading.Event,
+) -> Supervisor | None:
+  """Creates the chaos monkey, or None when chaos is disabled."""
+  if not settings.chaos:
+    return None
+  return Supervisor("Supervisor", stop_event, maintenance_event)
 
 
 def wait_for_shutdown(stop_event: threading.Event) -> None:
@@ -206,21 +227,26 @@ def shutdown(
   join_all(operators, config.DRAIN_TIMEOUT_SECONDS)
 
 
-def main() -> None:
-  """Runs the logistics center simulation."""
-  logging.basicConfig(level=logging.INFO, format=config.LOG_FORMAT)
+def main(argv: list[str] | None = None) -> None:
+  """Runs the logistics center simulation with settings from `argv`."""
+  settings = parse_args(argv)
+  configure_logging(settings)
   stop_event = threading.Event()
   producers_finished = threading.Event()
   maintenance_event = threading.Event()
-  dock: "queue.Queue[Package]" = queue.Queue(maxsize=config.QUEUE_MAX_SIZE)
+  dock: "queue.Queue[Package]" = queue.Queue(maxsize=settings.queue_size)
   inventory = Inventory()
-  trucks = build_trucks(dock, stop_event, maintenance_event)
-  operators = build_operators(dock, inventory, stop_event, producers_finished,
-                              maintenance_event)
+  trucks = build_trucks(settings, dock, stop_event, maintenance_event)
+  operators = build_operators(settings, dock, inventory, stop_event,
+                              producers_finished, maintenance_event)
   dashboard = Dashboard("Dashboard", inventory, dock, stop_event)
-  exporter = ExportWorker("Exporter", inventory, dock, stop_event)
-  supervisor = Supervisor("Supervisor", stop_event, maintenance_event)
-  first_phase: list[BaseWorker] = [*trucks, dashboard, exporter, supervisor]
+  exporter = ExportWorker("Exporter", inventory, dock, stop_event,
+                          path=settings.export_path,
+                          interval_seconds=settings.export_interval)
+  supervisor = build_supervisor(settings, stop_event, maintenance_event)
+  first_phase: list[BaseWorker] = [*trucks, dashboard, exporter]
+  if supervisor is not None:
+    first_phase.append(supervisor)
   for worker in [*first_phase, *operators]:
     worker.start()
   wait_for_shutdown(stop_event)
