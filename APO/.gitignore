@@ -2,3 +2,6 @@
 .claude/
 .venv/
 logistics_center/logistics_report.json
+.copilot/
+.mcp.json
+AppData/
