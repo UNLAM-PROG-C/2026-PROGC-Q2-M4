@@ -220,9 +220,18 @@ def shutdown(
       maintenance.
     operators: Consumers that keep running until the dock is empty.
     producers_finished: Signal that no more packages will be enqueued.
+
+  Raises:
+    KeyboardInterrupt: If a second Ctrl+C interrupts the first phase. The
+      operators are still released, so they drain the dock and exit on
+      their own instead of keeping the process alive.
   """
-  join_all(first_phase, config.JOIN_TIMEOUT_SECONDS)
-  producers_finished.set()
+  try:
+    join_all(first_phase, config.JOIN_TIMEOUT_SECONDS)
+  finally:
+    # Operators only exit once this is set and they are non-daemon threads,
+    # so it must be set even if the joins above are interrupted.
+    producers_finished.set()
   logger.info("Producers stopped, draining dock")
   join_all(operators, config.DRAIN_TIMEOUT_SECONDS)
 
