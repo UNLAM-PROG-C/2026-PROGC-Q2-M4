@@ -9,6 +9,7 @@ import main
 from core.inventory import Inventory
 from core.package import Package
 from workers.operator import Operator
+from workers.truck import Truck
 
 OPERATOR_COUNT = 3
 PACKAGE_COUNT = 20
@@ -61,6 +62,49 @@ class ShutdownInterruptTest(unittest.TestCase):
     self.assertTrue(self.dock.empty())
     self.assertEqual(self.inventory.snapshot().packages_received,
                      PACKAGE_COUNT)
+
+
+class UnstartableOperator(Operator):
+  """Operator whose thread cannot be created, like an exhausted OS limit."""
+
+  def start(self) -> None:
+    raise RuntimeError("can't start new thread")
+
+
+class StartFailureTest(unittest.TestCase):
+  """A failing start() must not leave already-started threads running."""
+
+  def test_start_failure_stops_started_workers(self) -> None:
+    stop_event = threading.Event()
+    producers_finished = threading.Event()
+    dock: "queue.Queue[Package]" = queue.Queue()
+    inventory = Inventory()
+    truck = Truck("Truck-1", dock, stop_event)
+    operators: list[Operator] = [
+        Operator("Operator-1", dock, inventory, stop_event,
+                 producers_finished, processing_seconds=NO_DELAY),
+        UnstartableOperator("Operator-2", dock, inventory, stop_event,
+                            producers_finished, processing_seconds=NO_DELAY),
+    ]
+    workers = [truck, *operators]
+
+    def release() -> None:
+      stop_event.set()
+      producers_finished.set()
+      for worker in workers:
+        if worker.ident is not None:
+          worker.join(JOIN_TIMEOUT_SECONDS)
+    # Safety net: never leave non-daemon threads behind if the test fails.
+    self.addCleanup(release)
+
+    with self.assertRaisesRegex(RuntimeError, "can't start new thread"):
+      main.run_workers([truck], operators, stop_event, producers_finished)
+
+    self.assertTrue(stop_event.is_set())
+    self.assertTrue(producers_finished.is_set())
+    alive = [worker.name for worker in workers if worker.is_alive()]
+    self.assertFalse(alive, f"Workers still running: {alive}")
+    self.assertTrue(dock.empty())
 
 
 if __name__ == "__main__":

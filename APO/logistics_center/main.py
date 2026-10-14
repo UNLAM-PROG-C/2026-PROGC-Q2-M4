@@ -189,8 +189,14 @@ def wait_for_shutdown(stop_event: threading.Event) -> None:
 
 
 def join_all(workers: list[BaseWorker], timeout: float) -> None:
-  """Joins the given workers, each with a bounded timeout."""
+  """Joins the given workers, each with a bounded timeout.
+
+  Workers that were never started (e.g. a later `start()` failed) are
+  skipped, since joining them would raise.
+  """
   for worker in workers:
+    if worker.ident is None:
+      continue
     worker.join(timeout=timeout)
     if worker.is_alive():
       logger.warning("%s did not stop within timeout", worker.name)
@@ -236,6 +242,27 @@ def shutdown(
   join_all(operators, config.DRAIN_TIMEOUT_SECONDS)
 
 
+def run_workers(
+    first_phase: list[BaseWorker],
+    operators: list[Operator],
+    stop_event: threading.Event,
+    producers_finished: threading.Event,
+) -> None:
+  """Starts every worker, waits for shutdown, then stops them in two phases.
+
+  The shutdown runs even if starting a worker fails (e.g. the OS refuses a
+  new thread), so the non-daemon threads already running never keep the
+  process alive; the start error is re-raised afterwards.
+  """
+  try:
+    for worker in [*first_phase, *operators]:
+      worker.start()
+    wait_for_shutdown(stop_event)
+  finally:
+    stop_event.set()
+    shutdown(first_phase, operators, producers_finished)
+
+
 def main(argv: list[str] | None = None) -> None:
   """Runs the logistics center simulation with settings from `argv`."""
   settings = parse_args(argv)
@@ -256,10 +283,7 @@ def main(argv: list[str] | None = None) -> None:
   first_phase: list[BaseWorker] = [*trucks, dashboard, exporter]
   if supervisor is not None:
     first_phase.append(supervisor)
-  for worker in [*first_phase, *operators]:
-    worker.start()
-  wait_for_shutdown(stop_event)
-  shutdown(first_phase, operators, producers_finished)
+  run_workers(first_phase, operators, stop_event, producers_finished)
   # The periodic exporter is already stopped: persist the drained final state
   # so the file matches the final report.
   exporter.export()
