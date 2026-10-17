@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Entidades Principales
+## 1. Entities Principales
 
 ### Entidad: Recordadora (`recordadora.gd`)
 Representa la planta-bomba de área (rol Cereza Explosiva).

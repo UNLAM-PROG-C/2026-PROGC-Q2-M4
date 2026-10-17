@@ -11,6 +11,5 @@ Las reglas técnicas y el diccionario temático del proyecto están en [AGENTS.m
 
 ## Contexto del motor Godot
 
-- Cuando una tarea requiera obtener contexto del proyecto Godot, cargá y aplicá siempre la skill [godot-mcp-sync](skills/godot-mcp-sync/SKILL.md) antes de proponer código o cambios estructurales.
-- Usá `godot-mcp` para verificar el estado real del Scene Tree, los nodos, las propiedades, los grupos y las señales; no infieras esa información únicamente desde archivos de texto.
-- Si `godot-mcp` no está disponible o devuelve información incompleta, detené la tarea e informá el bloqueo en lugar de adivinar.
+- Cuando una tarea requiera obtener contexto del proyecto Godot, preferí cargar y aplicar la skill [godot-mcp-sync](skills/godot-mcp-sync/SKILL.md) y usar `godot-mcp` para verificar el estado real del Scene Tree, los nodos, las propiedades, los grupos y las señales.
+- Si `godot-mcp` no está disponible o devuelve información incompleta, continuá utilizando los archivos del proyecto (`.tscn`, `.gd` y documentación) como fuente de contexto, dejando explícitas las suposiciones y validando el resultado mediante las herramientas disponibles.
