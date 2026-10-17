@@ -6,7 +6,7 @@ extends Area2D
 
 const IMPACT_EXPLOSION_SCENE: PackedScene = preload("res://impact_explosion.tscn")
 const DEFAULT_SPEED: float = 350.0
-const DEFAULT_SPLASH_DAMAGE: float = 40.0
+const DEFAULT_SPLASH_DAMAGE: float = 100.0
 const HALF_SPLASH_WIDTH: float = 240.0
 const HALF_SPLASH_HEIGHT: float = 240.0
 const EXIT_X: float = 1950.0

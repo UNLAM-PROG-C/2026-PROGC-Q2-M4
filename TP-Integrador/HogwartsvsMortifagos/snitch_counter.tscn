@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://d1fl0v4r4xhjv"]
+
+[ext_resource type="Script" path="res://snitch_counter.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://goetu7xsehmb" path="res://Images/snitch.png" id="2_texture"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_counter"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.894118, 0.803922, 0.623529, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.235294, 0.141176, 0.0823529, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 6
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_snitch_first_frame"]
+atlas = ExtResource("2_texture")
+region = Rect2(0, 0, 124.5, 38)
+
+[node name="SnitchCounter" type="PanelContainer" unique_id=987654321]
+custom_minimum_size = Vector2(150, 100)
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 174.0
+offset_bottom = 120.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_counter")
+script = ExtResource("1_script")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=987654322]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="SnitchesLabel" type="Label" parent="VBoxContainer" unique_id=987654323]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.235294, 0.141176, 0.0823529, 1)
+theme_override_font_sizes/font_size = 30
+text = "150"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SnitchIcon" type="TextureRect" parent="VBoxContainer" unique_id=987654324]
+custom_minimum_size = Vector2(124.5, 38)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = SubResource("AtlasTexture_snitch_first_frame")
+expand_mode = 1
+stretch_mode = 5

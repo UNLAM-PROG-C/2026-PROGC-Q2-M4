@@ -4,6 +4,7 @@ extends Area2D
 const IMPACT_EXPLOSION_SCENE: PackedScene = preload("res://impact_explosion.tscn")
 const DEFAULT_TEXTURE: Texture2D = preload("res://Images/projectile_effect.png")
 const FROST_SHOT_TEXTURE: Texture2D = preload("res://Images/frost_shot.png")
+const RON_SHOT_TEXTURE: Texture2D = preload("res://Images/ron_shot.png")
 
 ## Travel speed in pixels per second.
 @export var speed: float = 400.0
@@ -35,7 +36,7 @@ func _process(delta: float) -> void:
 		sprite.frame = (sprite.frame + 1) % sprite.hframes
 
 
-func activate(spawn_position: Vector2, slows_target: bool = false) -> void:
+func activate(spawn_position: Vector2, slows_target: bool = false, custom_texture: Texture2D = null) -> void:
 	global_position = spawn_position
 	update_row_z_index()
 	slows = slows_target
@@ -43,12 +44,18 @@ func activate(spawn_position: Vector2, slows_target: bool = false) -> void:
 	_animation_elapsed = 0.0
 	_is_active = true
 	sprite.frame = 0
-	sprite.texture = FROST_SHOT_TEXTURE if slows else DEFAULT_TEXTURE
+	sprite.texture = _resolve_texture(slows, custom_texture)
 	sprite.modulate = Color.WHITE
 	visible = true
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
 	set_process(true)
+
+
+func _resolve_texture(slows_target: bool, custom_texture: Texture2D) -> Texture2D:
+	if custom_texture != null:
+		return custom_texture
+	return FROST_SHOT_TEXTURE if slows_target else DEFAULT_TEXTURE
 
 
 func update_row_z_index() -> void:

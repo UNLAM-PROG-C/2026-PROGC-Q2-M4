@@ -249,11 +249,10 @@ script = ExtResource("13_card_button")
 card = ExtResource("17_protego_card")
 
 [node name="AccioButton" type="Button" parent="HUD" unique_id=1500000000]
-offset_left = 1775.0
-offset_top = 944.0
-offset_right = 1918.0
-offset_bottom = 1087.0
-flat = true
+offset_left = 1796.0
+offset_top = 956.0
+offset_right = 1896.0
+offset_bottom = 1056.0
 icon = ExtResource("23_wand_texture")
 expand_icon = true
 script = ExtResource("21_accio_button")

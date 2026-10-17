@@ -52,6 +52,9 @@ const MULTI_SPAWN_DOUBLE_CHANCE: float = 0.25
 const SECOND_ENEMY_SPAWN_DELAY: float = 0.010
 const THIRD_ENEMY_SPAWN_DELAY: float = 0.030
 const WAVE_PROGRESS_BAR_SCENE: PackedScene = preload("res://wave_progress_bar.tscn")
+const PAUSE_MENU_SCENE: PackedScene = preload("res://pause_menu.tscn")
+const SNITCH_COUNTER_SCENE: PackedScene = preload("res://snitch_counter.tscn")
+const SnitchCounter = preload("res://snitch_counter.gd")
 const WAVE_METER_2_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_2_waves.png")
 const WAVE_METER_3_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_3_waves.png")
 const WAVE_CHARGE_1_WAVE_TEXTURE: Texture2D = preload("res://Images/wave_charge_1_wave.png")
@@ -138,6 +141,8 @@ var _regular_enemy_ids: Dictionary[int, bool] = {}
 var _is_level_over: bool = false
 var _enemy_spawn_interval: float = 12.0
 var _wave_progress_bar: WaveProgressBar = null
+var _pause_menu: PauseMenu = null
+var _snitch_counter: SnitchCounter = null
 
 @onready var tile_map: TileMapLayer = _find_tile_map()
 @onready var entity_layer: Node2D = $Entities
@@ -146,7 +151,7 @@ var _wave_progress_bar: WaveProgressBar = null
 @onready var enemy_spawn_timer: Timer = $EnemySpawnTimer
 @onready var snitch_spawn_timer: Timer = $SnitchSpawnTimer
 @onready var hud: CanvasLayer = $HUD
-@onready var snitches_label: Label = $HUD/SnitchesLabel
+@onready var snitches_label: Label = $HUD/SnitchesLabel if has_node("HUD/SnitchesLabel") else null
 @onready var status_label: Label = $HUD/StatusLabel
 @onready var pool_debug_label: Label = $HUD/PoolDebugLabel
 @onready var wave_announcement: Control = $HUD/WaveAnnouncement
@@ -204,6 +209,33 @@ func _setup_level_hud() -> void:
 		_setup_boss_hud()
 	else:
 		_setup_wave_progress_bar()
+	_setup_pause_menu()
+	_setup_snitch_counter()
+
+
+func _setup_snitch_counter() -> void:
+	_snitch_counter = hud.get_node_or_null("SnitchCounter") as SnitchCounter
+	if _snitch_counter == null:
+		_snitch_counter = SNITCH_COUNTER_SCENE.instantiate() as SnitchCounter
+		hud.add_child(_snitch_counter)
+	_hide_legacy_snitches_label()
+	if _snitch_counter.snitches_label != null:
+		snitches_label = _snitch_counter.snitches_label
+
+
+func _hide_legacy_snitches_label() -> void:
+	var legacy: Label = hud.get_node_or_null("SnitchesLabel") as Label
+	if legacy != null and legacy != _snitch_counter.snitches_label:
+		legacy.visible = false
+
+
+func _setup_pause_menu() -> void:
+	_pause_menu = hud.get_node_or_null("PauseMenu") as PauseMenu
+	if _pause_menu == null:
+		_pause_menu = PAUSE_MENU_SCENE.instantiate() as PauseMenu
+		hud.add_child(_pause_menu)
+	_pause_menu.retry_requested.connect(_on_retry_button_pressed)
+	_pause_menu.back_to_map_requested.connect(_on_back_to_map_button_pressed)
 
 
 func _init_wave_announcement_format() -> void:
@@ -278,8 +310,16 @@ func _get_boss_shadow_spawn_row() -> int:
 
 func _on_boss_phase_two_started(boss_pos: Vector2) -> void:
 	var cutscene: CanvasLayer = DARK_MARK_CUTSCENE_SCENE.instantiate() as CanvasLayer
+	if _pause_menu != null:
+		_pause_menu.set_enabled(false)
+		cutscene.animation_finished.connect(_on_cutscene_finished)
 	hud.add_child(cutscene)
 	cutscene.call(&"play", boss_pos)
+
+
+func _on_cutscene_finished() -> void:
+	if _pause_menu != null and not _is_level_over:
+		_pause_menu.set_enabled(true)
 
 
 func _place_boss_at_cell(cell: Vector2i) -> void:
@@ -488,9 +528,16 @@ func _card_buttons() -> Array[AllyCardButton]:
 
 
 func _refresh_hud() -> void:
-	snitches_label.text = SNITCHES_LABEL_TEXT + str(_snitches)
+	_update_snitches_display()
 	for button: AllyCardButton in _card_buttons():
 		button.refresh(_snitches)
+
+
+func _update_snitches_display() -> void:
+	if _snitch_counter != null:
+		_snitch_counter.set_value(_snitches)
+	elif snitches_label != null:
+		snitches_label.text = str(_snitches)
 
 
 func _on_pool_stats_changed(shots_fired: int, pool_size: int, active_count: int) -> void:
@@ -529,8 +576,7 @@ func _set_cursor_mode(is_removing: bool) -> void:
 		_accio_button.set_active(is_removing)
 	if _accio_cursor != null:
 		_accio_cursor.visible = is_removing
-	var mode: Input.MouseMode = Input.MOUSE_MODE_HIDDEN if is_removing else Input.MOUSE_MODE_VISIBLE
-	Input.set_mouse_mode(mode)
+	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 	if not is_removing:
 		_clear_hovered_ally()
 		_stop_accio_glow()
@@ -686,6 +732,8 @@ func _init_placed_ally(ally: Ally) -> void:
 		(ally as Hermione).projectile_pool = projectile_pool
 	elif ally is McGonagall:
 		(ally as McGonagall).projectile_pool = projectile_pool
+	elif ally is Ron:
+		(ally as Ron).projectile_pool = projectile_pool
 	elif "projectile_pool" in ally:
 		ally.set("projectile_pool", projectile_pool)
 	if ally is SnitchBox:
@@ -1136,6 +1184,8 @@ func _stop_level() -> void:
 	snitch_spawn_timer.stop()
 	wave_director.cancel_and_wait()
 	projectile_pool.release_all()
+	if _pause_menu != null:
+		_pause_menu.set_enabled(false)
 
 
 func _exit_tree() -> void:
@@ -1169,10 +1219,12 @@ func _on_next_level_button_pressed() -> void:
 
 
 func _on_back_to_map_button_pressed() -> void:
+	get_tree().paused = false
 	_go_to_map()
 
 
 func _on_retry_button_pressed() -> void:
+	get_tree().paused = false
 	get_tree().reload_current_scene()
 
 

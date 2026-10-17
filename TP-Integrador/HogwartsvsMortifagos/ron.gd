@@ -1,6 +1,8 @@
 class_name Ron
 extends Ally
 
+const RON_SHOT_TEXTURE: Texture2D = preload("res://Images/ron_shot.png")
+
 ## Seconds between shots.
 @export var shot_interval: float = 3.0
 ## Damage dealt to the enemy hit by Ron's projectile (3x base damage).
@@ -28,7 +30,7 @@ func _on_shoot_timer_timeout() -> void:
 func _shoot() -> void:
 	if projectile_pool == null or not is_instance_valid(projectile_pool):
 		return
-	var projectile: Projectile = projectile_pool.acquire_projectile(shoot_point.global_position, damage)
+	var projectile: Projectile = projectile_pool.acquire_projectile(shoot_point.global_position, damage, false, RON_SHOT_TEXTURE)
 	if projectile == null:
 		return
 

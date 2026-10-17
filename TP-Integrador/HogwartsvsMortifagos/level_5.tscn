@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dcltwpk1d3fpc" path="res://level.gd" id="3_script"]
 [ext_resource type="PackedScene" uid="uid://cqbyxqa58mwy" path="res://slytherin_student.tscn" id="6_slytherin"]
 [ext_resource type="PackedScene" uid="uid://cpc5lnjbkueb1" path="res://snitch.tscn" id="7_snitch"]
-[ext_resource type="PackedScene" path="res://dementor.tscn" id="8_dementor"]
+[ext_resource type="PackedScene" uid="uid://cxajxi1ebmj8h" path="res://dementor.tscn" id="8_dementor"]
 [ext_resource type="Texture2D" uid="uid://m2225llgru1t" path="res://Images/background.png" id="10_background"]
 [ext_resource type="PackedScene" uid="uid://deqnbfjd6va" path="res://draco.tscn" id="11_draco"]
 [ext_resource type="Script" uid="uid://daladrauc8hd2" path="res://ally_card_button.gd" id="13_card_button"]
@@ -21,10 +21,10 @@
 [ext_resource type="PackedScene" path="res://accio_cursor.tscn" id="23_accio_cursor"]
 [ext_resource type="Texture2D" uid="uid://csm7y60tocuv8" path="res://Images/elder_wand.png" id="24_wand_texture"]
 [ext_resource type="Texture2D" uid="uid://bydhk7drs4isj" path="res://Images/seed_harry.png" id="ext_seed_harry"]
-[ext_resource type="Texture2D" uid="uid://dymbg17ppci62" path="res://Images/seed_snitch_box.png" id="ext_seed_snitch_box"]
-[ext_resource type="Texture2D" uid="uid://03nidtbp83i8" path="res://Images/seed_ron.png" id="ext_seed_ron"]
-[ext_resource type="Texture2D" uid="uid://wqrjixlbwefe" path="res://Images/seed_remembrall.png" id="ext_seed_remembrall"]
 [ext_resource type="Texture2D" uid="uid://3jilxgven0xv" path="res://Images/seed_protego.png" id="ext_seed_protego"]
+[ext_resource type="Texture2D" uid="uid://wqrjixlbwefe" path="res://Images/seed_remembrall.png" id="ext_seed_remembrall"]
+[ext_resource type="Texture2D" uid="uid://03nidtbp83i8" path="res://Images/seed_ron.png" id="ext_seed_ron"]
+[ext_resource type="Texture2D" uid="uid://dymbg17ppci62" path="res://Images/seed_snitch_box.png" id="ext_seed_snitch_box"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_erchu"]
 texture = ExtResource("1_grass")
@@ -235,22 +235,10 @@ expand_icon = true
 script = ExtResource("13_card_button")
 card = ExtResource("15_snitch_box_card")
 
-[node name="RonCardButton" type="Button" parent="HUD" unique_id=1600000001]
+[node name="RemembrallCardButton" type="Button" parent="HUD" unique_id=1303248470]
 offset_left = 573.6
 offset_top = 7.0
 offset_right = 705.6
-offset_bottom = 192.0
-size_flags_horizontal = 4
-icon = ExtResource("ext_seed_ron")
-flat = true
-expand_icon = true
-script = ExtResource("13_card_button")
-card = ExtResource("16_ron_card")
-
-[node name="RemembrallCardButton" type="Button" parent="HUD" unique_id=1303248470]
-offset_left = 728.4
-offset_top = 7.0
-offset_right = 860.4
 offset_bottom = 192.0
 size_flags_horizontal = 4
 icon = ExtResource("ext_seed_remembrall")
@@ -260,9 +248,9 @@ script = ExtResource("13_card_button")
 card = ExtResource("17_remembrall_card")
 
 [node name="ProtegoCardButton" type="Button" parent="HUD" unique_id=1400000001]
-offset_left = 883.2
+offset_left = 728.4
 offset_top = 7.0
-offset_right = 1015.2
+offset_right = 860.4
 offset_bottom = 192.0
 size_flags_horizontal = 4
 icon = ExtResource("ext_seed_protego")
@@ -271,17 +259,28 @@ expand_icon = true
 script = ExtResource("13_card_button")
 card = ExtResource("18_protego_card")
 
-[node name="AccioButton" type="Button" parent="HUD" unique_id=1500000002]
-offset_left = 1775.0
-offset_top = 944.0
-offset_right = 1918.0
-offset_bottom = 1087.0
+[node name="RonCardButton" type="Button" parent="HUD" unique_id=1600000001]
+offset_left = 883.2
+offset_top = 7.0
+offset_right = 1015.2
+offset_bottom = 192.0
+size_flags_horizontal = 4
+icon = ExtResource("ext_seed_ron")
 flat = true
+expand_icon = true
+script = ExtResource("13_card_button")
+card = ExtResource("16_ron_card")
+
+[node name="AccioButton" type="Button" parent="HUD" unique_id=1500000002]
+offset_left = 1796.0
+offset_top = 956.0
+offset_right = 1896.0
+offset_bottom = 1056.0
 icon = ExtResource("24_wand_texture")
 expand_icon = true
 script = ExtResource("22_accio_button")
 
-[node name="AccioCursor" parent="HUD" instance=ExtResource("23_accio_cursor")]
+[node name="AccioCursor" parent="HUD" unique_id=1952653364 instance=ExtResource("23_accio_cursor")]
 visible = false
 
 [node name="StatusLabel" type="Label" parent="HUD" unique_id=461003770]
@@ -296,7 +295,6 @@ vertical_alignment = 1
 
 [node name="WaveAnnouncement" type="PanelContainer" parent="HUD" unique_id=461003771]
 visible = false
-layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -383,37 +381,37 @@ alignment = 1
 [node name="NextLevelButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=1007129948]
 custom_minimum_size = Vector2(170, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Siguiente Nivel"
 
 [node name="RetryButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=1747888045]
 custom_minimum_size = Vector2(140, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Reintentar"
 
 [node name="BackToMapButton" type="Button" parent="HUD/LevelEndPanel/ModalBox/VBox/ButtonsRow" unique_id=214647231]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 text = "Volver al Mapa"
 
 [node name="WaveDirector" type="Node" parent="." unique_id=65764772]
