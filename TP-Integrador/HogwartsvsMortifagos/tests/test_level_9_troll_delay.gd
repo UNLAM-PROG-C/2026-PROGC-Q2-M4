@@ -20,6 +20,7 @@ func _run_tests() -> void:
 	_test_initial_state(level_node)
 	_test_before_first_wave(level_node)
 	_test_after_first_wave(level_node)
+	_test_troll_rules(level_node)
 
 	level_node.queue_free()
 	await process_frame
@@ -51,3 +52,20 @@ func _test_after_first_wave(level_node: Level) -> void:
 			troll_picked = true
 			break
 	assert(troll_picked, "Troll should be picked at least once in 100 samples when allowed")
+
+
+func _test_troll_rules(level_node: Level) -> void:
+	_test_troll_detection_by_class(level_node)
+	_test_delay_comes_only_from_export(level_node)
+
+
+func _test_troll_detection_by_class(level_node: Level) -> void:
+	assert(level_node.call("_scene_root_is_troll", load("res://troll.tscn")), "troll.tscn is a Troll")
+	assert(not level_node.call("_scene_root_is_troll", load("res://slytherin_student.tscn")), "A student is not a Troll")
+
+
+func _test_delay_comes_only_from_export(level_node: Level) -> void:
+	level_node.troll_delay_waves = 0
+	level_node.name = "Level9"
+	level_node.set("_completed_waves", 0)
+	assert(level_node.call("_are_trolls_allowed"), "With no exported delay, trolls are allowed from the start")

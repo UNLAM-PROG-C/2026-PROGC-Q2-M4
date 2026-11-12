@@ -129,6 +129,7 @@ var _final_wave_active: bool = false
 var _level_generation: int = 1
 var _pending_request_id: int = 0
 var _pending_wave_plan: WavePlan = null
+var _troll_scenes: Dictionary[PackedScene, bool] = {}
 var _defeated_enemy_ids: Dictionary[int, bool] = {}
 var _regular_enemy_ids: Dictionary[int, bool] = {}
 var _is_level_over: bool = false
@@ -176,6 +177,7 @@ func _init_level_state() -> void:
 	_total_defeated_enemies = 0
 	_pending_wave_plan = null
 	_calculate_total_level_kills()
+	_cache_troll_scenes()
 	if not is_boss_level and is_instance_valid(wave_director):
 		wave_director.result_ready.connect(_on_wave_result)
 
@@ -792,17 +794,27 @@ func _on_snitch_collected(amount: int) -> void:
 	_refresh_hud()
 
 
-func _is_troll_scene(scene: PackedScene) -> bool:
+func _cache_troll_scenes() -> void:
+	_troll_scenes.clear()
+	for scene: PackedScene in enemy_scenes:
+		_troll_scenes[scene] = _scene_root_is_troll(scene)
+
+
+func _scene_root_is_troll(scene: PackedScene) -> bool:
 	if scene == null:
 		return false
-	return scene.resource_path.get_file() == "troll.tscn"
+	var probe: Node = scene.instantiate()
+	var is_troll: bool = probe is Troll
+	probe.free()
+	return is_troll
+
+
+func _is_troll_scene(scene: PackedScene) -> bool:
+	return _troll_scenes.get(scene, false)
 
 
 func _are_trolls_allowed() -> bool:
-	var required_waves: int = troll_delay_waves
-	if required_waves <= 0 and (_get_current_level_num() == 9 or name == "Level9"):
-		required_waves = 1
-	return _completed_waves >= required_waves
+	return _completed_waves >= troll_delay_waves
 
 
 func _pick_random_enemy_scene() -> PackedScene:
