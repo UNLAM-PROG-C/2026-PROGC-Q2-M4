@@ -43,6 +43,7 @@ Los aliados cumplen el rol de las plantas:
 | Protego | `Protego` | Nuez | 50 |
 | Escoba | `Broomstick` | Jalapeño | 125 |
 | McGonagall | `McGonagall` | Ametralladora | 200 |
+| Dumbledore | `Dumbledore` | Disparo de área | 300 |
 | Accio | `Accio` | Pala | No aplica |
 
 ### Enemigos
@@ -57,6 +58,8 @@ Los enemigos cumplen el rol de los zombies:
 | Prefecto Slytherin | `SlytherinPrefect` | Rompe defensas |
 | Troll | `Troll` | Enemigo gigante |
 | Profesor Quirrell | `Quirrell` | Jefe final |
+| Dementor | `Dementor` | Cortacésped de carril |
+| Sombra | `ShadowEnemy` | Enemigo invocado por el jefe |
 
 ## Reglas obligatorias de Godot
 
