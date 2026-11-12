@@ -47,8 +47,8 @@ func _assert_hitbox_properties(troll: Troll) -> void:
 func _assert_detection_area_properties(troll: Troll) -> void:
 	assert(troll.detection_area != null, "Troll must have a valid detection_area reference")
 	assert(troll.attack_collision_box != null, "Troll must have a valid attack_collision_box reference")
-	assert(troll.attack_collision_box.get_parent() == troll.detection_area, "AtackCollisionBox child of DetectionArea")
-	assert(troll.attack_collision_box.name == "AtackCollisionBox", "Named AtackCollisionBox")
+	assert(troll.attack_collision_box.get_parent() == troll.detection_area, "AttackCollisionBox child of DetectionArea")
+	assert(troll.attack_collision_box.name == "AttackCollisionBox", "Named AttackCollisionBox")
 	assert(troll.attack_collision_box.position == Vector2(-64, -5), "Positioned at Vector2(-64, -5)")
 	assert(troll.detection_area.collision_layer == 0, "DetectionArea collision_layer must be 0")
 	var is_connected: bool = troll.detection_area.area_entered.is_connected(troll._on_detection_area_area_entered)
@@ -56,7 +56,7 @@ func _assert_detection_area_properties(troll: Troll) -> void:
 
 
 func _test_projectile_hits_hitbox_not_attack_box() -> void:
-	print("Testing projectile impacts Hitbox and ignores AtackCollisionBox...")
+	print("Testing projectile impacts Hitbox and ignores AttackCollisionBox...")
 	var troll_scene: PackedScene = load("res://troll.tscn")
 	var projectile_scene: PackedScene = load("res://projectile.tscn")
 	var troll: Troll = troll_scene.instantiate() as Troll
@@ -76,7 +76,7 @@ func _assert_projectile_in_attack_box(troll: Troll, projectile: Projectile) -> v
 	var initial_health: float = troll._health
 	projectile.activate(Vector2(420, 200), false)
 	await process_frame
-	assert(troll._health == initial_health, "Troll must NOT take damage when projectile is only in AtackCollisionBox area!")
+	assert(troll._health == initial_health, "Troll must NOT take damage when projectile is only in AttackCollisionBox area!")
 
 
 func _assert_projectile_in_hitbox(troll: Troll, projectile: Projectile) -> void:
@@ -88,7 +88,7 @@ func _assert_projectile_in_hitbox(troll: Troll, projectile: Projectile) -> void:
 
 
 func _test_ally_in_attack_box_triggers_strike() -> void:
-	print("Testing ally in AtackCollisionBox triggers attack...")
+	print("Testing ally in AttackCollisionBox triggers attack...")
 	var troll_scene: PackedScene = load("res://troll.tscn")
 	var ally_scene: PackedScene = load("res://harry.tscn")
 	var troll: Troll = troll_scene.instantiate() as Troll
@@ -101,17 +101,17 @@ func _test_ally_in_attack_box_triggers_strike() -> void:
 	if is_instance_valid(ally):
 		ally.queue_free()
 	await process_frame
-	print("Ally in AtackCollisionBox strike test PASSED.")
+	print("Ally in AttackCollisionBox strike test PASSED.")
 
 
 func _assert_ally_detection_and_strike(troll: Troll, ally: Ally) -> void:
 	ally.global_position = Vector2(436, 200)
 	await process_frame
-	assert(troll._has_allies_in_front(), "Troll must detect ally in AtackCollisionBox")
+	assert(troll._has_allies_in_front(), "Troll must detect ally in AttackCollisionBox")
 	troll._on_detection_area_area_entered(ally)
-	assert(troll._is_attacking, "Troll MUST start attacking when ally enters AtackCollisionBox!")
+	assert(troll._is_attacking, "Troll MUST start attacking when ally enters AttackCollisionBox!")
 	troll._on_animation_finished(&"attack")
-	assert(ally.health <= 0.0 or not is_instance_valid(ally), "Ally in AtackCollisionBox MUST be instakilled!")
+	assert(ally.health <= 0.0 or not is_instance_valid(ally), "Ally in AttackCollisionBox MUST be instakilled!")
 
 
 func _test_lane_row_z_index_calculation() -> void:

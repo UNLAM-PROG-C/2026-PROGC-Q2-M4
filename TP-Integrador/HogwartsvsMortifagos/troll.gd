@@ -21,7 +21,7 @@ var _attack_cooldown_remaining: float = 0.0
 @onready var animation_player: AnimationPlayer = $Animation
 @onready var detection_area: Area2D = $DetectionArea
 @onready var hitbox: CollisionShape2D = $Hitbox
-@onready var attack_collision_box: CollisionShape2D = $DetectionArea/AtackCollisionBox
+@onready var attack_collision_box: CollisionShape2D = $DetectionArea/AttackCollisionBox
 
 
 func _ready() -> void:

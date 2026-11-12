@@ -405,7 +405,7 @@ shape = SubResource("RectangleShape2D_detection")
 [node name="DetectionArea" type="Area2D" parent="." unique_id=2123140743]
 collision_layer = 0
 
-[node name="AtackCollisionBox" type="CollisionShape2D" parent="DetectionArea" unique_id=1257838571]
+[node name="AttackCollisionBox" type="CollisionShape2D" parent="DetectionArea" unique_id=1257838571]
 position = Vector2(-64, -5)
 shape = SubResource("RectangleShape2D_body")
 
