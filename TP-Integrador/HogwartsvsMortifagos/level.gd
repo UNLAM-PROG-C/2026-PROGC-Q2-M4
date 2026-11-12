@@ -933,17 +933,8 @@ func _get_current_meter_progress() -> int:
 
 
 func _get_phase_threshold(phase_index: int) -> int:
-	if wave_kill_thresholds.is_empty() or phase_index < 0 or phase_index >= wave_kill_thresholds.size():
+	if phase_index < 0 or phase_index >= wave_kill_thresholds.size():
 		return 0
-	var wave_count: int = wave_kill_thresholds.size()
-	if wave_count == 2:
-		var half: int = _total_level_kills / 2
-		return half if phase_index == 0 else (_total_level_kills - half)
-	elif wave_count == 3:
-		var third: int = roundi(float(_total_level_kills) / 3.0)
-		if phase_index == 0 or phase_index == 1:
-			return third
-		return _total_level_kills - (third * 2)
 	return wave_kill_thresholds[phase_index]
 
 
