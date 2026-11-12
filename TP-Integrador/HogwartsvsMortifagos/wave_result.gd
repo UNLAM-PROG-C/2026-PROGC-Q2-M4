@@ -9,7 +9,7 @@ enum ErrorCode
 	INVALID_PLAN
 }
 
-var plan: RefCounted = null
+var plan: WavePlan = null
 var level_generation: int = 0
 var request_id: int = 0
 var cancelled: bool = false

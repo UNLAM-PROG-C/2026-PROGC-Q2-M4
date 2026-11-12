@@ -1,15 +1,8 @@
 class_name Level
 extends Node2D
 
-const BOARD_SNAPSHOT_SCRIPT: Script = preload("res://board_snapshot.gd")
-const DEFENSE_SNAPSHOT_SCRIPT: Script = preload("res://defense_snapshot.gd")
-const WAVE_PLAN_SCRIPT: Script = preload("res://wave_plan.gd")
-const STATE_SPAWNING_NORMAL: int = 0
-const STATE_WAVE_PREPARATION: int = 1
-const STATE_WAVE_ACTIVE: int = 2
-const STATE_WAITING_FOR_CLEAR: int = 3
-const STATE_FINAL_WAVE_PREPARATION: int = 4
-const STATE_LEVEL_COMPLETE: int = 5
+const INVALID_WAVE_TRANSITION_MESSAGE: String = "Rejected wave transition from %d to %d"
+const FALLBACK_REQUEST_ID: int = 1
 const STANDARD_WAVE_RATIO: float = 0.5
 const SPECIAL_FIRST_WAVE_RATIO: float = 0.33
 const SPECIAL_SECOND_WAVE_RATIO: float = 0.66
@@ -130,12 +123,12 @@ var _current_phase_index: int = 0
 var _completed_waves: int = 0
 var _total_level_kills: int = 0
 var _active_enemies: int = 0
-var _wave_state: int = STATE_SPAWNING_NORMAL
+var _wave_state: WaveState.Value = WaveState.Value.SPAWNING_NORMAL
 var _intermediate_wave_size: int = 10
 var _final_wave_active: bool = false
 var _level_generation: int = 1
 var _pending_request_id: int = 0
-var _pending_wave_plan: RefCounted = null
+var _pending_wave_plan: WavePlan = null
 var _defeated_enemy_ids: Dictionary[int, bool] = {}
 var _regular_enemy_ids: Dictionary[int, bool] = {}
 var _is_level_over: bool = false
@@ -828,7 +821,7 @@ func _pick_random_enemy_scene() -> PackedScene:
 
 ## EnemySpawnTimer callback. Spawns regular enemies with accelerating difficulty.
 func _on_enemy_spawn_timer_timeout() -> void:
-	if _is_level_over or _wave_state != STATE_SPAWNING_NORMAL:
+	if _is_level_over or _wave_state != WaveState.Value.SPAWNING_NORMAL:
 		return
 	_accelerate_spawn_cadence()
 	_spawn_regular_enemies()
@@ -913,7 +906,7 @@ func _on_enemy_defeated(entity: Node2D) -> void:
 
 
 func _process_regular_enemy_kill() -> void:
-	if _wave_state != STATE_SPAWNING_NORMAL:
+	if _wave_state != WaveState.Value.SPAWNING_NORMAL:
 		return
 	_phase_defeated_enemies += 1
 	_total_defeated_enemies += 1
@@ -946,8 +939,15 @@ func _on_garden_invaded() -> void:
 	_lose()
 
 
+func _enter_wave_state(next: WaveState.Value) -> void:
+	if not WaveState.can_transition(_wave_state, next):
+		push_error(INVALID_WAVE_TRANSITION_MESSAGE % [_wave_state, next])
+		return
+	_wave_state = next
+
+
 func _check_wave_threshold() -> void:
-	if is_boss_level or _wave_state != STATE_SPAWNING_NORMAL:
+	if is_boss_level or _wave_state != WaveState.Value.SPAWNING_NORMAL:
 		return
 	if _current_phase_index >= wave_kill_thresholds.size():
 		return
@@ -960,13 +960,13 @@ func _reach_wave_threshold() -> void:
 	if is_instance_valid(enemy_spawn_timer):
 		enemy_spawn_timer.stop()
 	var is_final: bool = (_current_phase_index + 1) >= wave_kill_thresholds.size()
-	_wave_state = STATE_FINAL_WAVE_PREPARATION if is_final else STATE_WAVE_PREPARATION
+	_enter_wave_state(WaveState.Value.FINAL_WAVE_PREPARATION if is_final else WaveState.Value.WAVE_PREPARATION)
 	_request_wave(is_final)
 	_check_wave_readiness()
 
 
 func _check_wave_readiness() -> void:
-	if _wave_state != STATE_WAVE_PREPARATION and _wave_state != STATE_FINAL_WAVE_PREPARATION:
+	if _wave_state != WaveState.Value.WAVE_PREPARATION and _wave_state != WaveState.Value.FINAL_WAVE_PREPARATION:
 		return
 	if _active_enemies > 0:
 		return
@@ -978,91 +978,94 @@ func _check_wave_readiness() -> void:
 func _update_wave_lifecycle() -> void:
 	if is_boss_level:
 		return
-	if _wave_state == STATE_WAVE_PREPARATION or _wave_state == STATE_FINAL_WAVE_PREPARATION:
+	if _wave_state == WaveState.Value.WAVE_PREPARATION or _wave_state == WaveState.Value.FINAL_WAVE_PREPARATION:
 		_check_wave_readiness()
-	elif _wave_state == STATE_WAITING_FOR_CLEAR and _active_enemies == 0:
+	elif _wave_state == WaveState.Value.WAITING_FOR_CLEAR and _active_enemies == 0:
 		_resume_after_wave()
 
 
 func _request_wave(is_final: bool) -> void:
 	if is_instance_valid(wave_director):
-		var snapshot: RefCounted = _build_snapshot()
+		var snapshot: BoardSnapshot = _build_snapshot()
 		_pending_request_id = wave_director.request_plan(snapshot, is_final)
 	else:
 		_create_fallback_wave(is_final)
 
 
 func _create_fallback_wave(is_final: bool) -> void:
-	var plan: RefCounted = WAVE_PLAN_SCRIPT.new()
-	plan.set("level_generation", _level_generation)
-	plan.set("request_id", 1)
-	plan.set("wave_number", _current_phase_index + 1)
-	plan.set("is_final", is_final)
-	plan.set("enemy_count", final_wave_min if is_final else intermediate_wave_min)
-	plan.set("spawn_delay", 0.25)
-	plan.set("row_indices", active_rows.duplicate())
+	var plan: WavePlan = WavePlan.new()
+	plan.level_generation = _level_generation
+	plan.request_id = FALLBACK_REQUEST_ID
+	plan.wave_number = _current_phase_index + 1
+	plan.is_final = is_final
+	plan.enemy_count = final_wave_min if is_final else intermediate_wave_min
+	plan.spawn_delay = WavePlan.DEFAULT_SPAWN_DELAY
+	plan.row_indices = active_rows.duplicate()
 	_pending_wave_plan = plan
 	_check_wave_readiness()
 
 
-func _build_snapshot() -> RefCounted:
-	var snapshot: RefCounted = BOARD_SNAPSHOT_SCRIPT.new()
+func _build_snapshot() -> BoardSnapshot:
+	var snapshot: BoardSnapshot = BoardSnapshot.new()
 	_fill_snapshot_base(snapshot)
 	_fill_snapshot_wave_params(snapshot)
 	return snapshot
 
 
-func _fill_snapshot_base(snapshot: RefCounted) -> void:
+func _fill_snapshot_base(snapshot: BoardSnapshot) -> void:
 	var budget: int = _kill_budget()
-	snapshot.set("level_generation", _level_generation)
-	snapshot.set("state", _wave_state)
-	snapshot.set("regular_defeated", mini(_total_defeated_enemies, budget))
-	snapshot.set("regular_budget", budget)
-	snapshot.set("active_enemies", _active_enemies)
-	snapshot.set("defense_value", _defense_value())
-	snapshot.set("is_special_level", is_special_level)
-	snapshot.set("threshold_index", _current_phase_index)
+	snapshot.level_generation = _level_generation
+	snapshot.state = _wave_state
+	snapshot.regular_defeated = mini(_total_defeated_enemies, budget)
+	snapshot.regular_budget = budget
+	snapshot.active_enemies = _active_enemies
+	snapshot.defense_value = _defense_value()
+	snapshot.is_special_level = is_special_level
+	snapshot.threshold_index = _current_phase_index
 
 
-func _fill_snapshot_wave_params(snapshot: RefCounted) -> void:
-	snapshot.set("intermediate_wave_size", _intermediate_wave_size)
-	snapshot.set("intermediate_wave_min", intermediate_wave_min)
-	snapshot.set("intermediate_wave_max", intermediate_wave_max)
-	snapshot.set("final_wave_min", final_wave_min)
-	snapshot.set("final_wave_bonus_min", final_wave_bonus_min)
-	snapshot.set("final_wave_bonus_max", final_wave_bonus_max)
-	snapshot.set("row_indices", active_rows)
+func _fill_snapshot_wave_params(snapshot: BoardSnapshot) -> void:
+	snapshot.intermediate_wave_size = _intermediate_wave_size
+	snapshot.intermediate_wave_min = intermediate_wave_min
+	snapshot.intermediate_wave_max = intermediate_wave_max
+	snapshot.final_wave_min = final_wave_min
+	snapshot.final_wave_bonus_min = final_wave_bonus_min
+	snapshot.final_wave_bonus_max = final_wave_bonus_max
+	snapshot.row_indices = active_rows.duplicate()
 
 
 func _defense_value() -> float:
+	var snapshot: DefenseSnapshot = DefenseSnapshot.new()
+	snapshot.set_values(_sum_ally_health(), 0.0)
+	return snapshot.total_value
+
+
+func _sum_ally_health() -> float:
 	var ally_value: float = 0.0
 	for ally_node: Node2D in _occupied_cells.values():
 		if is_instance_valid(ally_node) and ally_node is Ally:
 			ally_value += (ally_node as Ally).health
-	var snapshot: RefCounted = DEFENSE_SNAPSHOT_SCRIPT.new()
-	snapshot.call("set_values", ally_value, 0.0)
-	return snapshot.get("total_value")
+	return ally_value
 
 
-func _on_wave_result(result: RefCounted) -> void:
-	if _is_level_over or result.get("level_generation") != _level_generation:
+func _on_wave_result(result: WaveResult) -> void:
+	if _is_level_over or result.level_generation != _level_generation:
 		return
-	if result.get("request_id") != _pending_request_id or result.get("cancelled"):
+	if result.request_id != _pending_request_id or result.cancelled:
 		return
-	var plan: RefCounted = result.get("plan")
-	if plan == null:
+	if result.plan == null:
 		return
-	_pending_wave_plan = plan
+	_pending_wave_plan = result.plan
 	_check_wave_readiness()
 
 
 func _start_prepared_wave() -> void:
-	var plan: RefCounted = _pending_wave_plan
+	var plan: WavePlan = _pending_wave_plan
 	_pending_wave_plan = null
-	_wave_state = STATE_WAVE_ACTIVE
-	_final_wave_active = bool(plan.get("is_final"))
+	_enter_wave_state(WaveState.Value.WAVE_ACTIVE)
+	_final_wave_active = plan.is_final
 	if not _final_wave_active:
-		_intermediate_wave_size = plan.get("enemy_count")
+		_intermediate_wave_size = plan.enemy_count
 	await _show_wave_announcement()
 	_spawn_wave_enemies(plan)
 
@@ -1078,25 +1081,25 @@ func _show_wave_announcement() -> void:
 		wave_announcement.visible = false
 
 
-func _spawn_wave_enemies(plan: RefCounted) -> void:
-	var enemy_count: int = plan.get("enemy_count")
-	var spawn_delay: float = plan.get("spawn_delay")
+func _spawn_wave_enemies(plan: WavePlan) -> void:
+	var enemy_count: int = plan.enemy_count
+	var spawn_delay: float = plan.spawn_delay
 	for index: int in range(enemy_count):
 		if index > 0 and spawn_delay > 0.0:
 			await get_tree().create_timer(spawn_delay).timeout
 		if _is_level_over:
 			return
 		_spawn_enemy(_pick_random_enemy_scene(), false)
-	_wave_state = STATE_WAITING_FOR_CLEAR
+	_enter_wave_state(WaveState.Value.WAITING_FOR_CLEAR)
 	_update_wave_lifecycle()
 
 
 func _resume_after_wave() -> void:
-	if _wave_state != STATE_WAITING_FOR_CLEAR:
+	if _wave_state != WaveState.Value.WAITING_FOR_CLEAR:
 		return
 	_completed_waves += 1
 	if _final_wave_active:
-		_wave_state = STATE_LEVEL_COMPLETE
+		_enter_wave_state(WaveState.Value.LEVEL_COMPLETE)
 		_win()
 		return
 	_advance_to_next_regular_phase()
@@ -1105,7 +1108,7 @@ func _resume_after_wave() -> void:
 func _advance_to_next_regular_phase() -> void:
 	_current_phase_index += 1
 	_phase_defeated_enemies = 0
-	_wave_state = STATE_SPAWNING_NORMAL
+	_enter_wave_state(WaveState.Value.SPAWNING_NORMAL)
 	enemy_spawn_timer.start(_enemy_spawn_interval)
 
 

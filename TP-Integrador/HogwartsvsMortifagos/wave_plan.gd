@@ -4,6 +4,7 @@ extends RefCounted
 const INTERMEDIATE_MIN_COUNT: int = 10
 const INTERMEDIATE_MAX_COUNT: int = 20
 const FINAL_MIN_COUNT: int = 25
+const DEFAULT_SPAWN_DELAY: float = 0.25
 
 var level_generation: int = 0
 var request_id: int = 0

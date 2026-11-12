@@ -1,37 +1,37 @@
 class_name WaveDirector
 extends Node
 
-const BOARD_SNAPSHOT_SCRIPT: Script = preload("res://board_snapshot.gd")
-const WAVE_PLAN_SCRIPT: Script = preload("res://wave_plan.gd")
-const WAVE_RESULT_SCRIPT: Script = preload("res://wave_result.gd")
 const INTERMEDIATE_MIN_COUNT: int = 10
 const INTERMEDIATE_MAX_COUNT: int = 20
 const FINAL_MIN_COUNT: int = 25
 const FINAL_BONUS_MIN: int = 5
 const FINAL_BONUS_MAX: int = 10
+## Defense value at which the intermediate wave reaches its maximum size.
+const DEFENSE_SCALE: float = 1000.0
+const NO_REQUEST: int = 0
 
-signal result_ready(result: RefCounted)
+signal result_ready(result: WaveResult)
 
 var _mutex: Mutex = Mutex.new()
 var _thread: Thread = null
-var _results: Array[RefCounted] = []
+var _results: Array[WaveResult] = []
 var _cancel_requested: bool = false
 var _level_generation: int = 0
 var _next_request_id: int = 1
 var _active_request_id: int = 0
 
-func request_plan(snapshot: RefCounted, is_final: bool) -> int:
+func request_plan(snapshot: BoardSnapshot, is_final: bool) -> int:
 	if _thread != null and _thread.is_started():
-		return 0
-	var request_id: int = _reserve_request(snapshot.get("level_generation"))
-	var copied_snapshot: RefCounted = _copy_snapshot(snapshot)
+		return NO_REQUEST
+	var request_id: int = _reserve_request(snapshot.level_generation)
+	var copied_snapshot: BoardSnapshot = snapshot.duplicate_snapshot()
 	_thread = Thread.new()
 	_thread.start(_calculate_plan.bind(copied_snapshot, request_id, is_final))
 	return request_id
 
 func poll_results() -> void:
-	var pending: Array[RefCounted] = _take_results()
-	for result: RefCounted in pending:
+	var pending: Array[WaveResult] = _take_results()
+	for result: WaveResult in pending:
 		result_ready.emit(result)
 	if not pending.is_empty():
 		_join_thread()
@@ -54,101 +54,85 @@ func _reserve_request(generation: int) -> int:
 	return request_id
 
 func _calculate_plan(
-	snapshot: RefCounted,
+	snapshot: BoardSnapshot,
 	request_id: int,
 	is_final: bool
 ) -> void:
-	var result: RefCounted = _build_result(snapshot, request_id, is_final)
+	var result: WaveResult = _build_result(snapshot, request_id, is_final)
 	_mutex.lock()
-	if _cancel_requested or snapshot.get("level_generation") != _level_generation:
-		result.set("cancelled", true)
-		result.set("error_code", 2)
+	if _cancel_requested or snapshot.level_generation != _level_generation:
+		result.cancelled = true
+		result.error_code = WaveResult.ErrorCode.CANCELLED
 	_results.append(result)
 	_mutex.unlock()
 
 func _build_result(
-	snapshot: RefCounted,
+	snapshot: BoardSnapshot,
 	request_id: int,
 	is_final: bool
-) -> RefCounted:
-	var result: RefCounted = WAVE_RESULT_SCRIPT.new()
-	result.set("level_generation", snapshot.get("level_generation"))
-	result.set("request_id", request_id)
-	if not snapshot.call("is_valid"):
-		result.set("error_code", 1)
+) -> WaveResult:
+	var result: WaveResult = WaveResult.new()
+	result.level_generation = snapshot.level_generation
+	result.request_id = request_id
+	if not snapshot.is_valid():
+		result.error_code = WaveResult.ErrorCode.INVALID_SNAPSHOT
 		return result
-	var plan: RefCounted = _create_plan(snapshot, request_id, is_final)
-	if not plan.call("is_valid"):
-		result.set("error_code", 3)
+	var plan: WavePlan = _create_plan(snapshot, request_id, is_final)
+	if not plan.is_valid():
+		result.error_code = WaveResult.ErrorCode.INVALID_PLAN
 		return result
-	result.set("plan", plan)
+	result.plan = plan
 	return result
 
 func _create_plan(
-	snapshot: RefCounted,
+	snapshot: BoardSnapshot,
 	request_id: int,
 	is_final: bool
-) -> RefCounted:
-	var plan: RefCounted = WAVE_PLAN_SCRIPT.new()
-	plan.set("level_generation", snapshot.get("level_generation"))
-	plan.set("request_id", request_id)
-	plan.set("wave_number", snapshot.get("threshold_index") + 1)
-	plan.set("is_final", is_final)
-	plan.set("enemy_count", _calculate_enemy_count(snapshot, is_final))
-	plan.set("reference_intermediate_count", snapshot.get("intermediate_wave_size"))
-	plan.set("intermediate_wave_min", snapshot.get("intermediate_wave_min"))
-	plan.set("intermediate_wave_max", snapshot.get("intermediate_wave_max"))
-	plan.set("final_wave_min", snapshot.get("final_wave_min"))
-	plan.set("spawn_delay", 0.25)
-	plan.set("row_indices", snapshot.get("row_indices").duplicate())
+) -> WavePlan:
+	var plan: WavePlan = WavePlan.new()
+	_fill_plan_identity(plan, snapshot, request_id, is_final)
+	_fill_plan_counts(plan, snapshot, is_final)
 	return plan
 
-func _calculate_enemy_count(snapshot: RefCounted, is_final: bool) -> int:
+func _fill_plan_identity(
+	plan: WavePlan,
+	snapshot: BoardSnapshot,
+	request_id: int,
+	is_final: bool
+) -> void:
+	plan.level_generation = snapshot.level_generation
+	plan.request_id = request_id
+	plan.wave_number = snapshot.threshold_index + 1
+	plan.is_final = is_final
+	plan.spawn_delay = WavePlan.DEFAULT_SPAWN_DELAY
+	plan.row_indices = snapshot.row_indices.duplicate()
+
+func _fill_plan_counts(plan: WavePlan, snapshot: BoardSnapshot, is_final: bool) -> void:
+	plan.enemy_count = _calculate_enemy_count(snapshot, is_final)
+	plan.reference_intermediate_count = snapshot.intermediate_wave_size
+	plan.intermediate_wave_min = snapshot.intermediate_wave_min
+	plan.intermediate_wave_max = snapshot.intermediate_wave_max
+	plan.final_wave_min = snapshot.final_wave_min
+
+func _calculate_enemy_count(snapshot: BoardSnapshot, is_final: bool) -> int:
 	if is_final:
-		var bonus: int = randi_range(
-			snapshot.get("final_wave_bonus_min"),
-			snapshot.get("final_wave_bonus_max")
-		)
-		return maxi(
-			snapshot.get("final_wave_min"),
-			snapshot.get("intermediate_wave_size") + bonus
-		)
-	var scaled_value: float = clampf(snapshot.get("defense_value") / 1000.0, 0.0, 1.0)
-	return clampi(
-		snapshot.get("intermediate_wave_min")
-			+ roundi(
-				scaled_value
-				* (
-					snapshot.get("intermediate_wave_max")
-					- snapshot.get("intermediate_wave_min")
-				)
-			),
-		snapshot.get("intermediate_wave_min"),
-		snapshot.get("intermediate_wave_max")
-	)
+		return _final_enemy_count(snapshot)
+	return _intermediate_enemy_count(snapshot)
 
-func _copy_snapshot(source: RefCounted) -> RefCounted:
-	var copy: RefCounted = BOARD_SNAPSHOT_SCRIPT.new()
-	copy.set("level_generation", source.get("level_generation"))
-	copy.set("state", source.get("state"))
-	copy.set("regular_defeated", source.get("regular_defeated"))
-	copy.set("regular_budget", source.get("regular_budget"))
-	copy.set("active_enemies", source.get("active_enemies"))
-	copy.set("defense_value", source.get("defense_value"))
-	copy.set("is_special_level", source.get("is_special_level"))
-	copy.set("threshold_index", source.get("threshold_index"))
-	copy.set("intermediate_wave_size", source.get("intermediate_wave_size"))
-	copy.set("intermediate_wave_min", source.get("intermediate_wave_min"))
-	copy.set("intermediate_wave_max", source.get("intermediate_wave_max"))
-	copy.set("final_wave_min", source.get("final_wave_min"))
-	copy.set("final_wave_bonus_min", source.get("final_wave_bonus_min"))
-	copy.set("final_wave_bonus_max", source.get("final_wave_bonus_max"))
-	copy.set("row_indices", source.get("row_indices").duplicate())
-	return copy
+func _final_enemy_count(snapshot: BoardSnapshot) -> int:
+	var bonus: int = randi_range(snapshot.final_wave_bonus_min, snapshot.final_wave_bonus_max)
+	var scaled: int = snapshot.intermediate_wave_size + bonus
+	return maxi(snapshot.final_wave_min, scaled)
 
-func _take_results() -> Array[RefCounted]:
+func _intermediate_enemy_count(snapshot: BoardSnapshot) -> int:
+	var pressure: float = clampf(snapshot.defense_value / DEFENSE_SCALE, 0.0, 1.0)
+	var span: int = snapshot.intermediate_wave_max - snapshot.intermediate_wave_min
+	var count: int = snapshot.intermediate_wave_min + roundi(pressure * float(span))
+	return clampi(count, snapshot.intermediate_wave_min, snapshot.intermediate_wave_max)
+
+func _take_results() -> Array[WaveResult]:
 	_mutex.lock()
-	var pending: Array[RefCounted] = _results.duplicate()
+	var pending: Array[WaveResult] = _results.duplicate()
 	_results.clear()
 	_mutex.unlock()
 	return pending
