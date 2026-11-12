@@ -90,7 +90,6 @@ corner_radius_bottom_left = 12
 
 [node name="Level8" type="Node2D" unique_id=1898794800]
 script = ExtResource("3_script")
-total_enemies = 45
 enemy_scenes = Array[PackedScene]([ExtResource("6_slytherin"), ExtResource("11_draco"), ExtResource("12_protego_student"), ExtResource("13_slytherin_prefect")])
 snitch_scene = ExtResource("7_snitch")
 dementor_scene = ExtResource("8_dementor")

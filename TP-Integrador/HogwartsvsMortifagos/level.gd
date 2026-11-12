@@ -71,11 +71,10 @@ const BOSS_FALLBACK_X: float = 1704.0
 const FINAL_LEVEL_NUMBER: int = 10
 const NEXT_LEVEL_SCENE_TEMPLATE: String = "res://level_%d.tscn"
 const GAME_SESSION_PATH: String = "/root/GameManager"
+const MIN_KILL_BUDGET: int = 1
 
 ## Snitches the player starts with.
 @export var starting_snitches: int = 150
-## Total number of enemies the level spawns.
-@export var total_enemies: int = 20
 ## Enemy scenes spawned by the level, picked at random.
 @export var enemy_scenes: Array[PackedScene] = []
 ## Collectable Snitch scene to instantiate.
@@ -192,8 +191,12 @@ func _calculate_total_level_kills() -> void:
 	_total_level_kills = 0
 	for threshold: int in wave_kill_thresholds:
 		_total_level_kills += threshold
-	if _total_level_kills <= 0:
-		_total_level_kills = total_enemies
+
+
+## Kill budget sent to the wave director. A level without quotas still sends
+## the minimum budget BoardSnapshot.is_valid accepts.
+func _kill_budget() -> int:
+	return maxi(_total_level_kills, MIN_KILL_BUDGET)
 
 
 func _init_hud_and_cards() -> void:
@@ -1010,7 +1013,7 @@ func _build_snapshot() -> RefCounted:
 
 
 func _fill_snapshot_base(snapshot: RefCounted) -> void:
-	var budget: int = maxi(total_enemies, _total_level_kills)
+	var budget: int = _kill_budget()
 	snapshot.set("level_generation", _level_generation)
 	snapshot.set("state", _wave_state)
 	snapshot.set("regular_defeated", mini(_total_defeated_enemies, budget))
