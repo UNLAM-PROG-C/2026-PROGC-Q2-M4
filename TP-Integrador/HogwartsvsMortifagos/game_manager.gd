@@ -1,8 +1,15 @@
+class_name GameSession
 extends Node
 
 ## Session progression shared by the levels and the level select menu (autoload).
+## The class is named GameSession because the autoload node is called GameManager
+## and a class_name cannot hide an autoload singleton.
 
-const INITIAL_UNLOCKED_LEVEL: int = 10
+const INITIAL_UNLOCKED_LEVEL: int = 1
+const DEFAULT_SAVE_PATH: String = "user://progress.cfg"
+const SAVE_SECTION: String = "progress"
+const UNLOCKED_KEY: String = "max_unlocked_level"
+const REWARDS_KEY: String = "claimed_rewards"
 const CustomCursor = preload("res://custom_cursor.gd")
 const CURSOR_SCENE: PackedScene = preload("res://custom_cursor.tscn")
 const BACKGROUND_MUSIC_PATH: String = "res://music/harry_potter_song.mp3"
@@ -13,13 +20,15 @@ const MUTED_VOLUME_DB: float = -80.0
 
 var max_unlocked_level: int = INITIAL_UNLOCKED_LEVEL
 var debug_mode: bool = false
-var claimed_rewards: Dictionary = {}
+var claimed_rewards: Dictionary[int, bool] = {}
+var save_path: String = DEFAULT_SAVE_PATH
 var _custom_cursor: Node = null
 var _music_player: AudioStreamPlayer = null
 var _music_volume: float = DEFAULT_MUSIC_VOLUME
 
 
 func _ready() -> void:
+	_load_progress()
 	_setup_custom_cursor()
 	_setup_background_music()
 
@@ -74,12 +83,38 @@ func get_music_player() -> AudioStreamPlayer:
 	return _music_player
 
 
+func _load_progress() -> void:
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(save_path) != OK:
+		return
+	max_unlocked_level = int(config.get_value(SAVE_SECTION, UNLOCKED_KEY, INITIAL_UNLOCKED_LEVEL))
+	_read_rewards(config)
+
+
+func _read_rewards(config: ConfigFile) -> void:
+	var stored: Variant = config.get_value(SAVE_SECTION, REWARDS_KEY, {})
+	if typeof(stored) != TYPE_DICTIONARY:
+		return
+	var table: Dictionary = stored
+	for key: Variant in table.keys():
+		claimed_rewards[int(key)] = true
+
+
+func _save_progress() -> void:
+	var config: ConfigFile = ConfigFile.new()
+	config.set_value(SAVE_SECTION, UNLOCKED_KEY, max_unlocked_level)
+	config.set_value(SAVE_SECTION, REWARDS_KEY, claimed_rewards)
+	config.save(save_path)
+
+
 func unlock_level(level_number: int) -> void:
 	max_unlocked_level = maxi(max_unlocked_level, level_number)
+	_save_progress()
 
 
 func claim_reward(level_number: int) -> void:
 	claimed_rewards[level_number] = true
+	_save_progress()
 
 
 func is_reward_claimed(level_number: int) -> bool:

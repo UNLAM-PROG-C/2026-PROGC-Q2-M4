@@ -70,6 +70,7 @@ const BOSS_SHADOW_Y_OFFSET: float = 132.0
 const BOSS_FALLBACK_X: float = 1704.0
 const FINAL_LEVEL_NUMBER: int = 10
 const NEXT_LEVEL_SCENE_TEMPLATE: String = "res://level_%d.tscn"
+const GAME_SESSION_PATH: String = "/root/GameManager"
 
 ## Snitches the player starts with.
 @export var starting_snitches: int = 150
@@ -452,9 +453,13 @@ func _init_accio_nodes() -> void:
 		_accio_cursor.visible = false
 
 
+func _session() -> GameSession:
+	return get_node_or_null(GAME_SESSION_PATH) as GameSession
+
+
 func _is_debug_mode_enabled() -> bool:
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	return game_manager != null and bool(game_manager.get("debug_mode"))
+	var session: GameSession = _session()
+	return session != null and session.debug_mode
 
 
 func _process(_delta: float) -> void:
@@ -1121,9 +1126,9 @@ func _win() -> void:
 
 
 func _unlock_next_level() -> void:
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	if game_manager != null and game_manager.has_method("unlock_level"):
-		game_manager.call("unlock_level", next_level_to_unlock)
+	var session: GameSession = _session()
+	if session != null:
+		session.unlock_level(next_level_to_unlock)
 
 
 func _get_current_level_num() -> int:
@@ -1134,13 +1139,12 @@ func _get_current_level_num() -> int:
 
 func _should_show_reward_unlock() -> bool:
 	var level_num: int = _get_current_level_num()
-	var reward_data: RewardCatalog.RewardData = RewardCatalog.get_reward_for_level(level_num)
-	if reward_data == null:
+	if RewardCatalog.get_reward_for_level(level_num) == null:
 		return false
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	if game_manager != null and game_manager.has_method("is_reward_claimed"):
-		return not bool(game_manager.call("is_reward_claimed", level_num))
-	return true
+	var session: GameSession = _session()
+	if session == null:
+		return true
+	return not session.is_reward_claimed(level_num)
 
 
 func _show_reward_unlock() -> void:
@@ -1154,9 +1158,9 @@ func _show_reward_unlock() -> void:
 
 
 func _on_reward_dismissed(level_num: int) -> void:
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	if game_manager != null and game_manager.has_method("claim_reward"):
-		game_manager.call("claim_reward", level_num)
+	var session: GameSession = _session()
+	if session != null:
+		session.claim_reward(level_num)
 	_show_victory_panel()
 
 

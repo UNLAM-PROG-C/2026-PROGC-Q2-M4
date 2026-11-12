@@ -12,6 +12,8 @@ const LOCKED_SUFFIX_TEXT: String = "\n[Cerrado]"
 const LEVEL_BUTTON_NAME_FORMAT: String = "Level%d"
 ## Number of level buttons on the map (the path ends at the last one).
 const LEVEL_COUNT: int = 10
+const FIRST_LEVEL: int = 1
+const GAME_SESSION_PATH: String = "/root/GameManager"
 const LEVEL_BUTTON_MIN_SIZE: Vector2 = Vector2(160.0, 65.0)
 ## Locked signs stay opaque so they fully cover footprints passing under them.
 const LOCKED_BUTTON_MODULATE: Color = Color(0.82, 0.78, 0.72, 1.0)
@@ -103,15 +105,19 @@ func _ready() -> void:
 		_setup_ambient_timer()
 
 
+func _session() -> GameSession:
+	return get_node_or_null(GAME_SESSION_PATH) as GameSession
+
+
 func _on_debug_mode_toggled(enabled: bool) -> void:
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	if game_manager != null:
-		game_manager.set("debug_mode", enabled)
+	var session: GameSession = _session()
+	if session != null:
+		session.debug_mode = enabled
 
 
 func _is_debug_mode_enabled() -> bool:
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	return game_manager != null and bool(game_manager.get("debug_mode"))
+	var session: GameSession = _session()
+	return session != null and session.debug_mode
 
 
 func _set_absolute_z(item: CanvasItem, z: int) -> void:
@@ -121,10 +127,10 @@ func _set_absolute_z(item: CanvasItem, z: int) -> void:
 
 ## Highest unlocked level, kept within the buttons on the map.
 func _unlocked_level() -> int:
-	var game_manager: Node = get_node_or_null("/root/GameManager")
-	if game_manager == null:
-		return 1
-	return clampi(int(game_manager.get("max_unlocked_level")), 1, LEVEL_COUNT)
+	var session: GameSession = _session()
+	if session == null:
+		return FIRST_LEVEL
+	return clampi(session.max_unlocked_level, FIRST_LEVEL, LEVEL_COUNT)
 
 
 ## Finds the level buttons of the container and gives them the parchment look.
