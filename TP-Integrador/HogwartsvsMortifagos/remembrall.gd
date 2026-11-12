@@ -55,12 +55,24 @@ func _on_fuse_timer_timeout() -> void:
 
 ## Damages every enemy inside ExplosionArea, spawns smoke effect and frees itself.
 func detonate() -> void:
-	for area: Area2D in explosion_area.get_overlapping_areas():
-		if area.is_in_group(Groups.ENEMIES):
-			(area as Enemy).take_damage(explosion_damage)
+	_damage_overlapping_enemies()
 	_spawn_smoke_explosion()
 	detonated.emit(self)
 	queue_free()
+
+
+func _damage_overlapping_enemies() -> void:
+	for area: Area2D in explosion_area.get_overlapping_areas():
+		_damage_enemy_area(area)
+
+
+func _damage_enemy_area(area: Area2D) -> void:
+	if not area.is_in_group(Groups.ENEMIES):
+		return
+	var enemy: Enemy = area as Enemy
+	if enemy == null:
+		return
+	enemy.take_damage(explosion_damage)
 
 
 func _spawn_smoke_explosion() -> void:

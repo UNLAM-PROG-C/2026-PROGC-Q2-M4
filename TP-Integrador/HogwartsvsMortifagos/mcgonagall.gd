@@ -10,7 +10,6 @@ const DEFAULT_BURST_COUNT: int = 4
 @export var shot_interval: float = DEFAULT_SHOT_INTERVAL
 @export var burst_interval: float = DEFAULT_BURST_INTERVAL
 @export var burst_count: int = DEFAULT_BURST_COUNT
-@export var projectile_scene: PackedScene
 @export var projectile_pool: ProjectilePool
 
 var _shots_remaining: int = 0
@@ -56,15 +55,7 @@ func _finish_burst() -> void:
 
 func _fire_burst_shot() -> void:
 	_shots_remaining -= 1
-	if projectile_pool == null or not is_instance_valid(projectile_pool):
-		return
-	var projectile: Projectile = projectile_pool.acquire_projectile(shoot_point.global_position)
-	if projectile == null:
-		return
-
-
-func _has_enemy_in_lane() -> bool:
-	return not Lane.enemies_in_lane(get_tree(), global_position.y).is_empty()
+	acquire_pooled_projectile(projectile_pool, shoot_point.global_position, ProjectilePool.DEFAULT_PROJECTILE_DAMAGE, false, null)
 
 
 func _exit_tree() -> void:

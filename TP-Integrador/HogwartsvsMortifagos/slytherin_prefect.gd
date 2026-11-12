@@ -92,14 +92,9 @@ func _deal_stopped_melee_damage() -> void:
 func _shoot() -> void:
 	if projectile_scene == null or get_parent() == null:
 		return
-	var projectile: Node2D = projectile_scene.instantiate() as Node2D
+	var projectile: EnemyProjectile = projectile_scene.instantiate() as EnemyProjectile
 	if projectile == null:
 		return
 	get_parent().add_child(projectile)
 	projectile.global_position = shoot_point.global_position
-	if projectile.has_method(&"update_row_z_index"):
-		projectile.call(&"update_row_z_index")
-
-
-func _has_ally_ahead() -> bool:
-	return Lane.has_allies_in_lane_ahead(get_tree(), global_position.y, global_position.x)
+	projectile.update_row_z_index()

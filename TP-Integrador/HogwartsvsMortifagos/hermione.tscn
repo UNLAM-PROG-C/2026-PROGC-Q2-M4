@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://1qkusualq7xf" path="res://hermione.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://ba57smhkkeykr" path="res://Images/hermione.png" id="2_texture"]
-[ext_resource type="PackedScene" uid="uid://bwxniwtn2vxfv" path="res://projectile.tscn" id="3_projectile"]
 [ext_resource type="PackedScene" path="res://damage_flash.tscn" id="4_damage_flash"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
@@ -11,7 +10,7 @@ size = Vector2(148, 112)
 [node name="Hermione" type="Area2D" unique_id=1539256906 groups=["allies"]]
 collision_mask = 0
 script = ExtResource("1_script")
-projectile_scene = ExtResource("3_projectile")
+health = 300.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1340029105]
 position = Vector2(19.5, -10.5)

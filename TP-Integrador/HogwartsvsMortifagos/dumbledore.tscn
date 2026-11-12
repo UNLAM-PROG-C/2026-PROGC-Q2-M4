@@ -10,6 +10,7 @@ size = Vector2(148, 112)
 [node name="Dumbledore" type="Area2D" unique_id=2087732313 groups=["allies"]]
 collision_mask = 0
 script = ExtResource("1_script")
+health = 300.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1885440008]
 position = Vector2(19.5, -10.5)

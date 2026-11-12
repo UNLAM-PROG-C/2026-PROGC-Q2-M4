@@ -3,7 +3,7 @@ extends Enemy
 
 const SHADOW_SPEED: float = 48.0
 const SHADOW_MAX_HEALTH: float = 200.0
-const SHADOW_DAMAGE_PER_SECOND: float = 30.0
+const SHADOW_DAMAGE_PER_ATTACK: float = 15.0
 const SHADOW_HFRAMES: int = 2
 const SHADOW_VFRAMES: int = 1
 
@@ -11,8 +11,7 @@ const SHADOW_VFRAMES: int = 1
 func _ready() -> void:
 	speed = SHADOW_SPEED
 	max_health = SHADOW_MAX_HEALTH
-	damage_per_second = SHADOW_DAMAGE_PER_SECOND
-	damage_per_attack = 15.0
+	damage_per_attack = SHADOW_DAMAGE_PER_ATTACK
 	_health = max_health
 	_init_sprite()
 	_setup_shadow_sprite()

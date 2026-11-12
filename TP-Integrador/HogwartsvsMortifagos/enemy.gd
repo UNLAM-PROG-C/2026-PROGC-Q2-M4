@@ -18,13 +18,13 @@ const HURT_HEALTH_RATIO: float = 0.5
 const GARDEN_EDGE_X: float = 0.0
 const SLOW_TINT_COLOR: Color = Color(0.5, 0.75, 1.0)
 const MIN_SLOW_FACTOR: float = 0.70
+## Frames in the attacking animation sheets.
+const ATTACKING_FRAME_COUNT: int = 4
 
 ## Maximum health.
 @export var max_health: float = 200.0
 ## Walking speed in pixels per second.
 @export var speed: float = 32.0
-## Damage dealt per second while attacking an ally.
-@export var damage_per_second: float = 30.0
 ## Damage dealt per attack cycle once the attack animation loop finishes.
 @export var damage_per_attack: float = 30.0
 ## Animation sheet used once hurt.
@@ -159,7 +159,7 @@ func _update_animation_texture() -> void:
 	var frame_count: int = TOTAL_FRAMES
 	if _is_attacking:
 		next_texture = attacking_texture if not _is_hurt else hurt_attacking_texture
-		frame_count = 4
+		frame_count = ATTACKING_FRAME_COUNT
 	elif _is_hurt:
 		next_texture = hurt_texture
 	if next_texture != null:
@@ -206,8 +206,7 @@ func _on_animation_timer_timeout() -> void:
 
 func _deal_attack_damage() -> void:
 	if is_instance_valid(_target_ally) and _target_ally.has_method(&"take_damage"):
-		var damage_amount: float = damage_per_attack if damage_per_attack > 0.0 else damage_per_second
-		_target_ally.take_damage(damage_amount)
+		_target_ally.take_damage(damage_per_attack)
 
 
 ## DetectionArea callback. Targets allies that enter attack range.

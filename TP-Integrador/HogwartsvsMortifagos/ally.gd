@@ -24,3 +24,21 @@ func take_damage(amount: float) -> void:
   if health <= 0.0:
     defeated.emit(self)
     queue_free()
+
+
+## Shared lane check used by every shooter ally.
+func _has_enemy_in_lane() -> bool:
+  return not Lane.enemies_in_lane(get_tree(), global_position.y).is_empty()
+
+
+## Takes a projectile from the shared pool; returns null when there is no pool.
+func acquire_pooled_projectile(
+  pool: ProjectilePool,
+  origin: Vector2,
+  shot_damage: float,
+  slows_target: bool,
+  texture: Texture2D
+) -> Projectile:
+  if pool == null or not is_instance_valid(pool):
+    return null
+  return pool.acquire_projectile(origin, shot_damage, slows_target, texture)

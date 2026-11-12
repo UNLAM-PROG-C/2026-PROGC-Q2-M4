@@ -5,8 +5,6 @@ extends Ally
 
 ## Seconds between shots.
 @export var shot_interval: float = 1.5
-## Projectile scene Harry shoots.
-@export var projectile_scene: PackedScene
 ## Pool that provides reusable projectiles for this ally.
 @export var projectile_pool: ProjectilePool
 
@@ -23,12 +21,4 @@ func _ready() -> void:
 func _on_shoot_timer_timeout() -> void:
 	if not _has_enemy_in_lane():
 		return
-	if projectile_pool == null or not is_instance_valid(projectile_pool):
-		return
-	var projectile: Projectile = projectile_pool.acquire_projectile(shoot_point.global_position)
-	if projectile == null:
-		return
-
-
-func _has_enemy_in_lane() -> bool:
-	return not Lane.enemies_in_lane(get_tree(), global_position.y).is_empty()
+	acquire_pooled_projectile(projectile_pool, shoot_point.global_position, ProjectilePool.DEFAULT_PROJECTILE_DAMAGE, false, null)
