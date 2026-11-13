@@ -1,10 +1,11 @@
 class_name WaveDirector
 extends Node
 
-## Boss of the wave calculation. It hands a copy of the board to a worker
-## thread and delivers the finished plan on the main thread. Every piece of
-## state the worker shares with the main thread lives in WaveMonitor; the
-## worker never touches the scene.
+## Boss/worker pattern. The boss (this node, main thread) starts a fixed team
+## of worker threads when it enters the tree, queues one WaveTask per request
+## and delivers finished plans on the main thread. Workers only read their own
+## copy of the board and never touch the scene. Every piece of state they share
+## with the main thread lives in WaveMonitor.
 
 const INTERMEDIATE_MIN_COUNT: int = 10
 const INTERMEDIATE_MAX_COUNT: int = 20
@@ -14,45 +15,71 @@ const FINAL_BONUS_MAX: int = 10
 ## Defense value at which the intermediate wave reaches its maximum size.
 const DEFENSE_SCALE: float = 1000.0
 const NO_REQUEST: int = 0
+const WORKER_COUNT: int = 2
+const RESULT_LOG: String = "[WaveDirector] worker %d planned wave %d: %d enemies"
 
 signal result_ready(result: WaveResult)
 
 var _monitor: WaveMonitor = WaveMonitor.new()
-var _thread: Thread = null
+var _workers: Array[Thread] = []
 
+func _ready() -> void:
+	for worker_index: int in range(WORKER_COUNT):
+		var worker: Thread = Thread.new()
+		worker.start(_worker_loop.bind(worker_index))
+		_workers.append(worker)
+
+func _exit_tree() -> void:
+	_monitor.shut_down(_workers.size())
+	for worker: Thread in _workers:
+		worker.wait_to_finish()
+	_workers.clear()
+
+## Main thread: queues a plan request. It never blocks and never drops a
+## request because a worker is busy; the task waits in the queue instead.
 func request_plan(snapshot: BoardSnapshot, is_final: bool) -> int:
-	if _thread != null and _thread.is_started():
+	if _workers.is_empty() or _monitor.is_shutting_down():
 		return NO_REQUEST
 	var request_id: int = _monitor.reserve_request(snapshot.level_generation)
-	var copied_snapshot: BoardSnapshot = snapshot.duplicate_snapshot()
-	_thread = Thread.new()
-	_thread.start(_calculate_plan.bind(copied_snapshot, request_id, is_final))
+	_monitor.submit(WaveTask.new(snapshot.duplicate_snapshot(), request_id, is_final))
 	return request_id
 
 func poll_results() -> void:
-	var pending: Array[WaveResult] = _monitor.take_results()
-	for result: WaveResult in pending:
+	for result: WaveResult in _monitor.take_results():
+		_log_result(result)
 		result_ready.emit(result)
-	if not pending.is_empty():
-		_join_thread()
 
+## Main thread: discards queued and running work of the current level. The
+## workers stay alive for the next request.
 func cancel_and_wait() -> void:
 	_monitor.request_cancel()
-	_join_thread()
+	_monitor.drop_pending_tasks()
 	_monitor.clear_results()
 
-func _calculate_plan(
-	snapshot: BoardSnapshot,
-	request_id: int,
-	is_final: bool
-) -> void:
-	var result: WaveResult = _build_result(snapshot, request_id, is_final)
-	_monitor.publish(result)
+func worker_count() -> int:
+	return _workers.size()
+
+## Worker thread body. Each worker owns its random generator because the
+## global one is shared state and is not safe to call from several threads.
+func _worker_loop(worker_index: int) -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.randomize()
+	var task: WaveTask = _monitor.take_task()
+	while task != null:
+		var result: WaveResult = _build_result(task.snapshot, task.request_id, task.is_final, rng)
+		result.worker_index = worker_index
+		_monitor.publish(result)
+		task = _monitor.take_task()
+
+func _log_result(result: WaveResult) -> void:
+	if result.plan != null:
+		print(RESULT_LOG % [result.worker_index, result.plan.wave_number, result.plan.enemy_count])
 
 func _build_result(
 	snapshot: BoardSnapshot,
 	request_id: int,
-	is_final: bool
+	is_final: bool,
+	rng: RandomNumberGenerator
 ) -> WaveResult:
 	var result: WaveResult = WaveResult.new()
 	result.level_generation = snapshot.level_generation
@@ -60,7 +87,7 @@ func _build_result(
 	if not snapshot.is_valid():
 		result.error_code = WaveResult.ErrorCode.INVALID_SNAPSHOT
 		return result
-	var plan: WavePlan = _create_plan(snapshot, request_id, is_final)
+	var plan: WavePlan = _create_plan(snapshot, request_id, is_final, rng)
 	if not plan.is_valid():
 		result.error_code = WaveResult.ErrorCode.INVALID_PLAN
 		return result
@@ -70,11 +97,12 @@ func _build_result(
 func _create_plan(
 	snapshot: BoardSnapshot,
 	request_id: int,
-	is_final: bool
+	is_final: bool,
+	rng: RandomNumberGenerator
 ) -> WavePlan:
 	var plan: WavePlan = WavePlan.new()
 	_fill_plan_identity(plan, snapshot, request_id, is_final)
-	_fill_plan_counts(plan, snapshot, is_final)
+	_fill_plan_counts(plan, snapshot, is_final, rng)
 	return plan
 
 func _fill_plan_identity(
@@ -90,20 +118,29 @@ func _fill_plan_identity(
 	plan.spawn_delay = WavePlan.DEFAULT_SPAWN_DELAY
 	plan.row_indices = snapshot.row_indices.duplicate()
 
-func _fill_plan_counts(plan: WavePlan, snapshot: BoardSnapshot, is_final: bool) -> void:
-	plan.enemy_count = _calculate_enemy_count(snapshot, is_final)
+func _fill_plan_counts(
+	plan: WavePlan,
+	snapshot: BoardSnapshot,
+	is_final: bool,
+	rng: RandomNumberGenerator
+) -> void:
+	plan.enemy_count = _calculate_enemy_count(snapshot, is_final, rng)
 	plan.reference_intermediate_count = snapshot.intermediate_wave_size
 	plan.intermediate_wave_min = snapshot.intermediate_wave_min
 	plan.intermediate_wave_max = snapshot.intermediate_wave_max
 	plan.final_wave_min = snapshot.final_wave_min
 
-func _calculate_enemy_count(snapshot: BoardSnapshot, is_final: bool) -> int:
+func _calculate_enemy_count(
+	snapshot: BoardSnapshot,
+	is_final: bool,
+	rng: RandomNumberGenerator
+) -> int:
 	if is_final:
-		return _final_enemy_count(snapshot)
+		return _final_enemy_count(snapshot, rng)
 	return _intermediate_enemy_count(snapshot)
 
-func _final_enemy_count(snapshot: BoardSnapshot) -> int:
-	var bonus: int = randi_range(snapshot.final_wave_bonus_min, snapshot.final_wave_bonus_max)
+func _final_enemy_count(snapshot: BoardSnapshot, rng: RandomNumberGenerator) -> int:
+	var bonus: int = rng.randi_range(snapshot.final_wave_bonus_min, snapshot.final_wave_bonus_max)
 	var scaled: int = snapshot.intermediate_wave_size + bonus
 	return maxi(snapshot.final_wave_min, scaled)
 
@@ -112,10 +149,3 @@ func _intermediate_enemy_count(snapshot: BoardSnapshot) -> int:
 	var span: int = snapshot.intermediate_wave_max - snapshot.intermediate_wave_min
 	var count: int = snapshot.intermediate_wave_min + roundi(pressure * float(span))
 	return clampi(count, snapshot.intermediate_wave_min, snapshot.intermediate_wave_max)
-
-func _join_thread() -> void:
-	if _thread == null:
-		return
-	if _thread.is_started():
-		_thread.wait_to_finish()
-	_thread = null

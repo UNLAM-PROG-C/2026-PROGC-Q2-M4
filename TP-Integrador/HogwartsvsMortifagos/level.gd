@@ -1000,6 +1000,8 @@ func _request_wave(is_final: bool) -> void:
 	if is_instance_valid(wave_director):
 		var snapshot: BoardSnapshot = _build_snapshot()
 		_pending_request_id = wave_director.request_plan(snapshot, is_final)
+		if _pending_request_id == WaveDirector.NO_REQUEST:
+			_create_fallback_wave(is_final)
 	else:
 		_create_fallback_wave(is_final)
 
