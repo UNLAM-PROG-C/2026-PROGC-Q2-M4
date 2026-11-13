@@ -70,8 +70,7 @@ func _ensure_wave_plan_ready(lvl: Level) -> void:
 	for _i: int in range(30):
 		if lvl.get("_pending_wave_plan") != null:
 			return
-		if is_instance_valid(lvl.wave_director):
-			lvl.wave_director.poll_results()
+		lvl.call("_poll_wave_future")
 		await process_frame
 
 

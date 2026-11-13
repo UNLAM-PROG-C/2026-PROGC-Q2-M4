@@ -1,79 +1,75 @@
 extends SceneTree
 
 const EXIT_OK: int = 0
-const LEVEL_GENERATION: int = 7
-const OTHER_GENERATION: int = 8
-const WORKER_COUNT: int = 4
-const PUBLISHES_PER_WORKER: int = 250
+const PRODUCER_COUNT: int = 4
+const SUBMITS_PER_PRODUCER: int = 250
+const FIRST_REQUEST_ID: int = 1
+const SECOND_REQUEST_ID: int = 2
+const SINGLE_WORKER: int = 1
 
 
 func _initialize() -> void:
 	print("--- Running Wave Monitor Tests ---")
-	_test_request_ids_are_unique()
-	_test_results_are_taken_once()
-	_test_cancel_marks_results()
-	_test_old_generation_is_cancelled()
-	_test_concurrent_publishers_lose_nothing()
+	_test_tasks_are_taken_in_order()
+	_test_drop_returns_pending_tasks()
+	_test_shutdown_releases_a_sleeping_worker()
+	_test_shutdown_rejects_new_tasks()
+	_test_concurrent_producers_lose_nothing()
 	print("--- All Wave Monitor Tests Passed ---")
 	quit(EXIT_OK)
 
 
-func _test_request_ids_are_unique() -> void:
+func _test_tasks_are_taken_in_order() -> void:
 	var monitor: WaveMonitor = WaveMonitor.new()
-	var first: int = monitor.reserve_request(LEVEL_GENERATION)
-	var second: int = monitor.reserve_request(LEVEL_GENERATION)
-	assert(first != second, "Each request gets its own id")
-	assert(second == first + 1, "Request ids grow by one")
+	monitor.submit(_task(FIRST_REQUEST_ID))
+	monitor.submit(_task(SECOND_REQUEST_ID))
+	assert(monitor.take_task().request_id == FIRST_REQUEST_ID, "The queue is first in, first out")
+	assert(monitor.take_task().request_id == SECOND_REQUEST_ID, "The second task comes next")
+	assert(monitor.pending_task_count() == 0, "Taken tasks leave the queue")
 
 
-func _test_results_are_taken_once() -> void:
+func _test_drop_returns_pending_tasks() -> void:
 	var monitor: WaveMonitor = WaveMonitor.new()
-	monitor.reserve_request(LEVEL_GENERATION)
-	monitor.publish(_result(LEVEL_GENERATION))
-	assert(monitor.take_results().size() == 1, "A published result is delivered")
-	assert(monitor.take_results().is_empty(), "A result is delivered only once")
+	monitor.submit(_task(FIRST_REQUEST_ID))
+	assert(monitor.drop_pending_tasks().size() == 1, "Dropping returns the queued task")
+	assert(monitor.pending_task_count() == 0, "Dropped tasks leave the queue")
 
 
-func _test_cancel_marks_results() -> void:
+## A worker blocked in take_task() must wake up and exit on shutdown.
+func _test_shutdown_releases_a_sleeping_worker() -> void:
 	var monitor: WaveMonitor = WaveMonitor.new()
-	monitor.reserve_request(LEVEL_GENERATION)
-	monitor.request_cancel()
-	assert(monitor.is_cancel_requested(), "Cancel is visible through the monitor")
-	monitor.publish(_result(LEVEL_GENERATION))
-	var result: WaveResult = monitor.take_results()[0]
-	assert(result.cancelled, "A result published after cancel is marked cancelled")
-	assert(result.error_code == WaveResult.ErrorCode.CANCELLED, "Cancelled result uses the CANCELLED code")
+	var worker: Thread = Thread.new()
+	worker.start(monitor.take_task)
+	monitor.shut_down(SINGLE_WORKER)
+	var task: WaveTask = worker.wait_to_finish()
+	assert(task == null, "A worker woken by shutdown receives no task")
 
 
-func _test_old_generation_is_cancelled() -> void:
+func _test_shutdown_rejects_new_tasks() -> void:
 	var monitor: WaveMonitor = WaveMonitor.new()
-	monitor.reserve_request(OTHER_GENERATION)
-	monitor.publish(_result(LEVEL_GENERATION))
-	assert(monitor.take_results()[0].cancelled, "A result from an old level generation is discarded")
+	monitor.shut_down(SINGLE_WORKER)
+	assert(not monitor.submit(_task(FIRST_REQUEST_ID)), "A stopped monitor rejects tasks")
 
 
-## Several threads publish at the same time. If the monitor did not give
-## mutual exclusion, appends would overwrite each other and results would be lost.
-func _test_concurrent_publishers_lose_nothing() -> void:
+## Several threads submit at the same time. If the monitor did not give
+## mutual exclusion, appends would overwrite each other and tasks would be lost.
+func _test_concurrent_producers_lose_nothing() -> void:
 	var monitor: WaveMonitor = WaveMonitor.new()
-	monitor.reserve_request(LEVEL_GENERATION)
-	var workers: Array[Thread] = []
-	for _i: int in range(WORKER_COUNT):
-		var worker: Thread = Thread.new()
-		worker.start(_publish_many.bind(monitor))
-		workers.append(worker)
-	for worker: Thread in workers:
-		worker.wait_to_finish()
-	var delivered: int = monitor.take_results().size()
-	assert(delivered == WORKER_COUNT * PUBLISHES_PER_WORKER, "No result is lost under concurrent publishers")
+	var producers: Array[Thread] = []
+	for _i: int in range(PRODUCER_COUNT):
+		var producer: Thread = Thread.new()
+		producer.start(_submit_many.bind(monitor))
+		producers.append(producer)
+	for producer: Thread in producers:
+		producer.wait_to_finish()
+	var queued: int = monitor.pending_task_count()
+	assert(queued == PRODUCER_COUNT * SUBMITS_PER_PRODUCER, "No task is lost under concurrent producers")
 
 
-func _publish_many(monitor: WaveMonitor) -> void:
-	for _i: int in range(PUBLISHES_PER_WORKER):
-		monitor.publish(_result(LEVEL_GENERATION))
+func _submit_many(monitor: WaveMonitor) -> void:
+	for _i: int in range(SUBMITS_PER_PRODUCER):
+		monitor.submit(_task(FIRST_REQUEST_ID))
 
 
-func _result(generation: int) -> WaveResult:
-	var result: WaveResult = WaveResult.new()
-	result.level_generation = generation
-	return result
+func _task(request_id: int) -> WaveTask:
+	return WaveTask.new(BoardSnapshot.new(), request_id, false)

@@ -2,10 +2,10 @@ class_name WaveDirector
 extends Node
 
 ## Boss/worker pattern. The boss (this node, main thread) starts a fixed team
-## of worker threads when it enters the tree, queues one WaveTask per request
-## and delivers finished plans on the main thread. Workers only read their own
-## copy of the board and never touch the scene. Every piece of state they share
-## with the main thread lives in WaveMonitor.
+## of worker threads when it enters the tree and queues one WaveTask per
+## request. request_plan() answers at once with a WaveFuture; a worker fills
+## it later. Workers only read their own copy of the board and never touch the
+## scene. The task queue they share with the main thread lives in WaveMonitor.
 
 const INTERMEDIATE_MIN_COUNT: int = 10
 const INTERMEDIATE_MAX_COUNT: int = 20
@@ -14,14 +14,14 @@ const FINAL_BONUS_MIN: int = 5
 const FINAL_BONUS_MAX: int = 10
 ## Defense value at which the intermediate wave reaches its maximum size.
 const DEFENSE_SCALE: float = 1000.0
-const NO_REQUEST: int = 0
+const FIRST_REQUEST_ID: int = 1
 const WORKER_COUNT: int = 2
 const RESULT_LOG: String = "[WaveDirector] worker %d planned wave %d: %d enemies"
 
-signal result_ready(result: WaveResult)
-
 var _monitor: WaveMonitor = WaveMonitor.new()
 var _workers: Array[Thread] = []
+## Only the main thread touches this counter, so it needs no lock.
+var _next_request_id: int = FIRST_REQUEST_ID
 
 func _ready() -> void:
 	for worker_index: int in range(WORKER_COUNT):
@@ -30,31 +30,27 @@ func _ready() -> void:
 		_workers.append(worker)
 
 func _exit_tree() -> void:
-	_monitor.shut_down(_workers.size())
+	_cancel_tasks(_monitor.shut_down(_workers.size()))
 	for worker: Thread in _workers:
 		worker.wait_to_finish()
 	_workers.clear()
 
-## Main thread: queues a plan request. It never blocks and never drops a
-## request because a worker is busy; the task waits in the queue instead.
-func request_plan(snapshot: BoardSnapshot, is_final: bool) -> int:
-	if _workers.is_empty() or _monitor.is_shutting_down():
-		return NO_REQUEST
-	var request_id: int = _monitor.reserve_request(snapshot.level_generation)
-	_monitor.submit(WaveTask.new(snapshot.duplicate_snapshot(), request_id, is_final))
-	return request_id
+## Main thread: queues a plan request and returns its future right away. It
+## never blocks and never drops a request because a worker is busy. Returns
+## null once the boss has stopped.
+func request_plan(snapshot: BoardSnapshot, is_final: bool) -> WaveFuture:
+	if _workers.is_empty():
+		return null
+	var task: WaveTask = WaveTask.new(snapshot.duplicate_snapshot(), _next_request_id, is_final)
+	_next_request_id += 1
+	if not _monitor.submit(task):
+		return null
+	return task.future
 
-func poll_results() -> void:
-	for result: WaveResult in _monitor.take_results():
-		_log_result(result)
-		result_ready.emit(result)
-
-## Main thread: discards queued and running work of the current level. The
-## workers stay alive for the next request.
-func cancel_and_wait() -> void:
-	_monitor.request_cancel()
-	_monitor.drop_pending_tasks()
-	_monitor.clear_results()
+## Main thread: drops queued work and cancels its futures. Running tasks
+## finish on their own; their futures stay usable. Workers stay alive.
+func cancel_pending() -> void:
+	_cancel_tasks(_monitor.drop_pending_tasks())
 
 func worker_count() -> int:
 	return _workers.size()
@@ -66,10 +62,21 @@ func _worker_loop(worker_index: int) -> void:
 	rng.randomize()
 	var task: WaveTask = _monitor.take_task()
 	while task != null:
-		var result: WaveResult = _build_result(task.snapshot, task.request_id, task.is_final, rng)
-		result.worker_index = worker_index
-		_monitor.publish(result)
+		_run_task(task, worker_index, rng)
 		task = _monitor.take_task()
+
+## Worker thread: skips cancelled work, otherwise fills the task's future.
+func _run_task(task: WaveTask, worker_index: int, rng: RandomNumberGenerator) -> void:
+	if task.future.is_cancelled():
+		return
+	var result: WaveResult = _build_result(task.snapshot, task.request_id, task.is_final, rng)
+	result.worker_index = worker_index
+	if task.future.complete(result):
+		_log_result(result)
+
+func _cancel_tasks(tasks: Array[WaveTask]) -> void:
+	for task: WaveTask in tasks:
+		task.future.cancel()
 
 func _log_result(result: WaveResult) -> void:
 	if result.plan != null:

@@ -3,6 +3,8 @@ extends Node2D
 
 const INVALID_WAVE_TRANSITION_MESSAGE: String = "Rejected wave transition from %d to %d"
 const FALLBACK_REQUEST_ID: int = 1
+## Longest time the level waits for a running wave calculation when it leaves.
+const WAVE_EXIT_WAIT_MS: int = 100
 const STANDARD_WAVE_RATIO: float = 0.5
 const SPECIAL_FIRST_WAVE_RATIO: float = 0.33
 const SPECIAL_SECOND_WAVE_RATIO: float = 0.66
@@ -127,7 +129,7 @@ var _wave_state: WaveState.Value = WaveState.Value.SPAWNING_NORMAL
 var _intermediate_wave_size: int = 10
 var _final_wave_active: bool = false
 var _level_generation: int = 1
-var _pending_request_id: int = 0
+var _pending_future: WaveFuture = null
 var _pending_wave_plan: WavePlan = null
 var _troll_scenes: Dictionary[PackedScene, bool] = {}
 var _defeated_enemy_ids: Dictionary[int, bool] = {}
@@ -178,8 +180,6 @@ func _init_level_state() -> void:
 	_pending_wave_plan = null
 	_calculate_total_level_kills()
 	_cache_troll_scenes()
-	if not is_boss_level and is_instance_valid(wave_director):
-		wave_director.result_ready.connect(_on_wave_result)
 
 
 func _calculate_total_level_kills() -> void:
@@ -462,7 +462,7 @@ func _is_debug_mode_enabled() -> bool:
 
 func _process(_delta: float) -> void:
 	if not _is_level_over:
-		wave_director.poll_results()
+		_poll_wave_future()
 	_update_accio_process()
 
 
@@ -999,8 +999,8 @@ func _update_wave_lifecycle() -> void:
 func _request_wave(is_final: bool) -> void:
 	if is_instance_valid(wave_director):
 		var snapshot: BoardSnapshot = _build_snapshot()
-		_pending_request_id = wave_director.request_plan(snapshot, is_final)
-		if _pending_request_id == WaveDirector.NO_REQUEST:
+		_pending_future = wave_director.request_plan(snapshot, is_final)
+		if _pending_future == null:
 			_create_fallback_wave(is_final)
 	else:
 		_create_fallback_wave(is_final)
@@ -1062,15 +1062,33 @@ func _sum_ally_health() -> float:
 	return ally_value
 
 
+## Main thread, every frame: reads the pending future without blocking.
+func _poll_wave_future() -> void:
+	if _pending_future == null or not _pending_future.is_done():
+		return
+	var result: WaveResult = _pending_future.get_result()
+	_pending_future = null
+	if result != null:
+		_on_wave_result(result)
+
+
 func _on_wave_result(result: WaveResult) -> void:
 	if _is_level_over or result.level_generation != _level_generation:
-		return
-	if result.request_id != _pending_request_id or result.cancelled:
 		return
 	if result.plan == null:
 		return
 	_pending_wave_plan = result.plan
 	_check_wave_readiness()
+
+
+## Cancels the pending future and waits at most wait_ms for a worker that is
+## already calculating it, so leaving the level never hangs.
+func _release_wave_future(wait_ms: int) -> void:
+	if _pending_future == null:
+		return
+	_pending_future.cancel()
+	_pending_future.wait_for(wait_ms)
+	_pending_future = null
 
 
 func _start_prepared_wave() -> void:
@@ -1197,7 +1215,8 @@ func _stop_level() -> void:
 	_level_generation += 1
 	enemy_spawn_timer.stop()
 	snitch_spawn_timer.stop()
-	wave_director.cancel_and_wait()
+	_release_wave_future(WAVE_EXIT_WAIT_MS)
+	wave_director.cancel_pending()
 	projectile_pool.release_all()
 	if _pause_menu != null:
 		_pause_menu.set_enabled(false)
@@ -1206,8 +1225,9 @@ func _stop_level() -> void:
 func _exit_tree() -> void:
 	if _is_removing:
 		_set_cursor_mode(false)
+	_release_wave_future(WAVE_EXIT_WAIT_MS)
 	if is_instance_valid(wave_director):
-		wave_director.cancel_and_wait()
+		wave_director.cancel_pending()
 	if is_instance_valid(projectile_pool):
 		projectile_pool.release_all()
 
