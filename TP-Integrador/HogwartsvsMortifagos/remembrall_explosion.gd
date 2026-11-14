@@ -5,6 +5,8 @@ extends Node2D
 ## Displays billowy red smoke clouds expanding across its 3x3 area of action.
 
 const PUFF_COUNT: int = 8
+## The explosion freezes with the rest of the game while paused.
+const RUNS_WHILE_PAUSED: bool = false
 const PUFF_RADIUS: float = 140.0
 const CORE_INITIAL_SCALE: Vector2 = Vector2(0.5, 0.5)
 const CORE_TARGET_SCALE: Vector2 = Vector2(4.3, 4.3)
@@ -62,5 +64,5 @@ func _build_puff_sprite(tint: Color, initial_scale: Vector2) -> Sprite2D:
 
 
 func _schedule_cleanup() -> void:
-  var timer: SceneTreeTimer = get_tree().create_timer(EXPLOSION_DURATION)
+  var timer: SceneTreeTimer = get_tree().create_timer(EXPLOSION_DURATION, RUNS_WHILE_PAUSED)
   timer.timeout.connect(queue_free)

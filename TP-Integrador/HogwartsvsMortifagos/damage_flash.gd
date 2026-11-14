@@ -5,6 +5,8 @@ extends Node
 ## Enemies fade back with a tween; allies snap back and have a cooldown.
 
 const MODULATE_PROPERTY: NodePath = ^"modulate"
+## The flash freezes with the rest of the game while paused.
+const RUNS_WHILE_PAUSED: bool = false
 
 ## Node tinted by the flash. Nothing happens while it is unset.
 @export var target: CanvasItem
@@ -27,10 +29,10 @@ func flash() -> void:
 	if fade_out:
 		create_tween().tween_property(target, MODULATE_PROPERTY, restore_color, duration)
 	else:
-		get_tree().create_timer(duration).timeout.connect(_restore)
+		get_tree().create_timer(duration, RUNS_WHILE_PAUSED).timeout.connect(_restore)
 	if cooldown > 0.0:
 		_is_cooling_down = true
-		get_tree().create_timer(cooldown).timeout.connect(_end_cooldown)
+		get_tree().create_timer(cooldown, RUNS_WHILE_PAUSED).timeout.connect(_end_cooldown)
 
 
 func _target_restore_color() -> Color:

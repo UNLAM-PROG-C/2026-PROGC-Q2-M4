@@ -6,6 +6,9 @@ const FALLBACK_REQUEST_ID: int = 1
 ## Longest time the level waits for a running wave calculation when it leaves.
 const WAVE_EXIT_WAIT_MS: int = 100
 const NO_ROW_FOCUS: float = 0.0
+## Gameplay timers must stop while the game is paused (SceneTree timers keep
+## running by default).
+const RUNS_WHILE_PAUSED: bool = false
 const FULL_ROW_FOCUS: float = 1.0
 const STANDARD_WAVE_RATIO: float = 0.5
 const SPECIAL_FIRST_WAVE_RATIO: float = 0.33
@@ -877,7 +880,7 @@ func _wait_for_multi_spawn_delay(index: int) -> void:
 	elif index == 2:
 		delay = THIRD_ENEMY_SPAWN_DELAY
 	if delay > 0.0 and is_inside_tree():
-		await get_tree().create_timer(delay).timeout
+		await get_tree().create_timer(delay, RUNS_WHILE_PAUSED).timeout
 
 
 func _accelerate_spawn_cadence() -> void:
@@ -1134,7 +1137,7 @@ func _show_wave_announcement() -> void:
 	else:
 		wave_announcement_label.text = WAVE_ANNOUNCEMENT_TEXT
 	wave_announcement.visible = true
-	await get_tree().create_timer(WAVE_ANNOUNCEMENT_DURATION).timeout
+	await get_tree().create_timer(WAVE_ANNOUNCEMENT_DURATION, RUNS_WHILE_PAUSED).timeout
 	if is_instance_valid(wave_announcement):
 		wave_announcement.visible = false
 
@@ -1144,7 +1147,7 @@ func _spawn_wave_enemies(plan: WavePlan) -> void:
 	var spawn_delay: float = plan.spawn_delay
 	for index: int in range(enemy_count):
 		if index > 0 and spawn_delay > 0.0:
-			await get_tree().create_timer(spawn_delay).timeout
+			await get_tree().create_timer(spawn_delay, RUNS_WHILE_PAUSED).timeout
 		if _is_level_over:
 			return
 		_spawn_enemy(_pick_random_enemy_scene(), false, _pick_wave_spawn_path(plan))
