@@ -152,6 +152,7 @@ var _enemy_spawn_interval: float = 12.0
 var _wave_progress_bar: WaveProgressBar = null
 var _pause_menu: PauseMenu = null
 var _snitch_counter: SnitchCounter = null
+var _sound_service: SoundService = null
 
 @onready var tile_map: TileMapLayer = _find_tile_map()
 @onready var entity_layer: Node2D = $Entities
@@ -174,1170 +175,1198 @@ var _snitch_counter: SnitchCounter = null
 
 
 func _ready() -> void:
-	_init_level_state()
-	_init_hud_and_cards()
-	_init_pool_and_defense()
-	_init_accio_nodes()
-	_init_spawn_timers()
+    _init_level_state()
+    _init_hud_and_cards()
+    _init_pool_and_defense()
+    _init_accio_nodes()
+    _init_spawn_timers()
+    _init_sound_service()
+
+
+func _init_sound_service() -> void:
+    var game_manager := get_tree().root.get_node_or_null("GameManager")
+    if game_manager != null:
+        _sound_service = game_manager.sound_service
 
 
 func _init_level_state() -> void:
-	_snitches = DEBUG_SNITCHES if _is_debug_mode_enabled() else starting_snitches
-	level_end_panel.visible = false
-	wave_announcement.visible = false
-	_intermediate_wave_size = intermediate_wave_min
-	_completed_waves = 0
-	_current_phase_index = 0
-	_phase_defeated_enemies = 0
-	_total_defeated_enemies = 0
-	_pending_wave_plan = null
-	_calculate_total_level_kills()
-	_cache_troll_scenes()
-	_wave_rng.randomize()
+    _snitches = DEBUG_SNITCHES if _is_debug_mode_enabled() else starting_snitches
+    level_end_panel.visible = false
+    wave_announcement.visible = false
+    _intermediate_wave_size = intermediate_wave_min
+    _completed_waves = 0
+    _current_phase_index = 0
+    _phase_defeated_enemies = 0
+    _total_defeated_enemies = 0
+    _pending_wave_plan = null
+    _calculate_total_level_kills()
+    _cache_troll_scenes()
+    _wave_rng.randomize()
 
 
 func _calculate_total_level_kills() -> void:
-	_total_level_kills = 0
-	for threshold: int in wave_kill_thresholds:
-		_total_level_kills += threshold
+    _total_level_kills = 0
+    for threshold: int in wave_kill_thresholds:
+        _total_level_kills += threshold
 
 
 ## Kill budget sent to the wave director. A level without quotas still sends
 ## the minimum budget BoardSnapshot.is_valid accepts.
 func _kill_budget() -> int:
-	return maxi(_total_level_kills, MIN_KILL_BUDGET)
+    return maxi(_total_level_kills, MIN_KILL_BUDGET)
 
 
 func _init_hud_and_cards() -> void:
-	for button: AllyCardButton in _card_buttons():
-		button.card_pressed.connect(_on_card_pressed)
-		button.cooldown_finished.connect(_refresh_hud)
-	_setup_level_hud()
-	_refresh_hud()
+    for button: AllyCardButton in _card_buttons():
+        button.card_pressed.connect(_on_card_pressed)
+        button.cooldown_finished.connect(_refresh_hud)
+    _setup_level_hud()
+    _refresh_hud()
 
 
 func _setup_level_hud() -> void:
-	_init_wave_announcement_format()
-	if is_boss_level:
-		_setup_boss_hud()
-	else:
-		_setup_wave_progress_bar()
-	_setup_pause_menu()
-	_setup_snitch_counter()
+    _init_wave_announcement_format()
+    if is_boss_level:
+        _setup_boss_hud()
+    else:
+        _setup_wave_progress_bar()
+    _setup_pause_menu()
+    _setup_snitch_counter()
 
 
 func _setup_snitch_counter() -> void:
-	_snitch_counter = hud.get_node_or_null("SnitchCounter") as SnitchCounter
-	if _snitch_counter == null:
-		_snitch_counter = SNITCH_COUNTER_SCENE.instantiate() as SnitchCounter
-		hud.add_child(_snitch_counter)
-	_hide_legacy_snitches_label()
-	if _snitch_counter.snitches_label != null:
-		snitches_label = _snitch_counter.snitches_label
+    _snitch_counter = hud.get_node_or_null("SnitchCounter") as SnitchCounter
+    if _snitch_counter == null:
+        _snitch_counter = SNITCH_COUNTER_SCENE.instantiate() as SnitchCounter
+        hud.add_child(_snitch_counter)
+    _hide_legacy_snitches_label()
+    if _snitch_counter.snitches_label != null:
+        snitches_label = _snitch_counter.snitches_label
 
 
 func _hide_legacy_snitches_label() -> void:
-	var legacy: Label = hud.get_node_or_null("SnitchesLabel") as Label
-	if legacy != null and legacy != _snitch_counter.snitches_label:
-		legacy.visible = false
+    var legacy: Label = hud.get_node_or_null("SnitchesLabel") as Label
+    if legacy != null and legacy != _snitch_counter.snitches_label:
+        legacy.visible = false
 
 
 func _setup_pause_menu() -> void:
-	_pause_menu = hud.get_node_or_null("PauseMenu") as PauseMenu
-	if _pause_menu == null:
-		_pause_menu = PAUSE_MENU_SCENE.instantiate() as PauseMenu
-		hud.add_child(_pause_menu)
-	_pause_menu.retry_requested.connect(_on_retry_button_pressed)
-	_pause_menu.back_to_map_requested.connect(_on_back_to_map_button_pressed)
+    _pause_menu = hud.get_node_or_null("PauseMenu") as PauseMenu
+    if _pause_menu == null:
+        _pause_menu = PAUSE_MENU_SCENE.instantiate() as PauseMenu
+        hud.add_child(_pause_menu)
+    _pause_menu.retry_requested.connect(_on_retry_button_pressed)
+    _pause_menu.back_to_map_requested.connect(_on_back_to_map_button_pressed)
 
 
 func _init_wave_announcement_format() -> void:
-	if wave_announcement_label == null:
-		return
-	wave_announcement_label.add_theme_color_override(&"font_color", PARCHMENT_TEXT_COLOR)
-	wave_announcement_label.add_theme_font_size_override(&"font_size", WAVE_ANNOUNCEMENT_FONT_SIZE)
-	wave_announcement_label.remove_theme_color_override(&"font_outline_color")
-	wave_announcement_label.remove_theme_constant_override(&"outline_size")
+    if wave_announcement_label == null:
+        return
+    wave_announcement_label.add_theme_color_override(&"font_color", PARCHMENT_TEXT_COLOR)
+    wave_announcement_label.add_theme_font_size_override(&"font_size", WAVE_ANNOUNCEMENT_FONT_SIZE)
+    wave_announcement_label.remove_theme_color_override(&"font_outline_color")
+    wave_announcement_label.remove_theme_constant_override(&"outline_size")
 
 
 func _setup_boss_hud() -> void:
-	_boss_health_bar = hud.get_node_or_null("BossHealthBar") as BossHealthBar
-	if _boss_health_bar == null:
-		var scene: PackedScene = preload("res://boss_health_bar.tscn")
-		_boss_health_bar = scene.instantiate() as BossHealthBar
-		hud.add_child(_boss_health_bar)
-	_boss_health_bar.position = BOSS_HEALTH_BAR_POSITION
-	_setup_boss_entity()
+    _boss_health_bar = hud.get_node_or_null("BossHealthBar") as BossHealthBar
+    if _boss_health_bar == null:
+        var scene: PackedScene = preload("res://boss_health_bar.tscn")
+        _boss_health_bar = scene.instantiate() as BossHealthBar
+        hud.add_child(_boss_health_bar)
+    _boss_health_bar.position = BOSS_HEALTH_BAR_POSITION
+    _setup_boss_entity()
 
 
 func _setup_boss_entity() -> void:
-	_boss = get_node_or_null("Entities/Quirrell") as Quirrell
-	if _boss == null:
-		_boss = get_node_or_null("Quirrell") as Quirrell
-	if _boss != null:
-		_connect_boss_signals()
-		_init_boss_position()
+    _boss = get_node_or_null("Entities/Quirrell") as Quirrell
+    if _boss == null:
+        _boss = get_node_or_null("Quirrell") as Quirrell
+    if _boss != null:
+        _connect_boss_signals()
+        _init_boss_position()
 
 
 func _init_boss_position() -> void:
-	var base_pos: Vector2 = _get_boss_cell_position(_boss.get_current_cell())
-	if _boss.global_position != Vector2.ZERO:
-		_boss_offset = _boss.global_position - base_pos
-	_place_boss_at_cell(_boss.get_current_cell())
+    var base_pos: Vector2 = _get_boss_cell_position(_boss.get_current_cell())
+    if _boss.global_position != Vector2.ZERO:
+        _boss_offset = _boss.global_position - base_pos
+    _place_boss_at_cell(_boss.get_current_cell())
 
 
 func _get_boss_cell_position(cell: Vector2i) -> Vector2:
-	if tile_map != null:
-		return tile_map.to_global(tile_map.map_to_local(cell))
-	return Vector2(BOSS_FALLBACK_X, _get_row_center_y(cell.y))
+    if tile_map != null:
+        return tile_map.to_global(tile_map.map_to_local(cell))
+    return Vector2(BOSS_FALLBACK_X, _get_row_center_y(cell.y))
 
 
 func _connect_boss_signals() -> void:
-	_boss.health_changed.connect(_on_boss_health_changed)
-	_boss.teleported.connect(_on_boss_teleported)
-	_boss.shadow_spawn_requested.connect(_on_boss_single_shadow_spawn_requested)
-	_boss.mass_shadow_spawn_requested.connect(_on_boss_mass_shadow_spawn_requested)
-	_boss.defeated.connect(_on_boss_defeated)
-	_boss.phase_two_started.connect(_on_boss_phase_two_started)
+    _boss.health_changed.connect(_on_boss_health_changed)
+    _boss.teleported.connect(_on_boss_teleported)
+    _boss.shadow_spawn_requested.connect(_on_boss_single_shadow_spawn_requested)
+    _boss.mass_shadow_spawn_requested.connect(_on_boss_mass_shadow_spawn_requested)
+    _boss.defeated.connect(_on_boss_defeated)
+    _boss.phase_two_started.connect(_on_boss_phase_two_started)
 
 
 func _on_boss_single_shadow_spawn_requested(spawn_pos: Vector2, _ignored_y: float) -> void:
-	var row_idx: int = _get_boss_shadow_spawn_row()
-	var lane_y: float = _get_row_center_y(row_idx)
-	_on_boss_shadow_spawn_requested(spawn_pos, lane_y)
+    var row_idx: int = _get_boss_shadow_spawn_row()
+    var lane_y: float = _get_row_center_y(row_idx)
+    _on_boss_shadow_spawn_requested(spawn_pos, lane_y)
 
 
 func _get_boss_shadow_spawn_row() -> int:
-	if _boss == null:
-		return DEFAULT_SNITCH_ROW
-	var candidates: Array[int] = []
-	if active_rows.has(_boss.current_row):
-		candidates.append(_boss.current_row)
-	if active_rows.has(_boss.current_row - 1):
-		candidates.append(_boss.current_row - 1)
-	if candidates.is_empty():
-		return _boss.current_row
-	return candidates.pick_random()
+    if _boss == null:
+        return DEFAULT_SNITCH_ROW
+    var candidates: Array[int] = []
+    if active_rows.has(_boss.current_row):
+        candidates.append(_boss.current_row)
+    if active_rows.has(_boss.current_row - 1):
+        candidates.append(_boss.current_row - 1)
+    if candidates.is_empty():
+        return _boss.current_row
+    return candidates.pick_random()
 
 
 
 func _on_boss_phase_two_started(boss_pos: Vector2) -> void:
-	var cutscene: DarkMarkCutscene = DARK_MARK_CUTSCENE_SCENE.instantiate() as DarkMarkCutscene
-	if _pause_menu != null:
-		_pause_menu.set_enabled(false)
-		cutscene.animation_finished.connect(_on_cutscene_finished)
-	hud.add_child(cutscene)
-	cutscene.play(boss_pos)
+    var cutscene: DarkMarkCutscene = DARK_MARK_CUTSCENE_SCENE.instantiate() as DarkMarkCutscene
+    if _pause_menu != null:
+        _pause_menu.set_enabled(false)
+        cutscene.animation_finished.connect(_on_cutscene_finished)
+    hud.add_child(cutscene)
+    cutscene.play(boss_pos)
 
 
 func _on_cutscene_finished() -> void:
-	if _pause_menu != null and not _is_level_over:
-		_pause_menu.set_enabled(true)
+    if _pause_menu != null and not _is_level_over:
+        _pause_menu.set_enabled(true)
 
 
 func _place_boss_at_cell(cell: Vector2i) -> void:
-	if _boss != null:
-		_boss.global_position = _get_boss_cell_position(cell) + _boss_offset
-		_boss.update_row_z_index()
+    if _boss != null:
+        _boss.global_position = _get_boss_cell_position(cell) + _boss_offset
+        _boss.update_row_z_index()
 
 
 func _on_boss_health_changed(current: float, _max_val: float) -> void:
-	if _boss_health_bar != null:
-		_boss_health_bar.set_health(current)
+    if _boss_health_bar != null:
+        _boss_health_bar.set_health(current)
 
 
 func _on_boss_teleported(from_cell: Vector2i, to_cell: Vector2i) -> void:
-	_spawn_teleport_shadow(from_cell)
-	_place_boss_at_cell(to_cell)
-	_crush_ally_at_cell(to_cell)
+    _spawn_teleport_shadow(from_cell)
+    _place_boss_at_cell(to_cell)
+    _crush_ally_at_cell(to_cell)
 
 
 func _spawn_teleport_shadow(cell: Vector2i) -> void:
-	if tile_map == null:
-		return
-	var sprite: Sprite2D = _create_shadow_sprite(cell)
-	entity_layer.add_child(sprite)
-	var tween: Tween = create_tween()
-	tween.tween_property(sprite, "modulate:a", 0.0, BOSS_TELEPORT_FADE_DURATION)
-	tween.tween_callback(sprite.queue_free)
+    if tile_map == null:
+        return
+    var sprite: Sprite2D = _create_shadow_sprite(cell)
+    entity_layer.add_child(sprite)
+    var tween: Tween = create_tween()
+    tween.tween_property(sprite, "modulate:a", 0.0, BOSS_TELEPORT_FADE_DURATION)
+    tween.tween_callback(sprite.queue_free)
 
 
 func _create_shadow_sprite(cell: Vector2i) -> Sprite2D:
-	var sprite: Sprite2D = Sprite2D.new()
-	sprite.texture = preload("res://Images/character_shadow.png")
-	sprite.hframes = 2
-	sprite.frame = 0
-	sprite.modulate = Color(0.0, 0.0, 0.0, 0.6)
-	sprite.global_position = _get_boss_cell_position(cell) + _boss_offset + Vector2(0.0, BOSS_SHADOW_Y_OFFSET)
-	return sprite
+    var sprite: Sprite2D = Sprite2D.new()
+    sprite.texture = preload("res://Images/character_shadow.png")
+    sprite.hframes = 2
+    sprite.frame = 0
+    sprite.modulate = Color(0.0, 0.0, 0.0, 0.6)
+    sprite.global_position = _get_boss_cell_position(cell) + _boss_offset + Vector2(0.0, BOSS_SHADOW_Y_OFFSET)
+    return sprite
 
 
 func _crush_ally_at_cell(cell: Vector2i) -> void:
-	if not _occupied_cells.has(cell):
-		return
-	var ally_node: Node2D = _occupied_cells[cell]
-	_occupied_cells.erase(cell)
-	if not is_instance_valid(ally_node):
-		return
-	if ally_node is Ally:
-		(ally_node as Ally).take_damage(CRUSH_DAMAGE)
-	else:
-		ally_node.queue_free()
+    if not _occupied_cells.has(cell):
+        return
+    var ally_node: Node2D = _occupied_cells[cell]
+    _occupied_cells.erase(cell)
+    if not is_instance_valid(ally_node):
+        return
+    if ally_node is Ally:
+        (ally_node as Ally).take_damage(CRUSH_DAMAGE)
+    else:
+        ally_node.queue_free()
 
 
 func _on_boss_shadow_spawn_requested(spawn_pos: Vector2, lane_y: float) -> void:
-	var shadow_scene: PackedScene = preload("res://shadow_enemy.tscn")
-	var shadow: ShadowEnemy = shadow_scene.instantiate() as ShadowEnemy
-	var spawn_y: float = lane_y if lane_y != 0.0 else (_get_row_center_y(_boss.current_row) if _boss != null else spawn_pos.y)
-	shadow.global_position = Vector2(spawn_pos.x, spawn_y)
-	shadow.defeated.connect(_on_enemy_defeated)
-	shadow.garden_invaded.connect(_on_garden_invaded)
-	entity_layer.add_child(shadow)
-	shadow.update_row_z_index()
-	_active_enemies += 1
+    var shadow_scene: PackedScene = preload("res://shadow_enemy.tscn")
+    var shadow: ShadowEnemy = shadow_scene.instantiate() as ShadowEnemy
+    var spawn_y: float = lane_y if lane_y != 0.0 else (_get_row_center_y(_boss.current_row) if _boss != null else spawn_pos.y)
+    shadow.global_position = Vector2(spawn_pos.x, spawn_y)
+    shadow.defeated.connect(_on_enemy_defeated)
+    shadow.garden_invaded.connect(_on_garden_invaded)
+    entity_layer.add_child(shadow)
+    shadow.update_row_z_index()
+    _active_enemies += 1
 
 
 func _on_boss_mass_shadow_spawn_requested() -> void:
-	for row_idx: int in active_rows:
-		var pos_x: float = _boss.global_position.x if _boss != null else BOSS_FALLBACK_X
-		var lane_y: float = _get_row_center_y(row_idx)
-		_spawn_mass_shadow(Vector2(pos_x, lane_y))
+    for row_idx: int in active_rows:
+        var pos_x: float = _boss.global_position.x if _boss != null else BOSS_FALLBACK_X
+        var lane_y: float = _get_row_center_y(row_idx)
+        _spawn_mass_shadow(Vector2(pos_x, lane_y))
 
 
 func _spawn_mass_shadow(pos: Vector2) -> void:
-	_on_boss_shadow_spawn_requested(pos, pos.y)
+    _on_boss_shadow_spawn_requested(pos, pos.y)
 
 
 func _on_boss_defeated(_entity: Node2D) -> void:
-	_defeat_all_active_enemies()
-	_win()
+    _defeat_all_active_enemies()
+    _win()
 
 
 func _defeat_all_active_enemies() -> void:
-	for enemy: Node in get_tree().get_nodes_in_group(Groups.ENEMIES):
-		if is_instance_valid(enemy) and enemy != _boss:
-			enemy.queue_free()
+    for enemy: Node in get_tree().get_nodes_in_group(Groups.ENEMIES):
+        if is_instance_valid(enemy) and enemy != _boss:
+            enemy.queue_free()
 
 
 func _setup_wave_progress_bar() -> void:
-	_ensure_wave_progress_bar_instance()
-	var is_3_waves: bool = wave_kill_thresholds.size() == 3
-	var meter_tex: Texture2D = wave_meter_texture
-	if meter_tex == null:
-		meter_tex = WAVE_METER_3_WAVES_TEXTURE if is_3_waves else WAVE_METER_2_WAVES_TEXTURE
-	var charge_tex: Texture2D = wave_charge_texture
-	if charge_tex == null:
-		charge_tex = WAVE_CHARGE_2_WAVES_TEXTURE if is_3_waves else WAVE_CHARGE_1_WAVE_TEXTURE
-	_wave_progress_bar.setup(_total_level_kills, meter_tex, charge_tex)
+    _ensure_wave_progress_bar_instance()
+    var is_3_waves: bool = wave_kill_thresholds.size() == 3
+    var meter_tex: Texture2D = wave_meter_texture
+    if meter_tex == null:
+        meter_tex = WAVE_METER_3_WAVES_TEXTURE if is_3_waves else WAVE_METER_2_WAVES_TEXTURE
+    var charge_tex: Texture2D = wave_charge_texture
+    if charge_tex == null:
+        charge_tex = WAVE_CHARGE_2_WAVES_TEXTURE if is_3_waves else WAVE_CHARGE_1_WAVE_TEXTURE
+    _wave_progress_bar.setup(_total_level_kills, meter_tex, charge_tex)
 
 
 func _ensure_wave_progress_bar_instance() -> void:
-	_wave_progress_bar = hud.get_node_or_null("WaveProgressBar") as WaveProgressBar
-	if _wave_progress_bar == null:
-		_wave_progress_bar = WAVE_PROGRESS_BAR_SCENE.instantiate() as WaveProgressBar
-		_wave_progress_bar.position = METER_POSITION
-		hud.add_child(_wave_progress_bar)
+    _wave_progress_bar = hud.get_node_or_null("WaveProgressBar") as WaveProgressBar
+    if _wave_progress_bar == null:
+        _wave_progress_bar = WAVE_PROGRESS_BAR_SCENE.instantiate() as WaveProgressBar
+        _wave_progress_bar.position = METER_POSITION
+        hud.add_child(_wave_progress_bar)
 
 
 func _init_pool_and_defense() -> void:
-	projectile_pool.stats_changed.connect(_on_pool_stats_changed)
-	_update_pool_debug_label(projectile_pool.shots_fired, projectile_pool.get_pool_size(), projectile_pool.active_projectiles.size())
-	_spawn_dementors()
+    projectile_pool.stats_changed.connect(_on_pool_stats_changed)
+    _update_pool_debug_label(projectile_pool.shots_fired, projectile_pool.get_pool_size(), projectile_pool.active_projectiles.size())
+    _spawn_dementors()
 
 
 func _init_spawn_timers() -> void:
-	_enemy_spawn_interval = enemy_spawn_timer.wait_time
-	enemy_spawn_timer.stop()
-	enemy_spawn_timer.start(INITIAL_ENEMY_DELAY)
+    _enemy_spawn_interval = enemy_spawn_timer.wait_time
+    enemy_spawn_timer.stop()
+    enemy_spawn_timer.start(INITIAL_ENEMY_DELAY)
 
 
 func _init_accio_nodes() -> void:
-	_accio_button = hud.get_node_or_null("AccioButton") as AccioButton
-	if _accio_button != null:
-		_accio_button.accio_toggled.connect(_on_accio_toggled)
-		_accio_button.place_on_card_bar(_card_bar_rect(), _accio_right_limit())
-	_accio_cursor = hud.get_node_or_null("AccioCursor") as CanvasItem
-	if _accio_cursor == null and _accio_button != null:
-		var scene: PackedScene = load("res://accio_cursor.tscn") as PackedScene
-		if scene != null:
-			_accio_cursor = scene.instantiate() as CanvasItem
-			_accio_cursor.name = "AccioCursor"
-			hud.add_child(_accio_cursor)
-	if _accio_cursor != null:
-		_accio_cursor.visible = false
+    _accio_button = hud.get_node_or_null("AccioButton") as AccioButton
+    if _accio_button != null:
+        _accio_button.accio_toggled.connect(_on_accio_toggled)
+        _accio_button.place_on_card_bar(_card_bar_rect(), _accio_right_limit())
+    _accio_cursor = hud.get_node_or_null("AccioCursor") as CanvasItem
+    if _accio_cursor == null and _accio_button != null:
+        var scene: PackedScene = load("res://accio_cursor.tscn") as PackedScene
+        if scene != null:
+            _accio_cursor = scene.instantiate() as CanvasItem
+            _accio_cursor.name = "AccioCursor"
+            hud.add_child(_accio_cursor)
+    if _accio_cursor != null:
+        _accio_cursor.visible = false
 
 
 func _session() -> GameSession:
-	return get_node_or_null(GAME_SESSION_PATH) as GameSession
+    return get_node_or_null(GAME_SESSION_PATH) as GameSession
 
 
 func _is_debug_mode_enabled() -> bool:
-	var session: GameSession = _session()
-	return session != null and session.debug_mode
+    var session: GameSession = _session()
+    return session != null and session.debug_mode
 
 
 func _process(_delta: float) -> void:
-	if not _is_level_over:
-		_poll_wave_future()
-	_update_accio_process()
+    if not _is_level_over:
+        _poll_wave_future()
+    _update_accio_process()
 
 
 ## Screen rectangle covered by all the card buttons of the HUD.
 func _card_bar_rect() -> Rect2:
-	var bar: Rect2 = Rect2()
-	for button: AllyCardButton in _card_buttons():
-		var card_rect: Rect2 = Rect2(button.position, button.size)
-		bar = card_rect if not bar.has_area() else bar.merge(card_rect)
-	return bar
+    var bar: Rect2 = Rect2()
+    for button: AllyCardButton in _card_buttons():
+        var card_rect: Rect2 = Rect2(button.position, button.size)
+        bar = card_rect if not bar.has_area() else bar.merge(card_rect)
+    return bar
 
 
 ## The Accio button must end before the pause button (or the screen edge).
 func _accio_right_limit() -> float:
-	if _pause_menu != null and _pause_menu.pause_button != null:
-		return _pause_menu.pause_button.get_global_rect().position.x
-	return get_viewport_rect().size.x
+    if _pause_menu != null and _pause_menu.pause_button != null:
+        return _pause_menu.pause_button.get_global_rect().position.x
+    return get_viewport_rect().size.x
 
 
 func _update_accio_process() -> void:
-	if not _is_removing and not _is_accio_glowing():
-		return
-	if _accio_cursor != null:
-		_accio_cursor.global_position = get_viewport().get_mouse_position()
-	if _is_removing:
-		_update_hovered_ally(_cell_under_mouse())
+    if not _is_removing and not _is_accio_glowing():
+        return
+    if _accio_cursor != null:
+        _accio_cursor.global_position = get_viewport().get_mouse_position()
+    if _is_removing:
+        _update_hovered_ally(_cell_under_mouse())
 
 
 func _is_accio_glowing() -> bool:
-	var cursor: AccioCursor = _accio_cursor as AccioCursor
-	return cursor != null and cursor.is_glowing()
+    var cursor: AccioCursor = _accio_cursor as AccioCursor
+    return cursor != null and cursor.is_glowing()
 
 
 func _find_tile_map() -> TileMapLayer:
-	var direct_tile_map: TileMapLayer = get_node_or_null("TileMapLayer") as TileMapLayer
-	if direct_tile_map != null:
-		return direct_tile_map
-	return get_node("Grid/TileMapLayer") as TileMapLayer
+    var direct_tile_map: TileMapLayer = get_node_or_null("TileMapLayer") as TileMapLayer
+    if direct_tile_map != null:
+        return direct_tile_map
+    return get_node("Grid/TileMapLayer") as TileMapLayer
 
 
 ## Spawns a protective Dementor on each row left of the garden.
 func _spawn_dementors() -> void:
-	if not dementor_cells.is_empty():
-		_spawn_dementors_from_cells()
-	elif not dementor_row_cells.is_empty():
-		_spawn_dementors_from_row_cells()
-	else:
-		_spawn_default_dementors()
+    if not dementor_cells.is_empty():
+        _spawn_dementors_from_cells()
+    elif not dementor_row_cells.is_empty():
+        _spawn_dementors_from_row_cells()
+    else:
+        _spawn_default_dementors()
 
 
 func _spawn_dementors_from_cells() -> void:
-	for cell: Vector2i in dementor_cells:
-		var dementor: Dementor = dementor_scene.instantiate() as Dementor
-		dementor.global_position = tile_map.to_global(tile_map.map_to_local(cell))
-		entity_layer.add_child(dementor)
+    for cell: Vector2i in dementor_cells:
+        var dementor: Dementor = dementor_scene.instantiate() as Dementor
+        dementor.global_position = tile_map.to_global(tile_map.map_to_local(cell))
+        entity_layer.add_child(dementor)
 
 
 func _spawn_dementors_from_row_cells() -> void:
-	var first_col: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, dementor_row_cells[0])))
-	var cell_width: float = tile_map.tile_set.tile_size.x * tile_map.global_scale.x
-	var dementor_x: float = first_col.x - cell_width
-	for row: int in dementor_row_cells:
-		var dementor: Dementor = dementor_scene.instantiate() as Dementor
-		var row_center: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, row)))
-		dementor.global_position = Vector2(dementor_x, row_center.y)
-		entity_layer.add_child(dementor)
+    var first_col: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, dementor_row_cells[0])))
+    var cell_width: float = tile_map.tile_set.tile_size.x * tile_map.global_scale.x
+    var dementor_x: float = first_col.x - cell_width
+    for row: int in dementor_row_cells:
+        var dementor: Dementor = dementor_scene.instantiate() as Dementor
+        var row_center: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, row)))
+        dementor.global_position = Vector2(dementor_x, row_center.y)
+        entity_layer.add_child(dementor)
 
 
 func _spawn_default_dementors() -> void:
-	for row_y: float in DEMENTOR_ROWS_Y:
-		var dementor: Dementor = dementor_scene.instantiate() as Dementor
-		dementor.position = Vector2(DEMENTOR_X, row_y)
-		entity_layer.add_child(dementor)
+    for row_y: float in DEMENTOR_ROWS_Y:
+        var dementor: Dementor = dementor_scene.instantiate() as Dementor
+        dementor.position = Vector2(DEMENTOR_X, row_y)
+        entity_layer.add_child(dementor)
 
 
 func _card_buttons() -> Array[AllyCardButton]:
-	var buttons: Array[AllyCardButton] = []
-	for child: Node in hud.get_children():
-		if child is AllyCardButton:
-			buttons.append(child as AllyCardButton)
-	return buttons
+    var buttons: Array[AllyCardButton] = []
+    for child: Node in hud.get_children():
+        if child is AllyCardButton:
+            buttons.append(child as AllyCardButton)
+    return buttons
 
 
 func _refresh_hud() -> void:
-	_update_snitches_display()
-	for button: AllyCardButton in _card_buttons():
-		button.refresh(_snitches)
+    _update_snitches_display()
+    for button: AllyCardButton in _card_buttons():
+        button.refresh(_snitches)
 
 
 func _update_snitches_display() -> void:
-	if _snitch_counter != null:
-		_snitch_counter.set_value(_snitches)
-	elif snitches_label != null:
-		snitches_label.text = str(_snitches)
+    if _snitch_counter != null:
+        _snitch_counter.set_value(_snitches)
+    elif snitches_label != null:
+        snitches_label.text = str(_snitches)
 
 
 func _on_pool_stats_changed(shots_fired: int, pool_size: int, active_count: int) -> void:
-	_update_pool_debug_label(shots_fired, pool_size, active_count)
+    _update_pool_debug_label(shots_fired, pool_size, active_count)
 
 
 func _update_pool_debug_label(shots_fired: int, pool_size: int, active_count: int) -> void:
-	pool_debug_label.text = "DEBUG | Disparos consecutivos: %d\nPool: %d | Activos: %d | Disponibles: %d" % [
-		shots_fired,
-		pool_size,
-		active_count,
-		pool_size - active_count
-	]
+    pool_debug_label.text = "DEBUG | Disparos consecutivos: %d\nPool: %d | Activos: %d | Disponibles: %d" % [
+        shots_fired,
+        pool_size,
+        active_count,
+        pool_size - active_count
+    ]
 
 
 ## Toggles the clicked card: clicking the selected card deselects it.
 func _on_card_pressed(button: AllyCardButton) -> void:
-	if _is_removing:
-		_cancel_accio()
-	_selected_card = null if _selected_card == button.card else button.card
-	_refresh_card_selection()
+    if _is_removing:
+        _cancel_accio()
+    _selected_card = null if _selected_card == button.card else button.card
+    _refresh_card_selection()
 
 
 func _on_accio_toggled(is_active: bool) -> void:
-	if is_active:
-		_selected_card = null
-		_refresh_card_selection()
-		_set_cursor_mode(true)
-	else:
-		_set_cursor_mode(false)
+    if is_active:
+        _selected_card = null
+        _refresh_card_selection()
+        _set_cursor_mode(true)
+    else:
+        _set_cursor_mode(false)
 
 
 func _set_cursor_mode(is_removing: bool) -> void:
-	_is_removing = is_removing
-	if _accio_button != null and _accio_button.is_active() != is_removing:
-		_accio_button.set_active(is_removing)
-	if _accio_cursor != null:
-		_accio_cursor.visible = is_removing
-	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
-	if not is_removing:
-		_clear_hovered_ally()
-		_stop_accio_glow()
+    _is_removing = is_removing
+    if _accio_button != null and _accio_button.is_active() != is_removing:
+        _accio_button.set_active(is_removing)
+    if _accio_cursor != null:
+        _accio_cursor.visible = is_removing
+    Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+    if not is_removing:
+        _clear_hovered_ally()
+        _stop_accio_glow()
 
 
 func _stop_accio_glow() -> void:
-	var cursor: AccioCursor = _accio_cursor as AccioCursor
-	if cursor != null:
-		cursor.stop_glow()
+    var cursor: AccioCursor = _accio_cursor as AccioCursor
+    if cursor != null:
+        cursor.stop_glow()
 
 
 func _cancel_accio() -> void:
-	_stop_accio_glow()
-	_set_cursor_mode(false)
+    _stop_accio_glow()
+    _set_cursor_mode(false)
 
 
 func _refresh_card_selection() -> void:
-	for button: AllyCardButton in _card_buttons():
-		button.set_selected(button.card == _selected_card)
+    for button: AllyCardButton in _card_buttons():
+        button.set_selected(button.card == _selected_card)
 
 
 ## Places the selected ally or executes Accio removal.
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_level_over:
-		return
-	if _is_cancel_event(event):
-		_handle_cancel_input()
-		return
-	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-	if mouse_event != null and mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
-		_handle_left_click()
+    if _is_level_over:
+        return
+    if _is_cancel_event(event):
+        _handle_cancel_input()
+        return
+    var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+    if mouse_event != null and mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+        _handle_left_click()
 
 
 func _is_cancel_event(event: InputEvent) -> bool:
-	if event is InputEventKey and event.is_pressed() and (event as InputEventKey).keycode == KEY_ESCAPE:
-		return true
-	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-	return mouse_event != null and mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_RIGHT
+    if event is InputEventKey and event.is_pressed() and (event as InputEventKey).keycode == KEY_ESCAPE:
+        return true
+    var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+    return mouse_event != null and mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_RIGHT
 
 
 func _handle_cancel_input() -> void:
-	if _is_removing:
-		_cancel_accio()
-	elif _selected_card != null:
-		_selected_card = null
-		_refresh_card_selection()
+    if _is_removing:
+        _cancel_accio()
+    elif _selected_card != null:
+        _selected_card = null
+        _refresh_card_selection()
 
 
 func _handle_left_click() -> void:
-	if _is_removing:
-		_try_remove_ally(_cell_under_mouse())
-	elif _selected_card != null:
-		_try_place_ally()
+    if _is_removing:
+        _try_remove_ally(_cell_under_mouse())
+    elif _selected_card != null:
+        _try_place_ally()
 
 
 func _update_hovered_ally(cell: Vector2i) -> void:
-	var ally: Ally = _occupied_cells.get(cell) as Ally
-	if ally == _hovered_ally:
-		return
-	_clear_hovered_ally()
-	if is_instance_valid(ally):
-		_hovered_ally = ally
-		_hovered_ally.modulate = ACCIO_HOVER_COLOR
+    var ally: Ally = _occupied_cells.get(cell) as Ally
+    if ally == _hovered_ally:
+        return
+    _clear_hovered_ally()
+    if is_instance_valid(ally):
+        _hovered_ally = ally
+        _hovered_ally.modulate = ACCIO_HOVER_COLOR
 
 
 func _clear_hovered_ally() -> void:
-	if is_instance_valid(_hovered_ally):
-		_hovered_ally.modulate = Color.WHITE
-	_hovered_ally = null
+    if is_instance_valid(_hovered_ally):
+        _hovered_ally.modulate = Color.WHITE
+    _hovered_ally = null
 
 
 func _try_remove_ally(cell: Vector2i) -> void:
-	if not _occupied_cells.has(cell):
-		return
-	var ally: Ally = _occupied_cells[cell] as Ally
-	_occupied_cells.erase(cell)
-	_clear_hovered_ally()
-	_finish_accio_removal()
-	if is_instance_valid(ally):
-		ally.queue_free()
+    if not _occupied_cells.has(cell):
+        return
+    var ally: Ally = _occupied_cells[cell] as Ally
+    _occupied_cells.erase(cell)
+    _clear_hovered_ally()
+    _finish_accio_removal()
+    if is_instance_valid(ally):
+        ally.queue_free()
 
 
 func _finish_accio_removal() -> void:
-	_is_removing = false
-	if _accio_button != null:
-		_accio_button.set_active(false)
-	var cursor: AccioCursor = _accio_cursor as AccioCursor
-	if cursor != null:
-		cursor.play_tip_glow(_on_accio_glow_completed)
-	else:
-		_set_cursor_mode(false)
+    _is_removing = false
+    if _accio_button != null:
+        _accio_button.set_active(false)
+    var cursor: AccioCursor = _accio_cursor as AccioCursor
+    if cursor != null:
+        cursor.play_tip_glow(_on_accio_glow_completed)
+    else:
+        _set_cursor_mode(false)
 
 
 func _on_accio_glow_completed() -> void:
-	_set_cursor_mode(false)
+    _set_cursor_mode(false)
 
 
 ## Tries to place the selected ally on the cell under the cursor.
 func _try_place_ally() -> void:
-	var cell: Vector2i = _cell_under_mouse()
-	if _can_place_at(cell) and _snitches >= _selected_card.cost:
-		_place_ally(_selected_card, cell)
+    var cell: Vector2i = _cell_under_mouse()
+    if _can_place_at(cell) and _snitches >= _selected_card.cost:
+        _place_ally(_selected_card, cell)
 
 
 func _cell_under_mouse() -> Vector2i:
-	return tile_map.local_to_map(tile_map.get_local_mouse_position())
+    return tile_map.local_to_map(tile_map.get_local_mouse_position())
 
 
 ## The cell must be on an active row, have a tile and be free.
 func _can_place_at(cell: Vector2i) -> bool:
-	if not cell.y in active_rows or _occupied_cells.has(cell):
-		return false
-	if is_boss_level and _boss != null and cell == _boss.get_current_cell():
-		return false
-	return tile_map.get_cell_source_id(cell) != EMPTY_CELL_SOURCE
+    if not cell.y in active_rows or _occupied_cells.has(cell):
+        return false
+    if is_boss_level and _boss != null and cell == _boss.get_current_cell():
+        return false
+    return tile_map.get_cell_source_id(cell) != EMPTY_CELL_SOURCE
 
 
 func _place_ally(card: AllyCard, cell: Vector2i) -> void:
-	var ally: Ally = card.scene.instantiate() as Ally
-	ally.global_position = tile_map.to_global(tile_map.map_to_local(cell))
-	_init_placed_ally(ally)
-	entity_layer.add_child(ally)
-	ally.update_row_z_index()
-	_register_placed_ally(ally, cell)
-	_finalize_ally_placement(card)
+    var ally: Ally = card.scene.instantiate() as Ally
+    ally.global_position = tile_map.to_global(tile_map.map_to_local(cell))
+    _init_placed_ally(ally)
+    entity_layer.add_child(ally)
+    ally.update_row_z_index()
+    _register_placed_ally(ally, cell)
+    _finalize_ally_placement(card)
+    if _sound_service != null:
+        var sound_variant: String = await _card_sound_variant(card)
+        _sound_service.play("card_place", sound_variant)
 
 
 func _register_placed_ally(ally: Ally, cell: Vector2i) -> void:
-	if ally is Broomstick:
-		_handle_broomstick_placed(ally as Broomstick, cell)
-		return
-	_occupied_cells[cell] = ally
-	ally.tree_exiting.connect(_on_ally_removed.bind(cell))
+    if ally is Broomstick:
+        _handle_broomstick_placed(ally as Broomstick, cell)
+        return
+    _occupied_cells[cell] = ally
+    ally.tree_exiting.connect(_on_ally_removed.bind(cell))
 
 
 func _handle_broomstick_placed(broom: Broomstick, cell: Vector2i) -> void:
-	var first_col_pos: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, cell.y)))
-	broom.global_position.x = minf(0.0, first_col_pos.x - 200.0)
+    var first_col_pos: Vector2 = tile_map.to_global(tile_map.map_to_local(Vector2i(2, cell.y)))
+    broom.global_position.x = minf(0.0, first_col_pos.x - 200.0)
 
 
 func _finalize_ally_placement(card: AllyCard) -> void:
-	_snitches -= card.cost
-	_button_for(card).start_cooldown()
-	_selected_card = null
-	_refresh_card_selection()
-	_refresh_hud()
+    _snitches -= card.cost
+    _button_for(card).start_cooldown()
+    _selected_card = null
+    _refresh_card_selection()
+    _refresh_hud()
 
 
 func _init_placed_ally(ally: Ally) -> void:
-	ally.projectile_pool = projectile_pool
-	if ally is SnitchBox:
-		(ally as SnitchBox).snitch_dropped.connect(_on_snitch_dropped)
+    ally.projectile_pool = projectile_pool
+    if ally is SnitchBox:
+        (ally as SnitchBox).snitch_dropped.connect(_on_snitch_dropped)
 
 
 func _button_for(card: AllyCard) -> AllyCardButton:
-	for button: AllyCardButton in _card_buttons():
-		if button.card == card:
-			return button
-	return null
+    for button: AllyCardButton in _card_buttons():
+        if button.card == card:
+            return button
+    return null
 
 
 ## Frees the grid cell of an ally that left the tree.
 func _on_ally_removed(cell: Vector2i) -> void:
-	_occupied_cells.erase(cell)
+    _occupied_cells.erase(cell)
 
 
 ## Callback when a Snitch Box drops a physical Snitch to be collected.
 func _on_snitch_dropped(snitch: Snitch) -> void:
-	entity_layer.add_child(snitch)
-	snitch.update_row_z_index()
-	snitch.collected.connect(_on_snitch_collected)
+    entity_layer.add_child(snitch)
+    snitch.update_row_z_index()
+    snitch.collected.connect(_on_snitch_collected)
 
 
 ## SnitchSpawnTimer callback. Spawns a Snitch falling from the sky.
 func _on_snitch_spawn_timer_timeout() -> void:
-	if _is_level_over:
-		return
-	var snitch: Snitch = snitch_scene.instantiate() as Snitch
-	var target_row: int = _pick_random_snitch_row()
-	var target_y: float = _get_row_center_y(target_row)
-	snitch.setup_sky_fall(target_y)
-	snitch.position = Vector2(randf_range(SKY_SNITCH_MIN_X, SKY_SNITCH_MAX_X), SKY_SNITCH_Y)
-	entity_layer.add_child(snitch)
-	snitch.collected.connect(_on_snitch_collected)
+    if _is_level_over:
+        return
+    var snitch: Snitch = snitch_scene.instantiate() as Snitch
+    var target_row: int = _pick_random_snitch_row()
+    var target_y: float = _get_row_center_y(target_row)
+    snitch.setup_sky_fall(target_y)
+    snitch.position = Vector2(randf_range(SKY_SNITCH_MIN_X, SKY_SNITCH_MAX_X), SKY_SNITCH_Y)
+    entity_layer.add_child(snitch)
+    snitch.collected.connect(_on_snitch_collected)
+    if _sound_service != null:
+        _sound_service.play("snitch_drop")
 
 
 func _pick_random_snitch_row() -> int:
-	if active_rows.is_empty():
-		return DEFAULT_SNITCH_ROW
-	return active_rows.pick_random()
+    if active_rows.is_empty():
+        return DEFAULT_SNITCH_ROW
+    return active_rows.pick_random()
 
 
 func _get_row_center_y(row: int) -> float:
-	if tile_map != null:
-		return tile_map.to_global(tile_map.map_to_local(Vector2i(GRID_SAMPLE_COLUMN, row))).y
-	var index: int = clampi(row - FIRST_GRID_ROW_INDEX, 0, DEMENTOR_ROWS_Y.size() - 1)
-	return DEMENTOR_ROWS_Y[index]
+    if tile_map != null:
+        return tile_map.to_global(tile_map.map_to_local(Vector2i(GRID_SAMPLE_COLUMN, row))).y
+    var index: int = clampi(row - FIRST_GRID_ROW_INDEX, 0, DEMENTOR_ROWS_Y.size() - 1)
+    return DEMENTOR_ROWS_Y[index]
 
 
 ## Callback when the player clicks and collects a Snitch.
 func _on_snitch_collected(amount: int) -> void:
-	_snitches += amount
-	_refresh_hud()
+    _snitches += amount
+    _refresh_hud()
+    if _sound_service != null:
+        _sound_service.play("snitch_collected")
 
 
 func _cache_troll_scenes() -> void:
-	_troll_scenes.clear()
-	for scene: PackedScene in enemy_scenes:
-		_troll_scenes[scene] = _scene_root_is_troll(scene)
+    _troll_scenes.clear()
+    for scene: PackedScene in enemy_scenes:
+        _troll_scenes[scene] = _scene_root_is_troll(scene)
 
 
 func _scene_root_is_troll(scene: PackedScene) -> bool:
-	if scene == null:
-		return false
-	var probe: Node = scene.instantiate()
-	var is_troll: bool = probe is Troll
-	probe.free()
-	return is_troll
+    if scene == null:
+        return false
+    var probe: Node = scene.instantiate()
+    var is_troll: bool = probe is Troll
+    probe.free()
+    return is_troll
 
 
 func _is_troll_scene(scene: PackedScene) -> bool:
-	return _troll_scenes.get(scene, false)
+    return _troll_scenes.get(scene, false)
 
 
 func _are_trolls_allowed() -> bool:
-	return _completed_waves >= troll_delay_waves
+    return _completed_waves >= troll_delay_waves
 
 
 func _pick_random_enemy_scene() -> PackedScene:
-	if enemy_scenes.is_empty():
-		return null
-	if _are_trolls_allowed():
-		return enemy_scenes.pick_random()
-	var allowed_scenes: Array[PackedScene] = []
-	for scene: PackedScene in enemy_scenes:
-		if not _is_troll_scene(scene):
-			allowed_scenes.append(scene)
-	if allowed_scenes.is_empty():
-		return enemy_scenes.pick_random()
-	return allowed_scenes.pick_random()
+    if enemy_scenes.is_empty():
+        return null
+    if _are_trolls_allowed():
+        return enemy_scenes.pick_random()
+    var allowed_scenes: Array[PackedScene] = []
+    for scene: PackedScene in enemy_scenes:
+        if not _is_troll_scene(scene):
+            allowed_scenes.append(scene)
+    if allowed_scenes.is_empty():
+        return enemy_scenes.pick_random()
+    return allowed_scenes.pick_random()
 
 
 ## EnemySpawnTimer callback. Spawns regular enemies with accelerating difficulty.
 func _on_enemy_spawn_timer_timeout() -> void:
-	if _is_level_over or _wave_state != WaveState.Value.SPAWNING_NORMAL:
-		return
-	_accelerate_spawn_cadence()
-	_spawn_regular_enemies()
+    if _is_level_over or _wave_state != WaveState.Value.SPAWNING_NORMAL:
+        return
+    _accelerate_spawn_cadence()
+    _spawn_regular_enemies()
 
 
 func _determine_enemy_spawn_count() -> int:
-	var roll: float = randf()
-	if roll < MULTI_SPAWN_TRIPLE_CHANCE:
-		return TRIPLE_SPAWN_COUNT
-	if roll < MULTI_SPAWN_TRIPLE_CHANCE + MULTI_SPAWN_DOUBLE_CHANCE:
-		return DOUBLE_SPAWN_COUNT
-	return SINGLE_SPAWN_COUNT
+    var roll: float = randf()
+    if roll < MULTI_SPAWN_TRIPLE_CHANCE:
+        return TRIPLE_SPAWN_COUNT
+    if roll < MULTI_SPAWN_TRIPLE_CHANCE + MULTI_SPAWN_DOUBLE_CHANCE:
+        return DOUBLE_SPAWN_COUNT
+    return SINGLE_SPAWN_COUNT
 
 
 func _spawn_regular_enemies() -> void:
-	var count: int = _determine_enemy_spawn_count()
-	var points: Array[NodePath] = spawn_points.duplicate()
-	points.shuffle()
-	for i: int in range(count):
-		if _is_level_over:
-			return
-		await _wait_for_multi_spawn_delay(i)
-		if _is_level_over or not is_inside_tree():
-			return
-		var path: NodePath = points[i % points.size()] if not points.is_empty() else NodePath()
-		_spawn_enemy(_pick_random_enemy_scene(), true, path)
+    var count: int = _determine_enemy_spawn_count()
+    var points: Array[NodePath] = spawn_points.duplicate()
+    points.shuffle()
+    for i: int in range(count):
+        if _is_level_over:
+            return
+        await _wait_for_multi_spawn_delay(i)
+        if _is_level_over or not is_inside_tree():
+            return
+        var path: NodePath = points[i % points.size()] if not points.is_empty() else NodePath()
+        _spawn_enemy(_pick_random_enemy_scene(), true, path)
 
 
 func _wait_for_multi_spawn_delay(index: int) -> void:
-	var delay: float = _multi_spawn_delay(index)
-	if delay > NO_SPAWN_DELAY and is_inside_tree():
-		await get_tree().create_timer(delay, RUNS_WHILE_PAUSED).timeout
+    var delay: float = _multi_spawn_delay(index)
+    if delay > NO_SPAWN_DELAY and is_inside_tree():
+        await get_tree().create_timer(delay, RUNS_WHILE_PAUSED).timeout
 
 
 ## Delay before the spawn at position index of a multi spawn (0 = first).
 func _multi_spawn_delay(index: int) -> float:
-	if index == SECOND_SPAWN_INDEX:
-		return SECOND_ENEMY_SPAWN_DELAY
-	if index == THIRD_SPAWN_INDEX:
-		return THIRD_ENEMY_SPAWN_DELAY
-	return NO_SPAWN_DELAY
+    if index == SECOND_SPAWN_INDEX:
+        return SECOND_ENEMY_SPAWN_DELAY
+    if index == THIRD_SPAWN_INDEX:
+        return THIRD_ENEMY_SPAWN_DELAY
+    return NO_SPAWN_DELAY
 
 
 func _accelerate_spawn_cadence() -> void:
-	_enemy_spawn_interval = maxf(
-		MIN_ENEMY_SPAWN_INTERVAL,
-		_enemy_spawn_interval - SPAWN_INTERVAL_DECREMENT
-	)
-	enemy_spawn_timer.wait_time = _enemy_spawn_interval
-	enemy_spawn_timer.start()
+    _enemy_spawn_interval = maxf(
+        MIN_ENEMY_SPAWN_INTERVAL,
+        _enemy_spawn_interval - SPAWN_INTERVAL_DECREMENT
+    )
+    enemy_spawn_timer.wait_time = _enemy_spawn_interval
+    enemy_spawn_timer.start()
 
 
 func _spawn_enemy(scene: PackedScene, counts_as_regular: bool, spawn_path: NodePath = NodePath()) -> void:
-	if scene == null:
-		return
-	var enemy: Enemy = scene.instantiate() as Enemy
-	enemy.global_position = _pick_spawn_position(spawn_path)
-	entity_layer.add_child(enemy)
-	enemy.update_row_z_index()
-	if counts_as_regular:
-		_spawned_enemies += 1
-	_active_enemies += 1
-	_regular_enemy_ids[enemy.get_instance_id()] = counts_as_regular
-	enemy.defeated.connect(_on_enemy_defeated)
-	enemy.garden_invaded.connect(_on_garden_invaded)
+    if scene == null:
+        return
+    var enemy: Enemy = scene.instantiate() as Enemy
+    enemy.global_position = _pick_spawn_position(spawn_path)
+    entity_layer.add_child(enemy)
+    enemy.update_row_z_index()
+    if counts_as_regular:
+        _spawned_enemies += 1
+    _active_enemies += 1
+    _regular_enemy_ids[enemy.get_instance_id()] = counts_as_regular
+    enemy.defeated.connect(_on_enemy_defeated)
+    enemy.garden_invaded.connect(_on_garden_invaded)
 
 
 func _pick_spawn_position(custom_path: NodePath = NodePath()) -> Vector2:
-	var path: NodePath = custom_path
-	if path.is_empty():
-		path = spawn_points.pick_random()
-	var spawn_point: Node2D = get_node(path) as Node2D
-	return spawn_point.global_position
+    var path: NodePath = custom_path
+    if path.is_empty():
+        path = spawn_points.pick_random()
+    var spawn_point: Node2D = get_node(path) as Node2D
+    return spawn_point.global_position
 
 
 ## Callback when an enemy is defeated. Tracks kills and updates wave progress.
 func _on_enemy_defeated(entity: Node2D) -> void:
-	var enemy_id: int = entity.get_instance_id()
-	if _defeated_enemy_ids.has(enemy_id):
-		return
-	_defeated_enemy_ids[enemy_id] = true
-	var is_regular: bool = _regular_enemy_ids.get(enemy_id, false)
-	_active_enemies = maxi(_active_enemies - 1, 0)
-	if is_regular:
-		_process_regular_enemy_kill()
-	_update_wave_lifecycle()
+    var enemy_id: int = entity.get_instance_id()
+    if _defeated_enemy_ids.has(enemy_id):
+        return
+    _defeated_enemy_ids[enemy_id] = true
+    var is_regular: bool = _regular_enemy_ids.get(enemy_id, false)
+    _active_enemies = maxi(_active_enemies - 1, 0)
+    if is_regular:
+        _process_regular_enemy_kill()
+    _update_wave_lifecycle()
 
 
 func _process_regular_enemy_kill() -> void:
-	if _wave_state != WaveState.Value.SPAWNING_NORMAL:
-		return
-	_phase_defeated_enemies += 1
-	_total_defeated_enemies += 1
-	_defeated_enemies = _total_defeated_enemies
-	_update_hud_meter()
-	_check_wave_threshold()
+    if _wave_state != WaveState.Value.SPAWNING_NORMAL:
+        return
+    _phase_defeated_enemies += 1
+    _total_defeated_enemies += 1
+    _defeated_enemies = _total_defeated_enemies
+    _update_hud_meter()
+    _check_wave_threshold()
 
 
 func _update_hud_meter() -> void:
-	if is_instance_valid(_wave_progress_bar):
-		_wave_progress_bar.update_progress(_get_current_meter_progress())
+    if is_instance_valid(_wave_progress_bar):
+        _wave_progress_bar.update_progress(_get_current_meter_progress())
 
 
 func _get_current_meter_progress() -> int:
-	var base_kills: int = 0
-	for i: int in range(_current_phase_index):
-		base_kills += _get_phase_threshold(i)
-	var current_quota: int = _get_phase_threshold(_current_phase_index)
-	return base_kills + mini(_phase_defeated_enemies, current_quota)
+    var base_kills: int = 0
+    for i: int in range(_current_phase_index):
+        base_kills += _get_phase_threshold(i)
+    var current_quota: int = _get_phase_threshold(_current_phase_index)
+    return base_kills + mini(_phase_defeated_enemies, current_quota)
 
 
 func _get_phase_threshold(phase_index: int) -> int:
-	if phase_index < 0 or phase_index >= wave_kill_thresholds.size():
-		return 0
-	return wave_kill_thresholds[phase_index]
+    if phase_index < 0 or phase_index >= wave_kill_thresholds.size():
+        return 0
+    return wave_kill_thresholds[phase_index]
 
 
 ## Callback when an enemy invades the garden. Triggers the defeat.
 func _on_garden_invaded() -> void:
-	_lose()
+    _lose()
 
 
 func _enter_wave_state(next: WaveState.Value) -> void:
-	if not WaveState.can_transition(_wave_state, next):
-		push_error(INVALID_WAVE_TRANSITION_MESSAGE % [_wave_state, next])
-		return
-	_wave_state = next
+    if not WaveState.can_transition(_wave_state, next):
+        push_error(INVALID_WAVE_TRANSITION_MESSAGE % [_wave_state, next])
+        return
+    _wave_state = next
 
 
 func _check_wave_threshold() -> void:
-	if is_boss_level or _wave_state != WaveState.Value.SPAWNING_NORMAL:
-		return
-	if _current_phase_index >= wave_kill_thresholds.size():
-		return
-	var required_kills: int = _get_phase_threshold(_current_phase_index)
-	if _phase_defeated_enemies >= required_kills:
-		_reach_wave_threshold()
+    if is_boss_level or _wave_state != WaveState.Value.SPAWNING_NORMAL:
+        return
+    if _current_phase_index >= wave_kill_thresholds.size():
+        return
+    var required_kills: int = _get_phase_threshold(_current_phase_index)
+    if _phase_defeated_enemies >= required_kills:
+        _reach_wave_threshold()
 
 
 func _reach_wave_threshold() -> void:
-	if is_instance_valid(enemy_spawn_timer):
-		enemy_spawn_timer.stop()
-	var is_final: bool = (_current_phase_index + 1) >= wave_kill_thresholds.size()
-	_enter_wave_state(WaveState.Value.FINAL_WAVE_PREPARATION if is_final else WaveState.Value.WAVE_PREPARATION)
-	_request_wave(is_final)
-	_check_wave_readiness()
+    if is_instance_valid(enemy_spawn_timer):
+        enemy_spawn_timer.stop()
+    var is_final: bool = (_current_phase_index + 1) >= wave_kill_thresholds.size()
+    _enter_wave_state(WaveState.Value.FINAL_WAVE_PREPARATION if is_final else WaveState.Value.WAVE_PREPARATION)
+    _request_wave(is_final)
+    _check_wave_readiness()
 
 
 func _check_wave_readiness() -> void:
-	if _wave_state != WaveState.Value.WAVE_PREPARATION and _wave_state != WaveState.Value.FINAL_WAVE_PREPARATION:
-		return
-	if _active_enemies > 0:
-		return
-	if _pending_wave_plan == null:
-		return
-	_start_prepared_wave()
+    if _wave_state != WaveState.Value.WAVE_PREPARATION and _wave_state != WaveState.Value.FINAL_WAVE_PREPARATION:
+        return
+    if _active_enemies > 0:
+        return
+    if _pending_wave_plan == null:
+        return
+    _start_prepared_wave()
 
 
 func _update_wave_lifecycle() -> void:
-	if is_boss_level:
-		return
-	if _wave_state == WaveState.Value.WAVE_PREPARATION or _wave_state == WaveState.Value.FINAL_WAVE_PREPARATION:
-		_check_wave_readiness()
-	elif _wave_state == WaveState.Value.WAITING_FOR_CLEAR and _active_enemies == 0:
-		_resume_after_wave()
+    if is_boss_level:
+        return
+    if _wave_state == WaveState.Value.WAVE_PREPARATION or _wave_state == WaveState.Value.FINAL_WAVE_PREPARATION:
+        _check_wave_readiness()
+    elif _wave_state == WaveState.Value.WAITING_FOR_CLEAR and _active_enemies == 0:
+        _resume_after_wave()
 
 
 func _request_wave(is_final: bool) -> void:
-	if is_instance_valid(wave_director):
-		var snapshot: BoardSnapshot = _build_snapshot()
-		_pending_future = wave_director.request_plan(snapshot, is_final)
-		if _pending_future == null:
-			_create_fallback_wave(is_final)
-	else:
-		_create_fallback_wave(is_final)
+    if is_instance_valid(wave_director):
+        var snapshot: BoardSnapshot = _build_snapshot()
+        _pending_future = wave_director.request_plan(snapshot, is_final)
+        if _pending_future == null:
+            _create_fallback_wave(is_final)
+    else:
+        _create_fallback_wave(is_final)
 
 
 func _create_fallback_wave(is_final: bool) -> void:
-	var plan: WavePlan = WavePlan.new()
-	plan.level_generation = _level_generation
-	plan.request_id = FALLBACK_REQUEST_ID
-	plan.wave_number = _current_phase_index + 1
-	plan.is_final = is_final
-	plan.enemy_count = final_wave_min if is_final else intermediate_wave_min
-	plan.spawn_delay = WavePlan.DEFAULT_SPAWN_DELAY
-	plan.row_indices = active_rows.duplicate()
-	_pending_wave_plan = plan
-	_check_wave_readiness()
+    var plan: WavePlan = WavePlan.new()
+    plan.level_generation = _level_generation
+    plan.request_id = FALLBACK_REQUEST_ID
+    plan.wave_number = _current_phase_index + 1
+    plan.is_final = is_final
+    plan.enemy_count = final_wave_min if is_final else intermediate_wave_min
+    plan.spawn_delay = WavePlan.DEFAULT_SPAWN_DELAY
+    plan.row_indices = active_rows.duplicate()
+    _pending_wave_plan = plan
+    _check_wave_readiness()
 
 
 func _build_snapshot() -> BoardSnapshot:
-	var snapshot: BoardSnapshot = BoardSnapshot.new()
-	_fill_snapshot_base(snapshot)
-	_fill_snapshot_wave_params(snapshot)
-	return snapshot
+    var snapshot: BoardSnapshot = BoardSnapshot.new()
+    _fill_snapshot_base(snapshot)
+    _fill_snapshot_wave_params(snapshot)
+    return snapshot
 
 
 func _fill_snapshot_base(snapshot: BoardSnapshot) -> void:
-	var budget: int = _kill_budget()
-	snapshot.level_generation = _level_generation
-	snapshot.state = _wave_state
-	snapshot.regular_defeated = mini(_total_defeated_enemies, budget)
-	snapshot.regular_budget = budget
-	snapshot.active_enemies = _active_enemies
-	snapshot.defense_value = _defense_value()
-	snapshot.is_special_level = is_special_level
-	snapshot.verbose_logs = _is_debug_mode_enabled()
-	snapshot.threshold_index = _current_phase_index
+    var budget: int = _kill_budget()
+    snapshot.level_generation = _level_generation
+    snapshot.state = _wave_state
+    snapshot.regular_defeated = mini(_total_defeated_enemies, budget)
+    snapshot.regular_budget = budget
+    snapshot.active_enemies = _active_enemies
+    snapshot.defense_value = _defense_value()
+    snapshot.is_special_level = is_special_level
+    snapshot.verbose_logs = _is_debug_mode_enabled()
+    snapshot.threshold_index = _current_phase_index
 
 
 func _fill_snapshot_wave_params(snapshot: BoardSnapshot) -> void:
-	snapshot.intermediate_wave_size = _intermediate_wave_size
-	snapshot.intermediate_wave_min = intermediate_wave_min
-	snapshot.intermediate_wave_max = intermediate_wave_max
-	snapshot.final_wave_min = final_wave_min
-	snapshot.final_wave_bonus_min = final_wave_bonus_min
-	snapshot.final_wave_bonus_max = final_wave_bonus_max
-	_fill_snapshot_rows(snapshot)
+    snapshot.intermediate_wave_size = _intermediate_wave_size
+    snapshot.intermediate_wave_min = intermediate_wave_min
+    snapshot.intermediate_wave_max = intermediate_wave_max
+    snapshot.final_wave_min = final_wave_min
+    snapshot.final_wave_bonus_min = final_wave_bonus_min
+    snapshot.final_wave_bonus_max = final_wave_bonus_max
+    _fill_snapshot_rows(snapshot)
 
 
 ## Main thread: copies the per-row data the parallel analysis needs, so the
 ## pool threads never read the scene.
 func _fill_snapshot_rows(snapshot: BoardSnapshot) -> void:
-	snapshot.row_indices = active_rows.duplicate()
-	for row: int in active_rows:
-		snapshot.row_ally_health.append(_row_ally_health(row))
-		snapshot.row_enemy_count.append(Lane.enemies_in_lane(get_tree(), _get_row_center_y(row)).size())
+    snapshot.row_indices = active_rows.duplicate()
+    for row: int in active_rows:
+        snapshot.row_ally_health.append(_row_ally_health(row))
+        snapshot.row_enemy_count.append(Lane.enemies_in_lane(get_tree(), _get_row_center_y(row)).size())
 
 
 func _row_ally_health(row: int) -> float:
-	var total: float = 0.0
-	for cell: Vector2i in _occupied_cells:
-		var ally_node: Node2D = _occupied_cells[cell]
-		if cell.y == row and is_instance_valid(ally_node) and ally_node is Ally:
-			total += (ally_node as Ally).health
-	return total
+    var total: float = 0.0
+    for cell: Vector2i in _occupied_cells:
+        var ally_node: Node2D = _occupied_cells[cell]
+        if cell.y == row and is_instance_valid(ally_node) and ally_node is Ally:
+            total += (ally_node as Ally).health
+    return total
 
 
 func _defense_value() -> float:
-	var snapshot: DefenseSnapshot = DefenseSnapshot.new()
-	snapshot.set_values(_sum_ally_health(), 0.0)
-	return snapshot.total_value
+    var snapshot: DefenseSnapshot = DefenseSnapshot.new()
+    snapshot.set_values(_sum_ally_health(), 0.0)
+    return snapshot.total_value
 
 
 func _sum_ally_health() -> float:
-	var ally_value: float = 0.0
-	for ally_node: Node2D in _occupied_cells.values():
-		if is_instance_valid(ally_node) and ally_node is Ally:
-			ally_value += (ally_node as Ally).health
-	return ally_value
+    var ally_value: float = 0.0
+    for ally_node: Node2D in _occupied_cells.values():
+        if is_instance_valid(ally_node) and ally_node is Ally:
+            ally_value += (ally_node as Ally).health
+    return ally_value
 
 
 ## Main thread, every frame: reads the pending future without blocking.
 func _poll_wave_future() -> void:
-	if _pending_future == null or not _pending_future.is_done():
-		return
-	var result: WaveResult = _pending_future.get_result()
-	_pending_future = null
-	if result != null:
-		_on_wave_result(result)
+    if _pending_future == null or not _pending_future.is_done():
+        return
+    var result: WaveResult = _pending_future.get_result()
+    _pending_future = null
+    if result != null:
+        _on_wave_result(result)
 
 
 func _on_wave_result(result: WaveResult) -> void:
-	if _is_level_over or result.level_generation != _level_generation:
-		return
-	if result.plan == null:
-		return
-	_pending_wave_plan = result.plan
-	_check_wave_readiness()
+    if _is_level_over or result.level_generation != _level_generation:
+        return
+    if result.plan == null:
+        return
+    _pending_wave_plan = result.plan
+    _check_wave_readiness()
 
 
 ## Cancels the pending future and waits at most wait_ms for a worker that is
 ## already calculating it, so leaving the level never hangs.
 func _release_wave_future(wait_ms: int) -> void:
-	if _pending_future == null:
-		return
-	_pending_future.cancel()
-	_pending_future.wait_for(wait_ms)
-	_pending_future = null
+    if _pending_future == null:
+        return
+    _pending_future.cancel()
+    _pending_future.wait_for(wait_ms)
+    _pending_future = null
 
 
 func _start_prepared_wave() -> void:
-	var plan: WavePlan = _pending_wave_plan
-	_pending_wave_plan = null
-	_enter_wave_state(WaveState.Value.WAVE_ACTIVE)
-	_final_wave_active = plan.is_final
-	if not _final_wave_active:
-		_intermediate_wave_size = plan.enemy_count
-	await _show_wave_announcement()
-	_spawn_wave_enemies(plan)
+    var plan: WavePlan = _pending_wave_plan
+    _pending_wave_plan = null
+    _enter_wave_state(WaveState.Value.WAVE_ACTIVE)
+    _final_wave_active = plan.is_final
+    if not _final_wave_active:
+        _intermediate_wave_size = plan.enemy_count
+    await _show_wave_announcement()
+    _spawn_wave_enemies(plan)
 
 
 func _show_wave_announcement() -> void:
-	if _final_wave_active:
-		wave_announcement_label.text = FINAL_WAVE_ANNOUNCEMENT_TEXT
-	else:
-		wave_announcement_label.text = WAVE_ANNOUNCEMENT_TEXT
-	wave_announcement.visible = true
-	await get_tree().create_timer(WAVE_ANNOUNCEMENT_DURATION, RUNS_WHILE_PAUSED).timeout
-	if is_instance_valid(wave_announcement):
-		wave_announcement.visible = false
+    if _final_wave_active:
+        wave_announcement_label.text = FINAL_WAVE_ANNOUNCEMENT_TEXT
+    else:
+        wave_announcement_label.text = WAVE_ANNOUNCEMENT_TEXT
+    wave_announcement.visible = true
+    if _final_wave_active and _sound_service != null:
+        _sound_service.play("wave_final")
+    await get_tree().create_timer(WAVE_ANNOUNCEMENT_DURATION, RUNS_WHILE_PAUSED).timeout
+    if is_instance_valid(wave_announcement):
+            wave_announcement.visible = false
+
+func _card_sound_variant(card: AllyCard) -> String:
+    if card.scene == null:
+        return "main"
+    var scene_path: String = card.scene.get_path()
+    if "harry" in scene_path or "hermione" in scene_path or "ron" in scene_path or "mcgonagall" in scene_path or "dumbledore" in scene_path:
+        return "mage"
+    if "broomstick" in scene_path:
+        return "broom"
+    if "protego" in scene_path:
+        return "shield"
+    return "main"
 
 
 func _spawn_wave_enemies(plan: WavePlan) -> void:
-	var enemy_count: int = plan.enemy_count
-	var spawn_delay: float = plan.spawn_delay
-	for index: int in range(enemy_count):
-		if index > 0 and spawn_delay > 0.0:
-			await get_tree().create_timer(spawn_delay, RUNS_WHILE_PAUSED).timeout
-		if _is_level_over:
-			return
-		_spawn_enemy(_pick_random_enemy_scene(), false, _pick_wave_spawn_path(plan))
-	_enter_wave_state(WaveState.Value.WAITING_FOR_CLEAR)
-	_update_wave_lifecycle()
+    var enemy_count: int = plan.enemy_count
+    var spawn_delay: float = plan.spawn_delay
+    for index: int in range(enemy_count):
+        if index > 0 and spawn_delay > 0.0:
+            await get_tree().create_timer(spawn_delay, RUNS_WHILE_PAUSED).timeout
+        if _is_level_over:
+            return
+        _spawn_enemy(_pick_random_enemy_scene(), false, _pick_wave_spawn_path(plan))
+    _enter_wave_state(WaveState.Value.WAITING_FOR_CLEAR)
+    _update_wave_lifecycle()
 
 
 ## Picks the spawn point of a wave enemy using the row weights of the plan.
 ## An empty path means "any spawn point", as before.
 func _pick_wave_spawn_path(plan: WavePlan) -> NodePath:
-	if plan.row_weights.is_empty() or plan.row_weights.size() != plan.row_indices.size():
-		return NodePath()
-	var index: int = _wave_rng.rand_weighted(_blend_row_weights(plan.row_weights))
-	if index < 0:
-		return NodePath()
-	return _spawn_point_for_row(plan.row_indices[index])
+    if plan.row_weights.is_empty() or plan.row_weights.size() != plan.row_indices.size():
+        return NodePath()
+    var index: int = _wave_rng.rand_weighted(_blend_row_weights(plan.row_weights))
+    if index < 0:
+        return NodePath()
+    return _spawn_point_for_row(plan.row_indices[index])
 
 
 ## Mixes an even spread with the analysis weights according to wave_row_focus.
 func _blend_row_weights(analysis_weights: Array[float]) -> PackedFloat32Array:
-	var even_share: float = FULL_ROW_FOCUS / float(analysis_weights.size())
-	var blended: PackedFloat32Array = PackedFloat32Array()
-	for weight: float in analysis_weights:
-		blended.append((FULL_ROW_FOCUS - wave_row_focus) * even_share + wave_row_focus * weight)
-	return blended
+    var even_share: float = FULL_ROW_FOCUS / float(analysis_weights.size())
+    var blended: PackedFloat32Array = PackedFloat32Array()
+    for weight: float in analysis_weights:
+        blended.append((FULL_ROW_FOCUS - wave_row_focus) * even_share + wave_row_focus * weight)
+    return blended
 
 
 func _spawn_point_for_row(row: int) -> NodePath:
-	var row_y: float = _get_row_center_y(row)
-	for path: NodePath in spawn_points:
-		var point: Node2D = get_node_or_null(path) as Node2D
-		if point != null and Lane.is_same_lane(point.global_position.y, row_y):
-			return path
-	return NodePath()
+    var row_y: float = _get_row_center_y(row)
+    for path: NodePath in spawn_points:
+        var point: Node2D = get_node_or_null(path) as Node2D
+        if point != null and Lane.is_same_lane(point.global_position.y, row_y):
+            return path
+    return NodePath()
 
 
 func _resume_after_wave() -> void:
-	if _wave_state != WaveState.Value.WAITING_FOR_CLEAR:
-		return
-	_completed_waves += 1
-	if _final_wave_active:
-		_enter_wave_state(WaveState.Value.LEVEL_COMPLETE)
-		_win()
-		return
-	_advance_to_next_regular_phase()
+    if _wave_state != WaveState.Value.WAITING_FOR_CLEAR:
+        return
+    _completed_waves += 1
+    if _final_wave_active:
+        _enter_wave_state(WaveState.Value.LEVEL_COMPLETE)
+        _win()
+        return
+    _advance_to_next_regular_phase()
 
 
 func _advance_to_next_regular_phase() -> void:
-	_current_phase_index += 1
-	_phase_defeated_enemies = 0
-	_enter_wave_state(WaveState.Value.SPAWNING_NORMAL)
-	enemy_spawn_timer.start(_enemy_spawn_interval)
+    _current_phase_index += 1
+    _phase_defeated_enemies = 0
+    _enter_wave_state(WaveState.Value.SPAWNING_NORMAL)
+    enemy_spawn_timer.start(_enemy_spawn_interval)
 
 
 ## Wins the level, unlocks the next one and shows reward or end panel.
 func _win() -> void:
-	_stop_level()
-	_unlock_next_level()
-	if _should_show_reward_unlock():
-		_show_reward_unlock()
-	else:
-		_show_victory_panel()
+    _stop_level()
+    _unlock_next_level()
+    if _should_show_reward_unlock():
+        _show_reward_unlock()
+    else:
+        _show_victory_panel()
 
 
 func _unlock_next_level() -> void:
-	var session: GameSession = _session()
-	if session != null:
-		session.unlock_level(next_level_to_unlock)
+    var session: GameSession = _session()
+    if session != null:
+        session.unlock_level(next_level_to_unlock)
 
 
 func _get_current_level_num() -> int:
-	if current_level_number > 0:
-		return current_level_number
-	return FINAL_LEVEL_NUMBER if is_boss_level else next_level_to_unlock - 1
+    if current_level_number > 0:
+        return current_level_number
+    return FINAL_LEVEL_NUMBER if is_boss_level else next_level_to_unlock - 1
 
 
 func _should_show_reward_unlock() -> bool:
-	var level_num: int = _get_current_level_num()
-	if RewardCatalog.get_reward_for_level(level_num) == null:
-		return false
-	var session: GameSession = _session()
-	if session == null:
-		return true
-	return not session.is_reward_claimed(level_num)
+    var level_num: int = _get_current_level_num()
+    if RewardCatalog.get_reward_for_level(level_num) == null:
+        return false
+    var session: GameSession = _session()
+    if session == null:
+        return true
+    return not session.is_reward_claimed(level_num)
 
 
 func _show_reward_unlock() -> void:
-	var level_num: int = _get_current_level_num()
-	var reward_data: RewardCatalog.RewardData = RewardCatalog.get_reward_for_level(level_num)
-	var screen_scene: PackedScene = preload("res://reward_unlock_screen.tscn")
-	var screen: RewardUnlockScreen = screen_scene.instantiate() as RewardUnlockScreen
-	screen.reward_dismissed.connect(_on_reward_dismissed)
-	hud.add_child(screen)
-	screen.setup(level_num, reward_data.texture, reward_data.description_text)
+    var level_num: int = _get_current_level_num()
+    var reward_data: RewardCatalog.RewardData = RewardCatalog.get_reward_for_level(level_num)
+    var screen_scene: PackedScene = preload("res://reward_unlock_screen.tscn")
+    var screen: RewardUnlockScreen = screen_scene.instantiate() as RewardUnlockScreen
+    screen.reward_dismissed.connect(_on_reward_dismissed)
+    hud.add_child(screen)
+    screen.setup(level_num, reward_data.texture, reward_data.description_text)
 
 
 func _on_reward_dismissed(level_num: int) -> void:
-	var session: GameSession = _session()
-	if session != null:
-		session.claim_reward(level_num)
-	_show_victory_panel()
+    var session: GameSession = _session()
+    if session != null:
+        session.claim_reward(level_num)
+    _show_victory_panel()
 
 
 func _show_victory_panel() -> void:
-	var win_message: String = BOSS_WIN_MESSAGE_TEXT if is_boss_level else WIN_MESSAGE_TEXT % next_level_to_unlock
-	var has_next: bool = not is_boss_level and _get_current_level_num() < FINAL_LEVEL_NUMBER
-	_show_end_panel(WIN_TITLE_TEXT, win_message, has_next)
+    var win_message: String = BOSS_WIN_MESSAGE_TEXT if is_boss_level else WIN_MESSAGE_TEXT % next_level_to_unlock
+    var has_next: bool = not is_boss_level and _get_current_level_num() < FINAL_LEVEL_NUMBER
+    _show_end_panel(WIN_TITLE_TEXT, win_message, has_next)
 
 
 ## Loses the level and shows the end panel.
 func _lose() -> void:
-	if _is_level_over:
-		return
-	_stop_level()
-	_show_end_panel(LOSE_TITLE_TEXT, LOSE_MESSAGE_TEXT, false)
+    if _is_level_over:
+        return
+    _stop_level()
+    _show_end_panel(LOSE_TITLE_TEXT, LOSE_MESSAGE_TEXT, false)
 
 
 func _stop_level() -> void:
-	if _is_removing:
-		_set_cursor_mode(false)
-	_is_level_over = true
-	_pending_wave_plan = null
-	_level_generation += 1
-	enemy_spawn_timer.stop()
-	snitch_spawn_timer.stop()
-	_release_wave_future(WAVE_EXIT_WAIT_MS)
-	wave_director.cancel_pending()
-	projectile_pool.release_all()
-	if _pause_menu != null:
-		_pause_menu.set_enabled(false)
+    if _is_removing:
+        _set_cursor_mode(false)
+    _is_level_over = true
+    _pending_wave_plan = null
+    _level_generation += 1
+    enemy_spawn_timer.stop()
+    snitch_spawn_timer.stop()
+    _release_wave_future(WAVE_EXIT_WAIT_MS)
+    wave_director.cancel_pending()
+    projectile_pool.release_all()
+    if _pause_menu != null:
+        _pause_menu.set_enabled(false)
 
 
 func _exit_tree() -> void:
-	if _is_removing:
-		_set_cursor_mode(false)
-	_release_wave_future(WAVE_EXIT_WAIT_MS)
-	if is_instance_valid(wave_director):
-		wave_director.cancel_pending()
-	if is_instance_valid(projectile_pool):
-		projectile_pool.release_all()
+    if _is_removing:
+        _set_cursor_mode(false)
+    _release_wave_future(WAVE_EXIT_WAIT_MS)
+    if is_instance_valid(wave_director):
+        wave_director.cancel_pending()
+    if is_instance_valid(projectile_pool):
+        projectile_pool.release_all()
 
 
 func _show_end_panel(title: String, message: String, show_next: bool) -> void:
-	if level_end_panel == null:
-		status_label.text = title
-		status_label.visible = true
-		return
-	end_title_label.text = title
-	end_message_label.text = message
-	next_level_button.visible = show_next
-	level_end_panel.visible = true
+    if level_end_panel == null:
+        status_label.text = title
+        status_label.visible = true
+        return
+    end_title_label.text = title
+    end_message_label.text = message
+    next_level_button.visible = show_next
+    level_end_panel.visible = true
 
 
 ## Callbacks of the interactive level end panel
 func _on_next_level_button_pressed() -> void:
-	var next_num: int = _get_current_level_num() + 1
-	var next_path: String = NEXT_LEVEL_SCENE_TEMPLATE % next_num
-	if next_num <= FINAL_LEVEL_NUMBER and ResourceLoader.exists(next_path):
-		get_tree().change_scene_to_file(next_path)
-	else:
-		_go_to_map()
+    var next_num: int = _get_current_level_num() + 1
+    var next_path: String = NEXT_LEVEL_SCENE_TEMPLATE % next_num
+    if next_num <= FINAL_LEVEL_NUMBER and ResourceLoader.exists(next_path):
+        get_tree().change_scene_to_file(next_path)
+    else:
+        _go_to_map()
 
 
 func _on_back_to_map_button_pressed() -> void:
-	get_tree().paused = false
-	_go_to_map()
+    get_tree().paused = false
+    _go_to_map()
 
 
 func _on_retry_button_pressed() -> void:
-	get_tree().paused = false
-	get_tree().reload_current_scene()
+    get_tree().paused = false
+    get_tree().reload_current_scene()
 
 
 func _go_to_map() -> void:
-	get_tree().change_scene_to_file(level_select_scene)
+    get_tree().change_scene_to_file(level_select_scene)

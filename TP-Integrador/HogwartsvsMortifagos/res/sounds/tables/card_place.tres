@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SoundTable" format=3 uid="uid://b24vqyt4lrrgp"]
+
+[ext_resource type="Script" uid="uid://doi3h1yd1if23" path="res://res/sounds/sound_table.gd" id="1_jysis"]
+
+[resource]
+script = ExtResource("1_jysis")
+name = "card_place"
+variants = {
+"broom": "res://res/sounds/cards/broom_place.ogg",
+"mage": "res://res/sounds/cards/mage_place.ogg",
+"main": "res://res/sounds/cards/main_place.ogg",
+"shield": "res://res/sounds/cards/shield_place.ogg"
+}
+metadata/_custom_type_script = "uid://doi3h1yd1if23"

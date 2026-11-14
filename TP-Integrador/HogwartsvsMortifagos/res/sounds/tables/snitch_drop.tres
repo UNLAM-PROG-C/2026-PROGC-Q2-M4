@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SoundTable" format=3 uid="uid://cdxanylvo38f3"]
+
+[ext_resource type="Script" uid="uid://doi3h1yd1if23" path="res://res/sounds/sound_table.gd" id="1_4olwm"]
+
+[resource]
+script = ExtResource("1_4olwm")
+name = "snitch_drop"
+variants = {
+"main": "res://res/sounds/events/snitch_drop.ogg"
+}
+metadata/_custom_type_script = "uid://doi3h1yd1if23"

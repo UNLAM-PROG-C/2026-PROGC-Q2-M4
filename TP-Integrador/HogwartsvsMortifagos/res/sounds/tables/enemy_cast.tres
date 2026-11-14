@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SoundTable" format=3 uid="uid://bsmevsbiyaark"]
+
+[ext_resource type="Script" uid="uid://doi3h1yd1if23" path="res://res/sounds/sound_table.gd" id="1_21ici"]
+
+[resource]
+script = ExtResource("1_21ici")
+name = "enemy_cast"
+variants = {
+"main": "res://res/sounds/events/enemy_cast.ogg"
+}
+metadata/_custom_type_script = "uid://doi3h1yd1if23"

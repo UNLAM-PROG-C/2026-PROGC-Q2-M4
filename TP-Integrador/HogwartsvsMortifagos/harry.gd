@@ -11,12 +11,20 @@ extends Ally
 
 
 func _ready() -> void:
-	shoot_timer.wait_time = shot_interval
-	shoot_timer.start()
+    shoot_timer.wait_time = shot_interval
+    shoot_timer.start()
 
 
 ## ShootTimer callback. Shoots only if there is an enemy in the same lane.
 func _on_shoot_timer_timeout() -> void:
-	if not _has_enemy_in_lane():
-		return
-	acquire_pooled_projectile(projectile_pool, shoot_point.global_position, ProjectilePool.DEFAULT_PROJECTILE_DAMAGE, false, null)
+    if not _has_enemy_in_lane():
+        return
+    acquire_pooled_projectile(projectile_pool, shoot_point.global_position, ProjectilePool.DEFAULT_PROJECTILE_DAMAGE, false, null)
+    _play_card_action()
+
+
+func _play_card_action() -> void:
+    var game_manager := get_tree().root.get_node_or_null("GameManager")
+    if game_manager != null and game_manager.sound_service != null:
+        var sound_variant := "mage"
+        game_manager.sound_service.play("card_action", sound_variant)

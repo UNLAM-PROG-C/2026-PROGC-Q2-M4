@@ -9,28 +9,28 @@ const SHADOW_VFRAMES: int = 1
 
 
 func _ready() -> void:
-	speed = SHADOW_SPEED
-	max_health = SHADOW_MAX_HEALTH
-	damage_per_attack = SHADOW_DAMAGE_PER_ATTACK
-	_health = max_health
-	_init_sprite()
-	_setup_shadow_sprite()
-	_init_slow_timer()
-	_init_animation_timer()
-	update_row_z_index()
+  speed = SHADOW_SPEED
+  max_health = SHADOW_MAX_HEALTH
+  damage_per_attack = SHADOW_DAMAGE_PER_ATTACK
+  _health = max_health
+  _init_sprite()
+  _setup_shadow_sprite()
+  _init_slow_timer()
+  _init_animation_timer()
+  update_row_z_index()
 
 
 func _setup_shadow_sprite() -> void:
-	if sprite != null:
-		sprite.texture = walk_texture
-		sprite.hframes = SHADOW_HFRAMES
-		sprite.vframes = SHADOW_VFRAMES
-		sprite.frame = 0
+  if sprite != null:
+    sprite.texture = walk_texture
+    sprite.hframes = SHADOW_HFRAMES
+    sprite.vframes = SHADOW_VFRAMES
+    sprite.frame = 0
 
 
 func _on_animation_timer_timeout() -> void:
-	super._on_animation_timer_timeout()
+  super._on_animation_timer_timeout()
 
 
 func _update_animation_texture() -> void:
-	pass
+  pass

@@ -19,47 +19,55 @@ var _shots_remaining: int = 0
 
 
 func _ready() -> void:
-	shoot_timer.one_shot = true
-	burst_timer.one_shot = false
-	burst_timer.wait_time = burst_interval
-	shoot_timer.start(shot_interval)
+    shoot_timer.one_shot = true
+    burst_timer.one_shot = false
+    burst_timer.wait_time = burst_interval
+    shoot_timer.start(shot_interval)
 
 
 func _on_shoot_timer_timeout() -> void:
-	if not _has_enemy_in_lane():
-		shoot_timer.start(shot_interval)
-		return
-	_start_burst()
+    if not _has_enemy_in_lane():
+        shoot_timer.start(shot_interval)
+        return
+    _start_burst()
 
 
 func _start_burst() -> void:
-	_shots_remaining = burst_count
-	_fire_burst_shot()
-	burst_timer.start(burst_interval)
+    _shots_remaining = burst_count
+    _fire_burst_shot()
+    burst_timer.start(burst_interval)
 
 
 func _on_burst_timer_timeout() -> void:
-	if _shots_remaining <= 0:
-		_finish_burst()
-		return
-	_fire_burst_shot()
-	if _shots_remaining <= 0:
-		_finish_burst()
+    if _shots_remaining <= 0:
+        _finish_burst()
+        return
+    _fire_burst_shot()
+    if _shots_remaining <= 0:
+        _finish_burst()
 
 
 func _finish_burst() -> void:
-	burst_timer.stop()
-	shoot_timer.start(shot_interval)
+    burst_timer.stop()
+    shoot_timer.start(shot_interval)
 
 
 func _fire_burst_shot() -> void:
-	_shots_remaining -= 1
-	acquire_pooled_projectile(projectile_pool, shoot_point.global_position, ProjectilePool.DEFAULT_PROJECTILE_DAMAGE, false, null)
+    _shots_remaining -= 1
+    acquire_pooled_projectile(projectile_pool, shoot_point.global_position, ProjectilePool.DEFAULT_PROJECTILE_DAMAGE, false, null)
+    _play_card_action()
+
+
+func _play_card_action() -> void:
+    var game_manager := get_tree().root.get_node_or_null("GameManager")
+    if game_manager != null and game_manager.sound_service != null:
+        var variant = "mage"
+        game_manager.sound_service.play("card_action", variant)
 
 
 func _exit_tree() -> void:
-	_shots_remaining = 0
-	if is_instance_valid(burst_timer):
-		burst_timer.stop()
-	if is_instance_valid(shoot_timer):
-		shoot_timer.stop()
+    _shots_remaining = 0
+    if is_instance_valid(burst_timer):
+        burst_timer.stop()
+    if is_instance_valid(shoot_timer):
+        shoot_timer.stop()

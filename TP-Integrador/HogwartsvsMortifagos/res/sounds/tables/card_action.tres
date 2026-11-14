@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SoundTable" format=3 uid="uid://deh6wrbq37a4w"]
+
+[ext_resource type="Script" uid="uid://doi3h1yd1if23" path="res://res/sounds/sound_table.gd" id="1_etgsg"]
+
+[resource]
+script = ExtResource("1_etgsg")
+name = "card_action"
+variants = {
+"broom": "res://res/sounds/cards/broom_action.ogg",
+"mage": "res://res/sounds/cards/mage_action.ogg",
+"shield": "res://res/sounds/cards/shield_action.ogg"
+}
+metadata/_custom_type_script = "uid://doi3h1yd1if23"
