@@ -92,7 +92,7 @@ func _on_area_entered(area: Area2D) -> void:
 	_has_hit = true
 	_spawn_impact_explosion()
 	enemy.take_damage(damage)
-	if slows and enemy.has_method("apply_slow"):
+	if slows:
 		enemy.apply_slow(slow_factor, slow_duration)
 	_return_to_pool()
 

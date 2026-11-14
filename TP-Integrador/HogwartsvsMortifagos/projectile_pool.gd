@@ -26,15 +26,22 @@ func _add_projectiles(amount: int) -> void:
 		return
 
 	for _index: int in range(amount):
-		var projectile: Projectile = projectile_scene.instantiate() as Projectile
-		if projectile == null:
-			push_error("ProjectilePool could not instantiate a Projectile.")
-			continue
-		add_child(projectile)
-		projectile.returned_to_pool.connect(_on_projectile_returned)
-		projectile.deactivate()
-		available_projectiles.append(projectile)
+		var projectile: Projectile = _create_projectile()
+		if projectile != null:
+			available_projectiles.append(projectile)
 	_emit_stats()
+
+
+## Instantiates one inactive projectile wired to return to this pool.
+func _create_projectile() -> Projectile:
+	var projectile: Projectile = projectile_scene.instantiate() as Projectile
+	if projectile == null:
+		push_error("ProjectilePool could not instantiate a Projectile.")
+		return null
+	add_child(projectile)
+	projectile.returned_to_pool.connect(_on_projectile_returned)
+	projectile.deactivate()
+	return projectile
 
 
 func acquire_projectile(spawn_position: Vector2, custom_damage: float = DEFAULT_PROJECTILE_DAMAGE, slows: bool = false, custom_texture: Texture2D = null) -> Projectile:

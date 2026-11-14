@@ -10,7 +10,6 @@ const DEFAULT_BURST_COUNT: int = 4
 @export var shot_interval: float = DEFAULT_SHOT_INTERVAL
 @export var burst_interval: float = DEFAULT_BURST_INTERVAL
 @export var burst_count: int = DEFAULT_BURST_COUNT
-@export var projectile_pool: ProjectilePool
 
 var _shots_remaining: int = 0
 

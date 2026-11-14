@@ -85,7 +85,7 @@ func _on_animation_timer_timeout() -> void:
 
 
 func _deal_stopped_melee_damage() -> void:
-	if is_instance_valid(_target_ally) and _target_ally.has_method(&"take_damage"):
+	if is_instance_valid(_target_ally):
 		_target_ally.take_damage(damage_per_attack)
 
 

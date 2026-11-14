@@ -9,6 +9,9 @@ signal defeated(entity: Node2D)
 
 ## Total health.
 @export var health: float = 100.0
+## Shared projectile pool, injected by the level when the ally is placed.
+## Only shooters use it; the others ignore it.
+var projectile_pool: ProjectilePool = null
 
 @onready var damage_flash: DamageFlash = $DamageFlash
 

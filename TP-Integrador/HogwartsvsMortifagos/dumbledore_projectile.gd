@@ -97,8 +97,9 @@ func _try_damage_enemy(target: Node, hit_enemies: Dictionary) -> void:
 	if hit_enemies.has(target_id):
 		return
 	hit_enemies[target_id] = true
-	if target.has_method(&"take_damage"):
-		target.call(&"take_damage", splash_damage)
+	var enemy: Enemy = target as Enemy
+	if enemy != null:
+		enemy.take_damage(splash_damage)
 
 
 func _is_inside_splash_box(node: Node2D) -> bool:

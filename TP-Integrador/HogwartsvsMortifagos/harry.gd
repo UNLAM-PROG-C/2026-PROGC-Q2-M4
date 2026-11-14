@@ -5,8 +5,6 @@ extends Ally
 
 ## Seconds between shots.
 @export var shot_interval: float = 1.5
-## Pool that provides reusable projectiles for this ally.
-@export var projectile_pool: ProjectilePool
 
 @onready var shoot_timer: Timer = $ShootTimer
 @onready var shoot_point: Marker2D = $ShootPoint

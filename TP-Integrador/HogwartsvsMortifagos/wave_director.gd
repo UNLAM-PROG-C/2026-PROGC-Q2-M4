@@ -7,11 +7,6 @@ extends Node
 ## it later. Workers only read their own copy of the board and never touch the
 ## scene. The task queue they share with the main thread lives in WaveMonitor.
 
-const INTERMEDIATE_MIN_COUNT: int = 10
-const INTERMEDIATE_MAX_COUNT: int = 20
-const FINAL_MIN_COUNT: int = 25
-const FINAL_BONUS_MIN: int = 5
-const FINAL_BONUS_MAX: int = 10
 ## Defense value at which the intermediate wave reaches its maximum size.
 const DEFENSE_SCALE: float = 1000.0
 const FIRST_REQUEST_ID: int = 1
@@ -73,7 +68,7 @@ func _run_task(task: WaveTask, worker_index: int, rng: RandomNumberGenerator) ->
 		return
 	var result: WaveResult = _build_result(task.snapshot, task.request_id, task.is_final, rng)
 	result.worker_index = worker_index
-	if task.future.complete(result):
+	if task.future.complete(result) and task.snapshot.verbose_logs:
 		_log_result(result)
 
 func _cancel_tasks(tasks: Array[WaveTask]) -> void:

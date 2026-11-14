@@ -20,10 +20,11 @@ const INITIAL_SCALE: Vector2 = Vector2(0.08, 0.08)
 const OVERLAY_DIM_COLOR: Color = Color(0.0, 0.0, 0.0, 0.6)
 const OVERLAY_TRANSPARENT_COLOR: Color = Color(0.0, 0.0, 0.0, 0.0)
 
-const ZOOM_IN_DURATION: float = 2.0
-const SWEEP_DURATION: float = 2.5
-const HOLD_DURATION: float = 2.0
-const FADE_OUT_DURATION: float = 0.6
+## Total about 3.4 s, so the fight is not interrupted for long.
+const ZOOM_IN_DURATION: float = 1.0
+const SWEEP_DURATION: float = 1.2
+const HOLD_DURATION: float = 0.8
+const FADE_OUT_DURATION: float = 0.4
 const SKULL_FADE_IN_RATIO: float = 0.4
 
 @onready var dark_overlay: ColorRect = $DarkOverlay

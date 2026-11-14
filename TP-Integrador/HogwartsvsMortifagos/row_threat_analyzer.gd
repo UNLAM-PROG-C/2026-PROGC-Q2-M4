@@ -6,6 +6,8 @@ extends RefCounted
 ## (fork) and waits for all of them (join) before building the plan. The
 ## result is one spawn weight per row: weak rows get more enemies.
 ##
+## Rows are logged only when the snapshot asks for it (debug mode).
+##
 ## The analyzer keeps no state of its own, so both wave workers can share one
 ## instance safely.
 
@@ -30,7 +32,8 @@ func analyze(snapshot: BoardSnapshot) -> Array[float]:
 	)
 	WorkerThreadPool.wait_for_group_task_completion(task_id)
 	var weights: Array[float] = _normalize(rows)
-	_log_rows(rows, weights)
+	if snapshot.verbose_logs:
+		_log_rows(rows, weights)
 	return weights
 
 ## Pool thread: scores one row. It reads and writes only rows[index].

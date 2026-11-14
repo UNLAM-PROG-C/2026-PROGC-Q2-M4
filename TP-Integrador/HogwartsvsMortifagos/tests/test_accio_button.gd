@@ -1,13 +1,10 @@
 extends SceneTree
 
 const EXIT_OK: int = 0
-const EXIT_ERROR: int = 1
-
-const PARCHMENT_NORMAL: Color = Color(0.894118, 0.803922, 0.623529, 1.0)
-const BORDER_COLOR: Color = Color(0.235294, 0.141176, 0.0823529, 1.0)
-const ACTIVE_COLOR: Color = Color(1.0, 0.4, 0.4)
-
-const AccioBtnScript = preload("res://accio_button.gd")
+const PULSE_WAIT: float = 0.4
+const LEVEL_PATHS: Array[String] = ["res://level_4.tscn", "res://level_6.tscn", "res://level_9.tscn", "res://level_10.tscn"]
+const SCREEN_HEIGHT: float = 1080.0
+const LAYOUT_FRAMES: int = 3
 
 
 func _initialize() -> void:
@@ -16,91 +13,81 @@ func _initialize() -> void:
 
 
 func _run_all_tests() -> void:
-	await _test_accio_button_standalone_visuals()
-	await _test_accio_button_state_toggle()
-	await _test_level_4_integration()
-	await _test_level_10_integration()
+	await _test_standalone_visuals()
+	await _test_state_toggle()
+	await _test_glow_pulses()
+	var lefts: Array[float] = []
+	for path: String in LEVEL_PATHS:
+		lefts.append(await _test_sits_after_card_bar(path))
+	assert(lefts.min() == lefts.max(), "AccioButton is at the same right-end spot in every level")
 	print("--- All Accio Button Tests Passed Successfully! ---")
 	quit(EXIT_OK)
 
 
-func _test_accio_button_standalone_visuals() -> void:
-	var btn: AccioButton = AccioButton.new()
-	root.add_child(btn)
-	await process_frame
-	assert(not btn.flat, "AccioButton must not be flat")
-	assert(btn.expand_icon, "AccioButton must expand icon")
-	assert(btn.icon != null, "AccioButton must have elder wand icon")
+func _test_standalone_visuals() -> void:
+	var btn: AccioButton = await _add_button()
+	assert(not btn.flat and btn.expand_icon, "AccioButton is a framed button with an expanded icon")
+	assert(btn.icon == AccioButton.WAND_TEXTURE, "AccioButton shows the Elder Wand")
+	assert(btn.text == AccioButton.LABEL_TEXT, "AccioButton shows the ACCIO label")
+	assert(btn.tooltip_text == AccioButton.TOOLTIP_TEXT_CONTENT, "AccioButton explains how to use it")
 	var normal_box: StyleBoxFlat = btn.get_theme_stylebox("normal") as StyleBoxFlat
-	assert(normal_box != null, "Must have normal StyleBoxFlat")
-	assert(normal_box.bg_color.is_equal_approx(PARCHMENT_NORMAL), "Normal bg must match pause parchment")
-	assert(normal_box.border_color.is_equal_approx(BORDER_COLOR), "Border color must match pause button")
-	assert(normal_box.border_width_left == 4, "Border width must be 4px")
-	assert(normal_box.corner_radius_top_left == 12, "Corner radius must be 12px")
-	assert(normal_box.shadow_size == 6, "Normal shadow size must be 6px")
-	_test_pressed_and_hover_styles(btn)
+	assert(normal_box.bg_color.is_equal_approx(AccioButton.PARCHMENT_BG_NORMAL), "Idle background is parchment")
+	assert(normal_box.border_color.is_equal_approx(AccioButton.PARCHMENT_FRAME), "Idle frame is brown")
+	assert(btn.get_theme_stylebox("focus") is StyleBoxEmpty, "No focus frame")
 	btn.free()
 
 
-func _test_pressed_and_hover_styles(btn: AccioButton) -> void:
-	var pressed_box: StyleBoxFlat = btn.get_theme_stylebox("pressed") as StyleBoxFlat
-	assert(pressed_box != null, "Must have pressed StyleBoxFlat")
-	assert(pressed_box.shadow_size == 2, "Pressed shadow size must be 2px")
-	var hover_box: StyleBoxFlat = btn.get_theme_stylebox("hover") as StyleBoxFlat
-	assert(hover_box != null, "Must have hover StyleBoxFlat")
-	assert(hover_box.shadow_size == 8, "Hover shadow size must be 8px")
-	var focus_box: StyleBox = btn.get_theme_stylebox("focus")
-	assert(focus_box is StyleBoxEmpty, "Focus style must be StyleBoxEmpty")
+func _test_state_toggle() -> void:
+	var btn: AccioButton = await _add_button()
+	assert(not btn.is_active(), "AccioButton starts inactive")
+	btn.set_active(true)
+	var active_box: StyleBoxFlat = btn.get_theme_stylebox("normal") as StyleBoxFlat
+	assert(btn.is_active() and active_box.bg_color.is_equal_approx(AccioButton.PARCHMENT_BG_ACTIVE), "Active turns golden")
+	assert((btn.get_theme_stylebox("normal") as StyleBoxFlat).border_color.is_equal_approx(AccioButton.ACTIVE_FRAME), "Active frame is gold")
+	btn.set_active(false)
+	var idle_box: StyleBoxFlat = btn.get_theme_stylebox("normal") as StyleBoxFlat
+	assert(idle_box.bg_color.is_equal_approx(AccioButton.PARCHMENT_BG_NORMAL), "Inactive goes back to parchment")
+	btn.free()
 
 
-func _test_accio_button_state_toggle() -> void:
+func _test_glow_pulses() -> void:
+	var btn: AccioButton = await _add_button()
+	var idle_box: StyleBoxFlat = btn.get_theme_stylebox("normal") as StyleBoxFlat
+	assert(idle_box.shadow_color.is_equal_approx(AccioButton.SOFT_SHADOW), "Idle only has a soft shadow")
+	btn.set_active(true)
+	var box: StyleBoxFlat = btn.get_theme_stylebox("normal") as StyleBoxFlat
+	var first: int = box.shadow_size
+	await create_timer(PULSE_WAIT).timeout
+	assert(box.shadow_size != first, "The glow pulses while active")
+	btn.queue_free()
+	await process_frame
+
+
+func _test_sits_after_card_bar(path: String) -> float:
+	var level: Level = (load(path) as PackedScene).instantiate() as Level
+	root.add_child(level)
+	for _i: int in range(LAYOUT_FRAMES):
+		await process_frame
+	var btn: AccioButton = level.hud.get_node_or_null("AccioButton") as AccioButton
+	assert(btn.visible, "%s: AccioButton is visible" % path)
+	var rect: Rect2 = btn.get_global_rect()
+	_assert_layout(level, rect, path)
+	level.queue_free()
+	await process_frame
+	return rect.position.x
+
+
+func _assert_layout(level: Level, rect: Rect2, path: String) -> void:
+	var bar: Rect2 = level.call("_card_bar_rect")
+	assert(rect.position.x >= bar.end.x, "%s: AccioButton sits after the last card" % path)
+	assert(is_equal_approx(rect.get_center().y, bar.get_center().y), "%s: AccioButton is centred on the card bar" % path)
+	assert(rect.size.y < bar.size.y, "%s: AccioButton is smaller than a card" % path)
+	assert(rect.end.x <= level.call("_accio_right_limit"), "%s: AccioButton ends before the pause button" % path)
+	assert(rect.end.y <= SCREEN_HEIGHT, "%s: AccioButton fits on screen" % path)
+
+
+func _add_button() -> AccioButton:
 	var btn: AccioButton = AccioButton.new()
 	root.add_child(btn)
 	await process_frame
-	assert(not btn.is_active(), "AccioButton must start inactive")
-	btn.set_active(true)
-	assert(btn.is_active(), "AccioButton must be active")
-	assert(btn.modulate.is_equal_approx(ACTIVE_COLOR), "Must modulate active color")
-	btn.set_active(false)
-	assert(not btn.is_active(), "AccioButton must be inactive")
-	assert(btn.modulate.is_equal_approx(Color.WHITE), "Must modulate white when inactive")
-	btn.free()
-
-
-func _test_level_4_integration() -> void:
-	var scene: PackedScene = load("res://level_4.tscn") as PackedScene
-	var level: Node2D = scene.instantiate() as Node2D
-	root.add_child(level)
-	for i in range(3):
-		await process_frame
-	var btn: AccioButton = level.get_node_or_null("HUD/AccioButton") as AccioButton
-	assert(btn != null, "Level 4 must have AccioButton in HUD")
-	assert(btn.visible, "AccioButton must be visible in Level 4")
-	assert(btn.offset_bottom <= 1060.0, "AccioButton must fit inside 1080p screen")
-	assert(btn.offset_right <= 1900.0, "AccioButton must fit horizontally")
-	_capture_screenshot()
-	level.queue_free()
-
-
-func _test_level_10_integration() -> void:
-	var scene: PackedScene = load("res://level_10.tscn") as PackedScene
-	var level: Node2D = scene.instantiate() as Node2D
-	root.add_child(level)
-	for i in range(3):
-		await process_frame
-	var btn: AccioButton = level.get_node_or_null("HUD/AccioButton") as AccioButton
-	assert(btn != null, "Level 10 must have AccioButton in HUD")
-	assert(btn.visible, "AccioButton must be visible in Level 10")
-	assert(btn.offset_bottom <= 1060.0, "AccioButton must fit inside 1080p screen")
-	level.queue_free()
-
-
-func _capture_screenshot() -> void:
-	if DisplayServer.get_name() == "headless":
-		return
-	var tex: ViewportTexture = root.get_viewport().get_texture()
-	if tex == null:
-		return
-	var img: Image = tex.get_image()
-	if img != null:
-		img.save_png("C:/Users/Mi Equipo/.gemini/antigravity-ide/brain/0f0023fa-e526-40da-ad19-775df2c3eadf/accio_button_preview.png")
+	return btn

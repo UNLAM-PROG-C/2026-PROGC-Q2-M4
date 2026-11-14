@@ -45,19 +45,18 @@ func _assert_distribution(counts: Dictionary) -> void:
   assert(p1 >= 0.62 and p1 <= 0.68, "Single spawn chance ~ 0.65: got " + str(p1))
 
 
+## SceneTreeTimers advance frame by frame, so a 10 ms wait cannot be measured
+## reliably with the wall clock. The test checks the delay the level chooses
+## for each spawn of a multi spawn instead.
 func _test_multi_spawn_delay_values() -> void:
   var scene: PackedScene = load(LEVEL_1_SCENE_PATH) as PackedScene
   var level_node: Level = scene.instantiate() as Level
   root.add_child(level_node)
   await process_frame
-  var t0: float = Time.get_ticks_msec()
-  await level_node.call(&"_wait_for_multi_spawn_delay", 1)
-  var elapsed_1: float = Time.get_ticks_msec() - t0
-  assert(elapsed_1 >= 8.0, "Second spawn delayed by ~10ms: got " + str(elapsed_1))
-  var t1: float = Time.get_ticks_msec()
-  await level_node.call(&"_wait_for_multi_spawn_delay", 2)
-  var elapsed_2: float = Time.get_ticks_msec() - t1
-  assert(elapsed_2 >= 25.0, "Third spawn delayed by ~30ms: got " + str(elapsed_2))
+  assert(level_node._multi_spawn_delay(0) == 0.0, "The first spawn is immediate")
+  assert(level_node._multi_spawn_delay(1) == Level.SECOND_ENEMY_SPAWN_DELAY, "Second spawn waits 10 ms")
+  assert(level_node._multi_spawn_delay(2) == Level.THIRD_ENEMY_SPAWN_DELAY, "Third spawn waits 30 ms")
+  assert(Level.SECOND_ENEMY_SPAWN_DELAY < Level.THIRD_ENEMY_SPAWN_DELAY, "Later spawns wait longer")
   level_node.queue_free()
   await process_frame
 

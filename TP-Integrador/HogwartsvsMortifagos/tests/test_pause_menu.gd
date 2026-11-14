@@ -36,13 +36,13 @@ func _test_initial_state() -> void:
 
 func _assert_menu_buttons_text(menu: PauseMenu) -> void:
   assert(menu.pause_button != null, "Pause button must exist")
-  assert(menu.pause_button.text == "| |", "Pause button must display | | symbol")
+  assert(menu.pause_button.text == PauseMenu.PAUSE_SYMBOL_TEXT, "Pause button must display the pause symbol")
   assert(menu.resume_button != null, "Resume button must exist")
-  assert(menu.resume_button.text == "Reanudar", "Resume button text mismatch")
+  assert(menu.resume_button.text == PauseMenu.RESUME_BUTTON_TEXT, "Resume button text mismatch")
   assert(menu.retry_button != null, "Retry button must exist")
-  assert(menu.retry_button.text == "Reiniciar nivel", "Retry button text mismatch")
+  assert(menu.retry_button.text == PauseMenu.RETRY_BUTTON_TEXT, "Retry button text mismatch")
   assert(menu.back_to_map_button != null, "Back to map button must exist")
-  assert(menu.back_to_map_button.text == "Volver al Mapa", "Back button text mismatch")
+  assert(menu.back_to_map_button.text == PauseMenu.BACK_TO_MAP_BUTTON_TEXT, "Back button text mismatch")
 
 
 func _assert_menu_initial_visibility(menu: PauseMenu) -> void:

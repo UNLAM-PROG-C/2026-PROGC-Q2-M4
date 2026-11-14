@@ -9,8 +9,6 @@ const BASE_DAMAGE: float = 20.0
 @export var shot_interval: float = 1.5
 ## Damage dealt by each ice projectile.
 @export var damage: float = BASE_DAMAGE
-## Shared projectile pool injected by Level.
-@export var projectile_pool: ProjectilePool
 
 @onready var shoot_timer: Timer = $ShootTimer
 @onready var shoot_point: Marker2D = $ShootPoint

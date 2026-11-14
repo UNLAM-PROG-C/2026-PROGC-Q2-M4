@@ -7,8 +7,6 @@ const RON_SHOT_TEXTURE: Texture2D = preload("res://Images/ron_shot.png")
 @export var shot_interval: float = 3.0
 ## Damage dealt to the enemy hit by Ron's projectile (3x base damage).
 @export var damage: float = 60.0
-## Shared projectile pool injected by Level.
-@export var projectile_pool: ProjectilePool
 
 @onready var shoot_timer: Timer = $ShootTimer
 @onready var shoot_point: Marker2D = $ShootPoint

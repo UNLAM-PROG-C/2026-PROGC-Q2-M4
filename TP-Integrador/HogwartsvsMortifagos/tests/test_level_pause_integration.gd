@@ -36,7 +36,7 @@ func _test_level_1_pause_integration() -> void:
 func _assert_level_pause_button(menu: PauseMenu) -> void:
   assert(menu != null, "Level 1 must instantiate PauseMenu in HUD")
   assert(menu.pause_button != null, "Pause button must exist in HUD")
-  assert(menu.pause_button.text == "| |", "Pause button symbol must be | |")
+  assert(menu.pause_button.text == PauseMenu.PAUSE_SYMBOL_TEXT, "Pause button must show the pause symbol")
   assert(menu.pause_button.visible, "Pause button must be visible during gameplay")
   assert(not menu.is_paused(), "Level 1 must start unpaused")
   assert(not paused, "SceneTree must not be paused initially")

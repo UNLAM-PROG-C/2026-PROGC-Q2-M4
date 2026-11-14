@@ -15,6 +15,7 @@ const VOLUME_LABEL_TEXT: String = "Volumen de fondo"
 const RESUME_BUTTON_TEXT: String = "Reanudar"
 const RETRY_BUTTON_TEXT: String = "Reiniciar nivel"
 const BACK_TO_MAP_BUTTON_TEXT: String = "Volver al Mapa"
+const GAME_MANAGER_NODE_NAME: String = "GameManager"
 
 @onready var pause_button: Button = $PauseButton
 @onready var modal_overlay: Control = $ModalOverlay
@@ -116,19 +117,19 @@ func resume() -> void:
 func _sync_volume_slider() -> void:
 	if volume_slider == null:
 		return
-	var manager: Node = _get_game_manager()
-	if manager != null and manager.has_method("get_music_volume"):
-		volume_slider.value = manager.call("get_music_volume")
+	var session: GameSession = _get_game_session()
+	if session != null:
+		volume_slider.value = session.get_music_volume()
 
 
-func _get_game_manager() -> Node:
-	return get_tree().root.get_node_or_null("GameManager")
+func _get_game_session() -> GameSession:
+	return get_tree().root.get_node_or_null(GAME_MANAGER_NODE_NAME) as GameSession
 
 
 func _on_volume_slider_value_changed(value: float) -> void:
-	var manager: Node = _get_game_manager()
-	if manager != null and manager.has_method("set_music_volume"):
-		manager.call("set_music_volume", value)
+	var session: GameSession = _get_game_session()
+	if session != null:
+		session.set_music_volume(value)
 
 
 func _on_pause_button_pressed() -> void:

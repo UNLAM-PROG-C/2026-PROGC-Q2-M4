@@ -34,7 +34,8 @@ const DEMENTOR_X: float = 160.0
 ## Horizontal range and starting height of Snitches falling from the sky.
 const SKY_SNITCH_MIN_X: float = 300.0
 const SKY_SNITCH_MAX_X: float = 1150.0
-const SKY_SNITCH_Y: float = -20.0
+## Sky snitches appear just below the card bar instead of above the screen.
+const SKY_SNITCH_Y: float = Snitch.MIN_VISIBLE_Y
 const DEFAULT_SNITCH_ROW: int = 4
 const FIRST_GRID_ROW_INDEX: int = 2
 const GRID_SAMPLE_COLUMN: int = 2
@@ -51,10 +52,12 @@ const MULTI_SPAWN_TRIPLE_CHANCE: float = 0.10
 const MULTI_SPAWN_DOUBLE_CHANCE: float = 0.25
 const SECOND_ENEMY_SPAWN_DELAY: float = 0.010
 const THIRD_ENEMY_SPAWN_DELAY: float = 0.030
+const SECOND_SPAWN_INDEX: int = 1
+const THIRD_SPAWN_INDEX: int = 2
+const NO_SPAWN_DELAY: float = 0.0
 const WAVE_PROGRESS_BAR_SCENE: PackedScene = preload("res://wave_progress_bar.tscn")
 const PAUSE_MENU_SCENE: PackedScene = preload("res://pause_menu.tscn")
 const SNITCH_COUNTER_SCENE: PackedScene = preload("res://snitch_counter.tscn")
-const SnitchCounter = preload("res://snitch_counter.gd")
 const WAVE_METER_2_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_2_waves.png")
 const WAVE_METER_3_WAVES_TEXTURE: Texture2D = preload("res://Images/wave_meter_3_waves.png")
 const WAVE_CHARGE_1_WAVE_TEXTURE: Texture2D = preload("res://Images/wave_charge_1_wave.png")
@@ -98,11 +101,11 @@ const MIN_KILL_BUDGET: int = 1
 ## Level unlocked on the map when this level is won.
 @export var next_level_to_unlock: int = 2
 @export var is_special_level: bool = false
-@export var intermediate_wave_min: int = 10
-@export var intermediate_wave_max: int = 20
-@export var final_wave_min: int = 25
-@export var final_wave_bonus_min: int = 5
-@export var final_wave_bonus_max: int = 10
+@export var intermediate_wave_min: int = WavePlan.INTERMEDIATE_MIN_COUNT
+@export var intermediate_wave_max: int = WavePlan.INTERMEDIATE_MAX_COUNT
+@export var final_wave_min: int = WavePlan.FINAL_MIN_COUNT
+@export var final_wave_bonus_min: int = WavePlan.FINAL_BONUS_MIN
+@export var final_wave_bonus_max: int = WavePlan.FINAL_BONUS_MAX
 ## Kill thresholds per wave.
 @export var wave_kill_thresholds: Array[int] = [15, 15]
 ## Texture for the wave meter hourglass frame.
@@ -319,12 +322,12 @@ func _get_boss_shadow_spawn_row() -> int:
 
 
 func _on_boss_phase_two_started(boss_pos: Vector2) -> void:
-	var cutscene: CanvasLayer = DARK_MARK_CUTSCENE_SCENE.instantiate() as CanvasLayer
+	var cutscene: DarkMarkCutscene = DARK_MARK_CUTSCENE_SCENE.instantiate() as DarkMarkCutscene
 	if _pause_menu != null:
 		_pause_menu.set_enabled(false)
 		cutscene.animation_finished.connect(_on_cutscene_finished)
 	hud.add_child(cutscene)
-	cutscene.call(&"play", boss_pos)
+	cutscene.play(boss_pos)
 
 
 func _on_cutscene_finished() -> void:
@@ -372,13 +375,14 @@ func _create_shadow_sprite(cell: Vector2i) -> Sprite2D:
 func _crush_ally_at_cell(cell: Vector2i) -> void:
 	if not _occupied_cells.has(cell):
 		return
-	var ally: Node2D = _occupied_cells[cell]
+	var ally_node: Node2D = _occupied_cells[cell]
 	_occupied_cells.erase(cell)
-	if is_instance_valid(ally):
-		if ally.has_method("take_damage"):
-			ally.take_damage(CRUSH_DAMAGE)
-		else:
-			ally.queue_free()
+	if not is_instance_valid(ally_node):
+		return
+	if ally_node is Ally:
+		(ally_node as Ally).take_damage(CRUSH_DAMAGE)
+	else:
+		ally_node.queue_free()
 
 
 func _on_boss_shadow_spawn_requested(spawn_pos: Vector2, lane_y: float) -> void:
@@ -451,6 +455,7 @@ func _init_accio_nodes() -> void:
 	_accio_button = hud.get_node_or_null("AccioButton") as AccioButton
 	if _accio_button != null:
 		_accio_button.accio_toggled.connect(_on_accio_toggled)
+		_accio_button.place_on_card_bar(_card_bar_rect(), _accio_right_limit())
 	_accio_cursor = hud.get_node_or_null("AccioCursor") as CanvasItem
 	if _accio_cursor == null and _accio_button != null:
 		var scene: PackedScene = load("res://accio_cursor.tscn") as PackedScene
@@ -475,6 +480,22 @@ func _process(_delta: float) -> void:
 	if not _is_level_over:
 		_poll_wave_future()
 	_update_accio_process()
+
+
+## Screen rectangle covered by all the card buttons of the HUD.
+func _card_bar_rect() -> Rect2:
+	var bar: Rect2 = Rect2()
+	for button: AllyCardButton in _card_buttons():
+		var card_rect: Rect2 = Rect2(button.position, button.size)
+		bar = card_rect if not bar.has_area() else bar.merge(card_rect)
+	return bar
+
+
+## The Accio button must end before the pause button (or the screen edge).
+func _accio_right_limit() -> float:
+	if _pause_menu != null and _pause_menu.pause_button != null:
+		return _pause_menu.pause_button.get_global_rect().position.x
+	return get_viewport_rect().size.x
 
 
 func _update_accio_process() -> void:
@@ -740,16 +761,7 @@ func _finalize_ally_placement(card: AllyCard) -> void:
 
 
 func _init_placed_ally(ally: Ally) -> void:
-	if ally is Harry:
-		(ally as Harry).projectile_pool = projectile_pool
-	elif ally is Hermione:
-		(ally as Hermione).projectile_pool = projectile_pool
-	elif ally is McGonagall:
-		(ally as McGonagall).projectile_pool = projectile_pool
-	elif ally is Ron:
-		(ally as Ron).projectile_pool = projectile_pool
-	elif "projectile_pool" in ally:
-		ally.set("projectile_pool", projectile_pool)
+	ally.projectile_pool = projectile_pool
 	if ally is SnitchBox:
 		(ally as SnitchBox).snitch_dropped.connect(_on_snitch_dropped)
 
@@ -874,13 +886,18 @@ func _spawn_regular_enemies() -> void:
 
 
 func _wait_for_multi_spawn_delay(index: int) -> void:
-	var delay: float = 0.0
-	if index == 1:
-		delay = SECOND_ENEMY_SPAWN_DELAY
-	elif index == 2:
-		delay = THIRD_ENEMY_SPAWN_DELAY
-	if delay > 0.0 and is_inside_tree():
+	var delay: float = _multi_spawn_delay(index)
+	if delay > NO_SPAWN_DELAY and is_inside_tree():
 		await get_tree().create_timer(delay, RUNS_WHILE_PAUSED).timeout
+
+
+## Delay before the spawn at position index of a multi spawn (0 = first).
+func _multi_spawn_delay(index: int) -> float:
+	if index == SECOND_SPAWN_INDEX:
+		return SECOND_ENEMY_SPAWN_DELAY
+	if index == THIRD_SPAWN_INDEX:
+		return THIRD_ENEMY_SPAWN_DELAY
+	return NO_SPAWN_DELAY
 
 
 func _accelerate_spawn_cadence() -> void:
@@ -1046,6 +1063,7 @@ func _fill_snapshot_base(snapshot: BoardSnapshot) -> void:
 	snapshot.active_enemies = _active_enemies
 	snapshot.defense_value = _defense_value()
 	snapshot.is_special_level = is_special_level
+	snapshot.verbose_logs = _is_debug_mode_enabled()
 	snapshot.threshold_index = _current_phase_index
 
 

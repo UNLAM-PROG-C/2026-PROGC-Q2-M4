@@ -24,6 +24,9 @@ const BOX_POP_DURATION: float = 0.25
 const GLOBAL_Y_PROPERTY: NodePath = ^"global_position:y"
 ## Default target Y coordinate for sky fall.
 const DEFAULT_TARGET_Y: float = 576.0
+## Bottom edge of the HUD card bar plus a margin. Snitches never go above it,
+## so they are never hidden behind the cards.
+const MIN_VISIBLE_Y: float = 200.0
 ## Lifetime in seconds while resting on the ground.
 const GROUND_LIFETIME: float = 5.0
 ## Maximum seconds allowed to reach the ground before timing out.
@@ -160,6 +163,7 @@ func _tick_timers(delta: float) -> void:
 func _process_escape(delta: float) -> void:
 	_escape_time_left -= delta
 	position += _escape_direction * escape_speed * delta
+	global_position.y = maxf(global_position.y, MIN_VISIBLE_Y)
 	if _escape_time_left <= 0.0 and zigzag_amplitude > 0.0:
 		_start_x = position.x - _zigzag_offset()
 

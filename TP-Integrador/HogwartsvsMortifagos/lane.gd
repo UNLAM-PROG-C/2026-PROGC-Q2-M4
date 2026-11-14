@@ -12,8 +12,8 @@ static func is_same_lane(a_y: float, b_y: float) -> bool:
 
 
 static func is_enemy_in_lane(enemy: Node2D, lane_y: float) -> bool:
-	if enemy.has_method(&"occupies_lane_y"):
-		return enemy.call(&"occupies_lane_y", lane_y)
+	if enemy is Enemy:
+		return (enemy as Enemy).occupies_lane_y(lane_y)
 	return is_same_lane(enemy.global_position.y, lane_y)
 
 

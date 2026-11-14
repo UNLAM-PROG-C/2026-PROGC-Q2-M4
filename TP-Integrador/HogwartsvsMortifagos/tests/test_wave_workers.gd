@@ -63,10 +63,10 @@ func _snapshot() -> BoardSnapshot:
 	var snapshot: BoardSnapshot = BoardSnapshot.new()
 	snapshot.level_generation = LEVEL_GENERATION
 	snapshot.regular_budget = BUDGET
-	snapshot.intermediate_wave_min = WaveDirector.INTERMEDIATE_MIN_COUNT
-	snapshot.intermediate_wave_max = WaveDirector.INTERMEDIATE_MAX_COUNT
-	snapshot.final_wave_min = WaveDirector.FINAL_MIN_COUNT
-	snapshot.final_wave_bonus_min = WaveDirector.FINAL_BONUS_MIN
-	snapshot.final_wave_bonus_max = WaveDirector.FINAL_BONUS_MAX
+	snapshot.intermediate_wave_min = WavePlan.INTERMEDIATE_MIN_COUNT
+	snapshot.intermediate_wave_max = WavePlan.INTERMEDIATE_MAX_COUNT
+	snapshot.final_wave_min = WavePlan.FINAL_MIN_COUNT
+	snapshot.final_wave_bonus_min = WavePlan.FINAL_BONUS_MIN
+	snapshot.final_wave_bonus_max = WavePlan.FINAL_BONUS_MAX
 	snapshot.row_indices = [ACTIVE_ROW] as Array[int]
 	return snapshot

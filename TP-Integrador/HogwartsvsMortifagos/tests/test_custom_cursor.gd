@@ -3,11 +3,13 @@ extends SceneTree
 const EXIT_OK: int = 0
 const EXIT_ERROR: int = 1
 
-const CustomCursorScript = preload("res://custom_cursor.gd")
 const KEY_TEXTURE_PATH: String = "res://Images/cursor_key.png"
 const WING_TEXTURE_PATH: String = "res://Images/cursor_wing.png"
-const EXPECTED_WING_OFFSET: Vector2 = Vector2(0.0, -44.0)
-const EXPECTED_KEY_OFFSET: Vector2 = Vector2(-34.5, 0.0)
+## Expected values come from the cursor script, so tuning the cursor does not
+## break the test; the test checks that the scene applies them.
+const EXPECTED_WING_OFFSET: Vector2 = CustomCursor.WING_PIVOT_OFFSET
+const EXPECTED_KEY_OFFSET: Vector2 = CustomCursor.KEY_PIVOT_OFFSET
+const EXPECTED_WING_ATTACH_Y: float = CustomCursor.WING_ATTACH_Y
 
 
 func _initialize() -> void:
@@ -43,11 +45,11 @@ func _verify_cursor_children(cursor: CanvasLayer) -> void:
 	assert(key_sprite.texture.resource_path == KEY_TEXTURE_PATH, "Key texture mismatch")
 	assert(left_wing.texture.resource_path == WING_TEXTURE_PATH, "Left wing texture mismatch")
 	assert(right_wing.texture.resource_path == WING_TEXTURE_PATH, "Right wing texture mismatch")
-	assert(key_sprite.offset == EXPECTED_KEY_OFFSET, "Key offset must center horizontally at top")
+	assert(key_sprite.offset == EXPECTED_KEY_OFFSET, "Key offset must match KEY_PIVOT_OFFSET")
 	assert(left_wing.offset == EXPECTED_WING_OFFSET, "Left wing pivot must be at bottom-left")
 	assert(right_wing.offset == EXPECTED_WING_OFFSET, "Right wing pivot must be at bottom-left")
 	assert(left_wing.scale.x == -1.0, "Left wing must be mirrored horizontally")
-	assert(right_wing.position.y == 45.0, "Wings must attach in top third")
+	assert(right_wing.position.y == EXPECTED_WING_ATTACH_Y, "Wings must attach at WING_ATTACH_Y")
 
 
 func _test_flapping_animation_states() -> void:

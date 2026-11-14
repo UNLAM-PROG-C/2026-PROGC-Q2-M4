@@ -10,7 +10,6 @@ const DEFAULT_SAVE_PATH: String = "user://progress.cfg"
 const SAVE_SECTION: String = "progress"
 const UNLOCKED_KEY: String = "max_unlocked_level"
 const REWARDS_KEY: String = "claimed_rewards"
-const CustomCursor = preload("res://custom_cursor.gd")
 const CURSOR_SCENE: PackedScene = preload("res://custom_cursor.tscn")
 const BACKGROUND_MUSIC_PATH: String = "res://music/harry_potter_song.mp3"
 const MUSIC_PLAYER_NODE_NAME: String = "BackgroundMusicPlayer"

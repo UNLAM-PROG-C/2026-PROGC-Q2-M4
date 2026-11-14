@@ -8,6 +8,8 @@ var regular_budget: int = 1
 var active_enemies: int = 0
 var defense_value: float = 0.0
 var is_special_level: bool = false
+## True in debug mode: workers print what they calculate.
+var verbose_logs: bool = false
 var threshold_index: int = 0
 var intermediate_wave_size: int = 10
 var intermediate_wave_min: int = 10
@@ -45,6 +47,7 @@ func _copy_progress_onto(copy: BoardSnapshot) -> void:
 	copy.active_enemies = active_enemies
 	copy.defense_value = defense_value
 	copy.is_special_level = is_special_level
+	copy.verbose_logs = verbose_logs
 	copy.threshold_index = threshold_index
 
 func _copy_wave_params_onto(copy: BoardSnapshot) -> void:

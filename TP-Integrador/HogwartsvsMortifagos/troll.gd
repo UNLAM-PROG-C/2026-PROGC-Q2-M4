@@ -104,7 +104,7 @@ func _on_animation_finished(anim_name: StringName) -> void:
 
 func _execute_instakill_all() -> void:
 	for ally: Ally in _get_allies_in_front():
-		if is_instance_valid(ally) and not ally.is_queued_for_deletion() and ally.has_method(&"take_damage"):
+		if is_instance_valid(ally) and not ally.is_queued_for_deletion():
 			ally.take_damage(damage_instakill)
 
 
