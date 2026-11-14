@@ -1,0 +1,42 @@
+class_name Dumbledore
+extends Ally
+
+## Dumbledore ally: shoots straight-line heavy projectile dealing 3x3 area splash damage.
+
+const DEFAULT_SHOT_INTERVAL: float = 3.0
+
+@export var shot_interval: float = DEFAULT_SHOT_INTERVAL
+@export var projectile_scene: PackedScene = preload("res://dumbledore_projectile.tscn")
+
+@onready var shoot_timer: Timer = $ShootTimer
+@onready var shoot_point: Marker2D = $ShootPoint
+
+
+func _ready() -> void:
+    shoot_timer.wait_time = shot_interval
+    shoot_timer.start()
+
+
+func _on_shoot_timer_timeout() -> void:
+    if not _has_enemy_in_lane():
+        return
+    _shoot()
+
+
+func _shoot() -> void:
+    if projectile_scene == null or get_parent() == null:
+        return
+    var projectile: DumbledoreProjectile = projectile_scene.instantiate() as DumbledoreProjectile
+    if projectile == null:
+        return
+    get_parent().add_child(projectile)
+    projectile.global_position = shoot_point.global_position
+    projectile.update_row_z_index()
+    _play_card_action()
+
+
+func _play_card_action() -> void:
+    var game_manager := get_tree().root.get_node_or_null("GameManager")
+    if game_manager != null and game_manager.sound_service != null:
+        var variant = "mage"
+        game_manager.sound_service.play("card_action", variant)

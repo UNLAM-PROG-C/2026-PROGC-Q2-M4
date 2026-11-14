@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SoundTable" format=3 uid="uid://d6u76jkq4hkb"]
+
+[ext_resource type="Script" uid="uid://doi3h1yd1if23" path="res://res/sounds/sound_table.gd" id="1_h04ms"]
+
+[resource]
+script = ExtResource("1_h04ms")
+name = "card_click"
+variants = {
+"main": "res://res/sounds/events/card_click.ogg"
+}
+metadata/_custom_type_script = "uid://doi3h1yd1if23"

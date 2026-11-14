@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://c1hvnpfntth87"]
+
+[ext_resource type="Script" uid="uid://ouo30h24xwbs" path="res://shadow_enemy.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dqsr3sbxn0m3w" path="res://Images/character_shadow.png" id="2_texture"]
+[ext_resource type="PackedScene" path="res://damage_flash.tscn" id="3_damage_flash"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(81, 151)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
+size = Vector2(95, 151)
+
+[node name="ShadowEnemy" type="Area2D" unique_id=28068509 groups=["enemies"]]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_script")
+speed = 48.0
+walk_texture = ExtResource("2_texture")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2054165171]
+position = Vector2(-12.25, -16.76316)
+scale = Vector2(1.2578948, 1.2578948)
+texture = ExtResource("2_texture")
+hframes = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=175162654]
+position = Vector2(-15.5, -20.5)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=321898988]
+position = Vector2(-20, 0)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1115733479]
+position = Vector2(-20.5, -20.5)
+shape = SubResource("RectangleShape2D_detection")
+
+[node name="AnimationTimer" type="Timer" parent="." unique_id=374851163]
+wait_time = 0.25
+autostart = true
+
+[node name="DamageFlash" parent="." unique_id=957934043 node_paths=PackedStringArray("target") instance=ExtResource("3_damage_flash")]
+target = NodePath("../Sprite2D")
+duration = 0.15
+fade_out = true
+
+[connection signal="area_entered" from="DetectionArea" to="." method="_on_detection_area_area_entered"]
+[connection signal="area_exited" from="DetectionArea" to="." method="_on_detection_area_area_exited"]
+[connection signal="timeout" from="AnimationTimer" to="." method="_on_animation_timer_timeout"]

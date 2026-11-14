@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SoundTable" format=3 uid="uid://cmoirch4dgqgb"]
+
+[ext_resource type="Script" uid="uid://doi3h1yd1if23" path="res://res/sounds/sound_table.gd" id="1_vptiu"]
+
+[resource]
+script = ExtResource("1_vptiu")
+name = "pause"
+variants = {
+"main": "res://res/sounds/events/pause.ogg"
+}
+metadata/_custom_type_script = "uid://doi3h1yd1if23"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SoundTable" format=3 uid="uid://cw8g182rov7mn"]
+
+[ext_resource type="Script" uid="uid://doi3h1yd1if23" path="res://res/sounds/sound_table.gd" id="1_5fsts"]
+
+[resource]
+script = ExtResource("1_5fsts")
+name = "resume"
+variants = {
+"main": "res://res/sounds/events/resume.ogg"
+}
+metadata/_custom_type_script = "uid://doi3h1yd1if23"
