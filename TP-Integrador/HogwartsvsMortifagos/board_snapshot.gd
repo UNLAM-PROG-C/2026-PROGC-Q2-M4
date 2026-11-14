@@ -16,6 +16,9 @@ var final_wave_min: int = 25
 var final_wave_bonus_min: int = 5
 var final_wave_bonus_max: int = 10
 var row_indices: Array[int] = []
+## Per-row data, parallel to row_indices, copied on the main thread.
+var row_ally_health: Array[float] = []
+var row_enemy_count: Array[int] = []
 
 func is_valid() -> bool:
 	return (
@@ -52,3 +55,5 @@ func _copy_wave_params_onto(copy: BoardSnapshot) -> void:
 	copy.final_wave_bonus_min = final_wave_bonus_min
 	copy.final_wave_bonus_max = final_wave_bonus_max
 	copy.row_indices = row_indices.duplicate()
+	copy.row_ally_health = row_ally_health.duplicate()
+	copy.row_enemy_count = row_enemy_count.duplicate()

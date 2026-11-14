@@ -20,6 +20,8 @@ const RESULT_LOG: String = "[WaveDirector] worker %d planned wave %d: %d enemies
 
 var _monitor: WaveMonitor = WaveMonitor.new()
 var _workers: Array[Thread] = []
+## Stateless, so both workers share it.
+var _row_analyzer: RowThreatAnalyzer = RowThreatAnalyzer.new()
 ## Only the main thread touches this counter, so it needs no lock.
 var _next_request_id: int = FIRST_REQUEST_ID
 
@@ -110,6 +112,7 @@ func _create_plan(
 	var plan: WavePlan = WavePlan.new()
 	_fill_plan_identity(plan, snapshot, request_id, is_final)
 	_fill_plan_counts(plan, snapshot, is_final, rng)
+	_fill_plan_rows(plan, snapshot)
 	return plan
 
 func _fill_plan_identity(
@@ -123,7 +126,11 @@ func _fill_plan_identity(
 	plan.wave_number = snapshot.threshold_index + 1
 	plan.is_final = is_final
 	plan.spawn_delay = WavePlan.DEFAULT_SPAWN_DELAY
+
+## Wave worker thread: rows and their spawn weights from the parallel analysis.
+func _fill_plan_rows(plan: WavePlan, snapshot: BoardSnapshot) -> void:
 	plan.row_indices = snapshot.row_indices.duplicate()
+	plan.row_weights = _row_analyzer.analyze(snapshot)
 
 func _fill_plan_counts(
 	plan: WavePlan,

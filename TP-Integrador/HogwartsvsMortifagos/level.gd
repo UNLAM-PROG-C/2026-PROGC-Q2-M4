@@ -5,6 +5,8 @@ const INVALID_WAVE_TRANSITION_MESSAGE: String = "Rejected wave transition from %
 const FALLBACK_REQUEST_ID: int = 1
 ## Longest time the level waits for a running wave calculation when it leaves.
 const WAVE_EXIT_WAIT_MS: int = 100
+const NO_ROW_FOCUS: float = 0.0
+const FULL_ROW_FOCUS: float = 1.0
 const STANDARD_WAVE_RATIO: float = 0.5
 const SPECIAL_FIRST_WAVE_RATIO: float = 0.33
 const SPECIAL_SECOND_WAVE_RATIO: float = 0.66
@@ -83,6 +85,9 @@ const MIN_KILL_BUDGET: int = 1
 @export var active_rows: Array[int] = [4]
 ## Markers where enemies spawn, picked at random.
 @export var spawn_points: Array[NodePath] = []
+## How much the parallel row analysis steers wave enemies toward weak rows:
+## 0 spreads them evenly (as before), 1 follows the analysis fully.
+@export_range(0.0, 1.0) var wave_row_focus: float = NO_ROW_FOCUS
 @export var dementor_row_cells: Array[int] = []
 @export var dementor_cells: Array[Vector2i] = []
 ## Current level number (if 0, inferred from next_level_to_unlock or is_boss_level).
@@ -130,6 +135,8 @@ var _intermediate_wave_size: int = 10
 var _final_wave_active: bool = false
 var _level_generation: int = 1
 var _pending_future: WaveFuture = null
+## Main-thread generator for wave spawn rows.
+var _wave_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _pending_wave_plan: WavePlan = null
 var _troll_scenes: Dictionary[PackedScene, bool] = {}
 var _defeated_enemy_ids: Dictionary[int, bool] = {}
@@ -180,6 +187,7 @@ func _init_level_state() -> void:
 	_pending_wave_plan = null
 	_calculate_total_level_kills()
 	_cache_troll_scenes()
+	_wave_rng.randomize()
 
 
 func _calculate_total_level_kills() -> void:
@@ -1045,7 +1053,25 @@ func _fill_snapshot_wave_params(snapshot: BoardSnapshot) -> void:
 	snapshot.final_wave_min = final_wave_min
 	snapshot.final_wave_bonus_min = final_wave_bonus_min
 	snapshot.final_wave_bonus_max = final_wave_bonus_max
+	_fill_snapshot_rows(snapshot)
+
+
+## Main thread: copies the per-row data the parallel analysis needs, so the
+## pool threads never read the scene.
+func _fill_snapshot_rows(snapshot: BoardSnapshot) -> void:
 	snapshot.row_indices = active_rows.duplicate()
+	for row: int in active_rows:
+		snapshot.row_ally_health.append(_row_ally_health(row))
+		snapshot.row_enemy_count.append(Lane.enemies_in_lane(get_tree(), _get_row_center_y(row)).size())
+
+
+func _row_ally_health(row: int) -> float:
+	var total: float = 0.0
+	for cell: Vector2i in _occupied_cells:
+		var ally_node: Node2D = _occupied_cells[cell]
+		if cell.y == row and is_instance_valid(ally_node) and ally_node is Ally:
+			total += (ally_node as Ally).health
+	return total
 
 
 func _defense_value() -> float:
@@ -1121,9 +1147,38 @@ func _spawn_wave_enemies(plan: WavePlan) -> void:
 			await get_tree().create_timer(spawn_delay).timeout
 		if _is_level_over:
 			return
-		_spawn_enemy(_pick_random_enemy_scene(), false)
+		_spawn_enemy(_pick_random_enemy_scene(), false, _pick_wave_spawn_path(plan))
 	_enter_wave_state(WaveState.Value.WAITING_FOR_CLEAR)
 	_update_wave_lifecycle()
+
+
+## Picks the spawn point of a wave enemy using the row weights of the plan.
+## An empty path means "any spawn point", as before.
+func _pick_wave_spawn_path(plan: WavePlan) -> NodePath:
+	if plan.row_weights.is_empty() or plan.row_weights.size() != plan.row_indices.size():
+		return NodePath()
+	var index: int = _wave_rng.rand_weighted(_blend_row_weights(plan.row_weights))
+	if index < 0:
+		return NodePath()
+	return _spawn_point_for_row(plan.row_indices[index])
+
+
+## Mixes an even spread with the analysis weights according to wave_row_focus.
+func _blend_row_weights(analysis_weights: Array[float]) -> PackedFloat32Array:
+	var even_share: float = FULL_ROW_FOCUS / float(analysis_weights.size())
+	var blended: PackedFloat32Array = PackedFloat32Array()
+	for weight: float in analysis_weights:
+		blended.append((FULL_ROW_FOCUS - wave_row_focus) * even_share + wave_row_focus * weight)
+	return blended
+
+
+func _spawn_point_for_row(row: int) -> NodePath:
+	var row_y: float = _get_row_center_y(row)
+	for path: NodePath in spawn_points:
+		var point: Node2D = get_node_or_null(path) as Node2D
+		if point != null and Lane.is_same_lane(point.global_position.y, row_y):
+			return path
+	return NodePath()
 
 
 func _resume_after_wave() -> void:

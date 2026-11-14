@@ -17,6 +17,8 @@ var final_wave_min: int = FINAL_MIN_COUNT
 var is_final: bool = false
 var spawn_delay: float = 0.0
 var row_indices: Array[int] = []
+## Spawn weight of each row in row_indices; empty means uniform.
+var row_weights: Array[float] = []
 
 func is_valid() -> bool:
 	if level_generation < 0 or request_id <= 0 or wave_number <= 0:

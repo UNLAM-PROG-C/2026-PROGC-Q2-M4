@@ -99,6 +99,7 @@ dementor_scene = ExtResource("8_dementor")
 level_select_scene = "uid://c0vgnide3ben3"
 active_rows = Array[int]([2, 3, 4, 5, 6])
 spawn_points = Array[NodePath]([NodePath("Spawners/Marker2D"), NodePath("Spawners/Marker2D2"), NodePath("Spawners/Marker2D3"), NodePath("Spawners/Marker2D4"), NodePath("Spawners/Marker2D5")])
+wave_row_focus = 0.5
 dementor_row_cells = Array[int]([2, 3, 4, 5, 6])
 next_level_to_unlock = 10
 is_special_level = true
