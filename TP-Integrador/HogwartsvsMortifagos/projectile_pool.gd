@@ -9,9 +9,6 @@ const DEFAULT_PROJECTILE_DAMAGE: float = 20.0
 
 var available_projectiles: Array[Projectile] = []
 var active_projectiles: Array[Projectile] = []
-var shots_fired: int = 0
-
-signal stats_changed(shots_fired: int, pool_size: int, active_count: int)
 
 
 func _ready() -> void:
@@ -29,7 +26,6 @@ func _add_projectiles(amount: int) -> void:
 		var projectile: Projectile = _create_projectile()
 		if projectile != null:
 			available_projectiles.append(projectile)
-	_emit_stats()
 
 
 ## Instantiates one inactive projectile wired to return to this pool.
@@ -53,9 +49,7 @@ func acquire_projectile(spawn_position: Vector2, custom_damage: float = DEFAULT_
 	var projectile: Projectile = available_projectiles.pop_back()
 	projectile.damage = custom_damage
 	active_projectiles.append(projectile)
-	shots_fired += 1
 	projectile.activate(spawn_position, slows, custom_texture)
-	_emit_stats()
 	return projectile
 
 
@@ -66,7 +60,6 @@ func _on_projectile_returned(projectile: Projectile) -> void:
 	projectile.damage = DEFAULT_PROJECTILE_DAMAGE
 	if not available_projectiles.has(projectile):
 		available_projectiles.append(projectile)
-	_emit_stats()
 
 
 func release_all() -> void:
@@ -76,12 +69,3 @@ func release_all() -> void:
 			if not available_projectiles.has(projectile):
 				available_projectiles.append(projectile)
 	active_projectiles.clear()
-	_emit_stats()
-
-
-func get_pool_size() -> int:
-	return available_projectiles.size() + active_projectiles.size()
-
-
-func _emit_stats() -> void:
-	stats_changed.emit(shots_fired, get_pool_size(), active_projectiles.size())

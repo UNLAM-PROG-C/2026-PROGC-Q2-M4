@@ -163,7 +163,6 @@ var _sound_service: SoundService = null
 @onready var hud: CanvasLayer = $HUD
 @onready var snitches_label: Label = $HUD/SnitchesLabel if has_node("HUD/SnitchesLabel") else null
 @onready var status_label: Label = $HUD/StatusLabel
-@onready var pool_debug_label: Label = $HUD/PoolDebugLabel
 @onready var wave_announcement: Control = $HUD/WaveAnnouncement
 @onready var wave_announcement_label: Label = $HUD/WaveAnnouncement/Label
 @onready var level_end_panel: Control = $HUD/LevelEndPanel
@@ -177,7 +176,7 @@ var _sound_service: SoundService = null
 func _ready() -> void:
     _init_level_state()
     _init_hud_and_cards()
-    _init_pool_and_defense()
+    _spawn_dementors()
     _init_accio_nodes()
     _init_spawn_timers()
     _init_sound_service()
@@ -447,12 +446,6 @@ func _ensure_wave_progress_bar_instance() -> void:
         hud.add_child(_wave_progress_bar)
 
 
-func _init_pool_and_defense() -> void:
-    projectile_pool.stats_changed.connect(_on_pool_stats_changed)
-    _update_pool_debug_label(projectile_pool.shots_fired, projectile_pool.get_pool_size(), projectile_pool.active_projectiles.size())
-    _spawn_dementors()
-
-
 func _init_spawn_timers() -> void:
     _enemy_spawn_interval = enemy_spawn_timer.wait_time
     enemy_spawn_timer.stop()
@@ -581,19 +574,6 @@ func _update_snitches_display() -> void:
         _snitch_counter.set_value(_snitches)
     elif snitches_label != null:
         snitches_label.text = str(_snitches)
-
-
-func _on_pool_stats_changed(shots_fired: int, pool_size: int, active_count: int) -> void:
-    _update_pool_debug_label(shots_fired, pool_size, active_count)
-
-
-func _update_pool_debug_label(shots_fired: int, pool_size: int, active_count: int) -> void:
-    pool_debug_label.text = "DEBUG | Disparos consecutivos: %d\nPool: %d | Activos: %d | Disponibles: %d" % [
-        shots_fired,
-        pool_size,
-        active_count,
-        pool_size - active_count
-    ]
 
 
 ## Toggles the clicked card: clicking the selected card deselects it.

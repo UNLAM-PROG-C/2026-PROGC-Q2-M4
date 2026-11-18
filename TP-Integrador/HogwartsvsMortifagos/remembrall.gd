@@ -27,60 +27,59 @@ const EXPLOSION_EFFECT_SCENE: PackedScene = preload("res://remembrall_explosion.
 
 
 func _ready() -> void:
-	animation_timer.wait_time = FUSE_DURATION / ANIMATION_FRAME_COUNT
-	animation_timer.start()
-	start_fuse()
+  animation_timer.wait_time = FUSE_DURATION / ANIMATION_FRAME_COUNT
+  animation_timer.start()
+  start_fuse()
 
 
 func start_fuse() -> void:
-	fuse_timer.start()
+  fuse_timer.start()
 
 
 ## AnimationTimer callback. Advances through the seven Remembrall frames.
 func _on_animation_timer_timeout() -> void:
-	if sprite.frame >= ANIMATION_FRAME_COUNT - 1:
-		animation_timer.stop()
-		return
-	sprite.frame += 1
+  if sprite.frame >= ANIMATION_FRAME_COUNT - 1:
+    animation_timer.stop()
+    return
+  sprite.frame += 1
 
 
 ## FuseTimer callback. Plays the warning animation and then explodes.
 func _on_fuse_timer_timeout() -> void:
-	var tween: Tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(sprite, SPRITE_SCALE_PROPERTY, WARNING_SCALE, WARNING_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, MODULATE_PROPERTY, WARNING_COLOR, WARNING_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_callback(detonate)
+  var tween: Tween = create_tween()
+  tween.set_parallel(true)
+  tween.tween_property(sprite, SPRITE_SCALE_PROPERTY, WARNING_SCALE, WARNING_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+  tween.tween_property(self, MODULATE_PROPERTY, WARNING_COLOR, WARNING_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+  tween.chain().tween_callback(detonate)
 
 
 ## Damages every enemy inside ExplosionArea, spawns smoke effect and frees itself.
 func detonate() -> void:
-	_damage_overlapping_enemies()
-	_spawn_smoke_explosion()
-	detonated.emit(self)
-	queue_free()
+  _damage_overlapping_enemies()
+  _spawn_smoke_explosion()
+  detonated.emit(self)
+  queue_free()
 
 
 func _damage_overlapping_enemies() -> void:
-	for area: Area2D in explosion_area.get_overlapping_areas():
-		_damage_enemy_area(area)
+  for area: Area2D in explosion_area.get_overlapping_areas():
+    _damage_enemy_area(area)
 
 
 func _damage_enemy_area(area: Area2D) -> void:
-	if not area.is_in_group(Groups.ENEMIES):
-		return
-	var enemy: Enemy = area as Enemy
-	if enemy == null:
-		return
-	enemy.take_damage(explosion_damage)
+  if not area.is_in_group(Groups.ENEMIES):
+    return
+  var enemy: Enemy = area as Enemy
+  if enemy == null:
+    return
+  enemy.take_damage(explosion_damage)
 
 
 func _spawn_smoke_explosion() -> void:
-	if EXPLOSION_EFFECT_SCENE == null:
-		return
-	var effect: Node2D = EXPLOSION_EFFECT_SCENE.instantiate() as Node2D
-	effect.global_position = global_position
-	var parent_node: Node = get_parent()
-	if parent_node != null:
-		parent_node.add_child(effect)
-
+  if EXPLOSION_EFFECT_SCENE == null:
+    return
+  var effect: Node2D = EXPLOSION_EFFECT_SCENE.instantiate() as Node2D
+  effect.global_position = global_position
+  var parent_node: Node = get_parent()
+  if parent_node != null:
+    parent_node.add_child(effect)

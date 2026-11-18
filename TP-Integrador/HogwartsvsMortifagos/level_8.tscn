@@ -164,15 +164,6 @@ offset_bottom = 50.0
 theme_override_font_sizes/font_size = 24
 text = "Snitches: 150"
 
-[node name="PoolDebugLabel" type="Label" parent="HUD" unique_id=556627188]
-offset_left = 18.0
-offset_top = 212.0
-offset_right = 438.0
-offset_bottom = 272.0
-theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 18
-text = "DEBUG | Disparos consecutivos: 0
-Pool: 50 | Activos: 0 | Disponibles: 50"
 
 [node name="HarryCardButton" type="Button" parent="HUD" unique_id=216127474]
 offset_left = 264.0

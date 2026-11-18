@@ -22,28 +22,28 @@ var _is_cooling_down: bool = false
 
 
 func flash() -> void:
-	if target == null or _is_cooling_down:
-		return
-	var restore_color: Color = _target_restore_color()
-	target.modulate = flash_color
-	if fade_out:
-		create_tween().tween_property(target, MODULATE_PROPERTY, restore_color, duration)
-	else:
-		get_tree().create_timer(duration, RUNS_WHILE_PAUSED).timeout.connect(_restore)
-	if cooldown > 0.0:
-		_is_cooling_down = true
-		get_tree().create_timer(cooldown, RUNS_WHILE_PAUSED).timeout.connect(_end_cooldown)
+  if target == null or _is_cooling_down:
+    return
+  var restore_color: Color = _target_restore_color()
+  target.modulate = flash_color
+  if fade_out:
+    create_tween().tween_property(target, MODULATE_PROPERTY, restore_color, duration)
+  else:
+    get_tree().create_timer(duration, RUNS_WHILE_PAUSED).timeout.connect(_restore)
+  if cooldown > 0.0:
+    _is_cooling_down = true
+    get_tree().create_timer(cooldown, RUNS_WHILE_PAUSED).timeout.connect(_end_cooldown)
 
 
 func _target_restore_color() -> Color:
-	if target.has_meta(&"base_modulate"):
-		return target.get_meta(&"base_modulate") as Color
-	return Color.WHITE
+  if target.has_meta(&"base_modulate"):
+    return target.get_meta(&"base_modulate") as Color
+  return Color.WHITE
 
 
 func _restore() -> void:
-	target.modulate = _target_restore_color()
+  target.modulate = _target_restore_color()
 
 
 func _end_cooldown() -> void:
-	_is_cooling_down = false
+  _is_cooling_down = false

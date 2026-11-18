@@ -17,38 +17,38 @@ var _has_hit: bool = false
 
 
 func _process(delta: float) -> void:
-	position.x -= speed * delta
-	_animation_elapsed += delta
-	if _animation_elapsed >= animation_frame_duration:
-		_animation_elapsed = 0.0
-		sprite.frame = (sprite.frame + 1) % sprite.hframes
+  position.x -= speed * delta
+  _animation_elapsed += delta
+  if _animation_elapsed >= animation_frame_duration:
+    _animation_elapsed = 0.0
+    sprite.frame = (sprite.frame + 1) % sprite.hframes
 
 
 func _on_area_entered(area: Area2D) -> void:
-	if _has_hit or not area.is_in_group(Groups.ALLIES):
-		return
-	var ally: Ally = area as Ally
-	if ally == null or not is_instance_valid(ally):
-		return
-	_has_hit = true
-	_spawn_impact_explosion()
-	ally.take_damage(damage)
-	queue_free()
+  if _has_hit or not area.is_in_group(Groups.ALLIES):
+    return
+  var ally: Ally = area as Ally
+  if ally == null or not is_instance_valid(ally):
+    return
+  _has_hit = true
+  _spawn_impact_explosion()
+  ally.take_damage(damage)
+  queue_free()
 
 
 func update_row_z_index() -> void:
-	z_index = Lane.get_projectile_z_index(global_position.y)
+  z_index = Lane.get_projectile_z_index(global_position.y)
 
 
 func _spawn_impact_explosion() -> void:
-	var parent_node: Node = get_parent()
-	if parent_node == null or not is_instance_valid(parent_node):
-		return
-	var explosion: Node2D = IMPACT_EXPLOSION_SCENE.instantiate() as Node2D
-	parent_node.add_child(explosion)
-	explosion.global_position = global_position
-	explosion.z_index = z_index
+  var parent_node: Node = get_parent()
+  if parent_node == null or not is_instance_valid(parent_node):
+    return
+  var explosion: Node2D = IMPACT_EXPLOSION_SCENE.instantiate() as Node2D
+  parent_node.add_child(explosion)
+  explosion.global_position = global_position
+  explosion.z_index = z_index
 
 
 func _on_screen_exited() -> void:
-	queue_free()
+  queue_free()

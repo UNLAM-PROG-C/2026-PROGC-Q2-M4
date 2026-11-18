@@ -93,103 +93,103 @@ var _active_walkers: int = 0
 
 
 func _ready() -> void:
-	_set_absolute_z(ambient_footprints_layer, AMBIENT_LAYER_Z)
-	_set_absolute_z(path_footprints_layer, PATH_LAYER_Z)
-	_set_absolute_z(level_buttons_container, BUTTONS_Z)
-	_setup_level_buttons()
-	_refresh_level_buttons()
-	debug_mode_check_button.button_pressed = _is_debug_mode_enabled()
-	debug_mode_check_button.toggled.connect(_on_debug_mode_toggled)
-	_start_path_footprints()
-	if ambient_footprints_enabled:
-		_setup_ambient_timer()
+    _set_absolute_z(ambient_footprints_layer, AMBIENT_LAYER_Z)
+    _set_absolute_z(path_footprints_layer, PATH_LAYER_Z)
+    _set_absolute_z(level_buttons_container, BUTTONS_Z)
+    _setup_level_buttons()
+    _refresh_level_buttons()
+    debug_mode_check_button.button_pressed = _is_debug_mode_enabled()
+    debug_mode_check_button.toggled.connect(_on_debug_mode_toggled)
+    _start_path_footprints()
+    if ambient_footprints_enabled:
+        _setup_ambient_timer()
 
 
 func _session() -> GameSession:
-	return get_node_or_null(GAME_SESSION_PATH) as GameSession
+    return get_node_or_null(GAME_SESSION_PATH) as GameSession
 
 
 func _on_debug_mode_toggled(enabled: bool) -> void:
-	var session: GameSession = _session()
-	if session != null:
-		session.debug_mode = enabled
+    var session: GameSession = _session()
+    if session != null:
+        session.debug_mode = enabled
 
 
 func _is_debug_mode_enabled() -> bool:
-	var session: GameSession = _session()
-	return session != null and session.debug_mode
+    var session: GameSession = _session()
+    return session != null and session.debug_mode
 
 
 func _set_absolute_z(item: CanvasItem, z: int) -> void:
-	item.z_index = z
-	item.z_as_relative = false
+    item.z_index = z
+    item.z_as_relative = false
 
 
 ## Highest unlocked level, kept within the buttons on the map.
 func _unlocked_level() -> int:
-	var session: GameSession = _session()
-	if session == null:
-		return FIRST_LEVEL
-	return clampi(session.max_unlocked_level, FIRST_LEVEL, LEVEL_COUNT)
+    var session: GameSession = _session()
+    if session == null:
+        return FIRST_LEVEL
+    return clampi(session.max_unlocked_level, FIRST_LEVEL, LEVEL_COUNT)
 
 
 ## Finds the level buttons of the container and gives them the parchment look.
 func _setup_level_buttons() -> void:
-	_level_buttons.clear()
-	for i: int in range(1, LEVEL_COUNT + 1):
-		var button: Button = level_buttons_container.get_node_or_null(LEVEL_BUTTON_NAME_FORMAT % i) as Button
-		if button != null:
-			_level_buttons.append(button)
-			button.pressed.connect(_on_level_button_pressed.bind(i))
-			button.custom_minimum_size = LEVEL_BUTTON_MIN_SIZE
-			button.theme = level_button_theme
+    _level_buttons.clear()
+    for i: int in range(1, LEVEL_COUNT + 1):
+        var button: Button = level_buttons_container.get_node_or_null(LEVEL_BUTTON_NAME_FORMAT % i) as Button
+        if button != null:
+            _level_buttons.append(button)
+            button.pressed.connect(_on_level_button_pressed.bind(i))
+            button.custom_minimum_size = LEVEL_BUTTON_MIN_SIZE
+            button.theme = level_button_theme
 
 
 ## Updates the visual state (enabled/disabled) of each level button.
 func _refresh_level_buttons() -> void:
-	for index: int in range(_level_buttons.size()):
-		var level_number: int = index + 1
-		var button: Button = _level_buttons[index]
-		var is_unlocked: bool = level_number <= _unlocked_level()
-		button.disabled = not is_unlocked
-		if is_unlocked:
-			button.text = LEVEL_BUTTON_TEXT % level_number
-			button.modulate = Color.WHITE
-		else:
-			button.text = LEVEL_BUTTON_TEXT % level_number + LOCKED_SUFFIX_TEXT
-			button.modulate = LOCKED_BUTTON_MODULATE
+    for index: int in range(_level_buttons.size()):
+        var level_number: int = index + 1
+        var button: Button = _level_buttons[index]
+        var is_unlocked: bool = level_number <= _unlocked_level()
+        button.disabled = not is_unlocked
+        if is_unlocked:
+            button.text = LEVEL_BUTTON_TEXT % level_number
+            button.modulate = Color.WHITE
+        else:
+            button.text = LEVEL_BUTTON_TEXT % level_number + LOCKED_SUFFIX_TEXT
+            button.modulate = LOCKED_BUTTON_MODULATE
 
 
 ## Handles a click on a level button. Levels without a scene load nothing.
 func _on_level_button_pressed(level_number: int) -> void:
-	if level_number > _unlocked_level():
-		return
-	level_selected.emit(level_number)
-	if level_number <= level_scenes.size():
-		get_tree().change_scene_to_packed(level_scenes[level_number - 1])
+    if level_number > _unlocked_level():
+        return
+    level_selected.emit(level_number)
+    if level_number <= level_scenes.size():
+        get_tree().change_scene_to_packed(level_scenes[level_number - 1])
 
 
 func _take_footprint_from_pool() -> Footprint:
-	if _footprint_pool.is_empty():
-		return Footprint.new()
-	var footprint: Footprint = _footprint_pool.pop_back()
-	footprint.visible = true
-	footprint.modulate.a = 1.0
-	return footprint
+    if _footprint_pool.is_empty():
+        return Footprint.new()
+    var footprint: Footprint = _footprint_pool.pop_back()
+    footprint.visible = true
+    footprint.modulate.a = 1.0
+    return footprint
 
 
 func _return_footprint_to_pool(footprint: Footprint) -> void:
-	if footprint.get_parent() != null:
-		footprint.get_parent().remove_child(footprint)
-	footprint.visible = false
-	_footprint_pool.append(footprint)
+    if footprint.get_parent() != null:
+        footprint.get_parent().remove_child(footprint)
+    footprint.visible = false
+    _footprint_pool.append(footprint)
 
 
 func _place_footprint(footprint: Footprint, spawn_position: Vector2, spawn_rotation: float, footprint_scale: Vector2, z: int) -> void:
-	footprint.global_position = spawn_position
-	footprint.rotation = spawn_rotation
-	footprint.scale = footprint_scale
-	_set_absolute_z(footprint, z)
+    footprint.global_position = spawn_position
+    footprint.rotation = spawn_rotation
+    footprint.scale = footprint_scale
+    _set_absolute_z(footprint, z)
 
 
 # ==============================================================================
@@ -198,55 +198,55 @@ func _place_footprint(footprint: Footprint, spawn_position: Vector2, spawn_rotat
 
 ## Starts the footprint animation walking only the unlocked part of the path.
 func _start_path_footprints() -> void:
-	if level_path == null or level_path.curve == null:
-		return
-	_clear_path_footprints()
-	var target_length: float = _unlocked_path_length()
-	if target_length > 0.0:
-		_schedule_path_steps(target_length)
+    if level_path == null or level_path.curve == null:
+        return
+    _clear_path_footprints()
+    var target_length: float = _unlocked_path_length()
+    if target_length > 0.0:
+        _schedule_path_steps(target_length)
 
 
 func _clear_path_footprints() -> void:
-	for child: Node in path_footprints_layer.get_children():
-		child.queue_free()
+    for child: Node in path_footprints_layer.get_children():
+        child.queue_free()
 
 
 ## Path length up to the highest unlocked level: none for the first level,
 ## the whole path for the last one.
 func _unlocked_path_length() -> float:
-	var walked_fraction: float = clampf(float(_unlocked_level() - 1) / float(LEVEL_COUNT - 1), 0.0, 1.0)
-	return level_path.curve.get_baked_length() * walked_fraction
+    var walked_fraction: float = clampf(float(_unlocked_level() - 1) / float(LEVEL_COUNT - 1), 0.0, 1.0)
+    return level_path.curve.get_baked_length() * walked_fraction
 
 
 func _schedule_path_steps(target_length: float) -> void:
-	var distance: float = PATH_START_DISTANCE
-	var right_foot: bool = true
-	var delay: float = 0.0
-	while distance <= target_length:
-		var step: Transform2D = _footprint_transform_at(distance, right_foot)
-		var step_timer: SceneTreeTimer = get_tree().create_timer(delay)
-		step_timer.timeout.connect(_spawn_path_footprint.bind(step.origin, step.get_rotation(), right_foot))
-		delay += path_step_interval
-		distance += step_distance
-		right_foot = not right_foot
+    var distance: float = PATH_START_DISTANCE
+    var right_foot: bool = true
+    var delay: float = 0.0
+    while distance <= target_length:
+        var step: Transform2D = _footprint_transform_at(distance, right_foot)
+        var step_timer: SceneTreeTimer = get_tree().create_timer(delay)
+        step_timer.timeout.connect(_spawn_path_footprint.bind(step.origin, step.get_rotation(), right_foot))
+        delay += path_step_interval
+        distance += step_distance
+        right_foot = not right_foot
 
 
 ## Global position and rotation of the footprint at a distance along the path.
 func _footprint_transform_at(distance: float, is_right_foot: bool) -> Transform2D:
-	var curve_transform: Transform2D = level_path.curve.sample_baked_with_rotation(distance)
-	var base_position: Vector2 = level_path.to_global(curve_transform.origin)
-	var direction: Vector2 = curve_transform.x.normalized()
-	var perpendicular: Vector2 = Vector2(-direction.y, direction.x)
-	var foot_sign: float = 1.0 if is_right_foot else -1.0
-	var footprint_position: Vector2 = base_position + perpendicular * (foot_spacing * foot_sign)
-	return Transform2D(direction.angle() + FOOTPRINT_ROTATION_OFFSET, footprint_position)
+    var curve_transform: Transform2D = level_path.curve.sample_baked_with_rotation(distance)
+    var base_position: Vector2 = level_path.to_global(curve_transform.origin)
+    var direction: Vector2 = curve_transform.x.normalized()
+    var perpendicular: Vector2 = Vector2(-direction.y, direction.x)
+    var foot_sign: float = 1.0 if is_right_foot else -1.0
+    var footprint_position: Vector2 = base_position + perpendicular * (foot_spacing * foot_sign)
+    return Transform2D(direction.angle() + FOOTPRINT_ROTATION_OFFSET, footprint_position)
 
 
 func _spawn_path_footprint(spawn_position: Vector2, spawn_rotation: float, right_foot: bool) -> void:
-	var footprint: Footprint = _take_footprint_from_pool()
-	footprint.setup(right_foot, PATH_FOOTPRINT_OPACITY)
-	_place_footprint(footprint, spawn_position, spawn_rotation, PATH_FOOTPRINT_SCALE, PATH_LAYER_Z)
-	path_footprints_layer.add_child(footprint)
+    var footprint: Footprint = _take_footprint_from_pool()
+    footprint.setup(right_foot, PATH_FOOTPRINT_OPACITY)
+    _place_footprint(footprint, spawn_position, spawn_rotation, PATH_FOOTPRINT_SCALE, PATH_LAYER_Z)
+    path_footprints_layer.add_child(footprint)
 
 
 # ==============================================================================
@@ -254,78 +254,78 @@ func _spawn_path_footprint(spawn_position: Vector2, spawn_rotation: float, right
 # ==============================================================================
 
 func _setup_ambient_timer() -> void:
-	ambient_footprints_timer.one_shot = true
-	ambient_footprints_timer.timeout.connect(_on_ambient_footprints_timer_timeout)
-	_restart_ambient_timer()
-	# Spawn the first walkers right away so the map starts full of life
-	for i: int in range(INITIAL_WALKERS):
-		get_tree().create_timer(float(i) * INITIAL_WALKER_INTERVAL).timeout.connect(_try_spawn_ambient_walker)
+    ambient_footprints_timer.one_shot = true
+    ambient_footprints_timer.timeout.connect(_on_ambient_footprints_timer_timeout)
+    _restart_ambient_timer()
+    # Spawn the first walkers right away so the map starts full of life
+    for i: int in range(INITIAL_WALKERS):
+        get_tree().create_timer(float(i) * INITIAL_WALKER_INTERVAL).timeout.connect(_try_spawn_ambient_walker)
 
 
 func _restart_ambient_timer() -> void:
-	ambient_footprints_timer.start(randf_range(walker_spawn_min_time, walker_spawn_max_time))
+    ambient_footprints_timer.start(randf_range(walker_spawn_min_time, walker_spawn_max_time))
 
 
 func _on_ambient_footprints_timer_timeout() -> void:
-	_try_spawn_ambient_walker()
-	_restart_ambient_timer()
+    _try_spawn_ambient_walker()
+    _restart_ambient_timer()
 
 
 func _try_spawn_ambient_walker() -> void:
-	if _active_walkers < max_active_walkers:
-		_spawn_ambient_walker()
+    if _active_walkers < max_active_walkers:
+        _spawn_ambient_walker()
 
 
 ## Spawns a passer-by that takes between walker_min_steps and walker_max_steps and disappears.
 func _spawn_ambient_walker() -> void:
-	_active_walkers += 1
-	var origin: Vector2 = _random_walker_origin()
-	var walk_angle: float = randf_range(0.0, TAU)
-	var total_steps: int = randi_range(walker_min_steps, walker_max_steps)
-	var step_length: float = randf_range(WALKER_MIN_STEP_LENGTH, WALKER_MAX_STEP_LENGTH)
-	var right_foot: bool = randf() > RIGHT_FOOT_CHANCE
-	var cadence: float = randf_range(WALKER_MIN_CADENCE, WALKER_MAX_CADENCE)
-	for step_index: int in range(total_steps):
-		var step_origin: Vector2 = origin + Vector2.from_angle(walk_angle) * (float(step_index) * step_length)
-		_schedule_walker_step(step_origin, walk_angle, right_foot, float(step_index) * cadence)
-		right_foot = not right_foot
-	# Once every step is taken, free the slot so another walker can appear
-	_schedule_walker_release(float(total_steps) * cadence + WALKER_RELEASE_DELAY)
+    _active_walkers += 1
+    var origin: Vector2 = _random_walker_origin()
+    var walk_angle: float = randf_range(0.0, TAU)
+    var total_steps: int = randi_range(walker_min_steps, walker_max_steps)
+    var step_length: float = randf_range(WALKER_MIN_STEP_LENGTH, WALKER_MAX_STEP_LENGTH)
+    var right_foot: bool = randf() > RIGHT_FOOT_CHANCE
+    var cadence: float = randf_range(WALKER_MIN_CADENCE, WALKER_MAX_CADENCE)
+    for step_index: int in range(total_steps):
+        var step_origin: Vector2 = origin + Vector2.from_angle(walk_angle) * (float(step_index) * step_length)
+        _schedule_walker_step(step_origin, walk_angle, right_foot, float(step_index) * cadence)
+        right_foot = not right_foot
+    # Once every step is taken, free the slot so another walker can appear
+    _schedule_walker_release(float(total_steps) * cadence + WALKER_RELEASE_DELAY)
 
 
 func _random_walker_origin() -> Vector2:
-	var x: float = randf_range(WALKER_AREA_MIN.x, WALKER_AREA_MAX.x)
-	var y: float = randf_range(WALKER_AREA_MIN.y, WALKER_AREA_MAX.y)
-	return Vector2(x, y)
+    var x: float = randf_range(WALKER_AREA_MIN.x, WALKER_AREA_MAX.x)
+    var y: float = randf_range(WALKER_AREA_MIN.y, WALKER_AREA_MAX.y)
+    return Vector2(x, y)
 
 
 func _schedule_walker_step(step_origin: Vector2, walk_angle: float, right_foot: bool, delay: float) -> void:
-	var direction: Vector2 = Vector2.from_angle(walk_angle)
-	var perpendicular: Vector2 = Vector2(-direction.y, direction.x)
-	var foot_sign: float = 1.0 if right_foot else -1.0
-	var footprint_position: Vector2 = step_origin + (perpendicular * WALKER_FOOT_OFFSET * foot_sign)
-	var step_timer: SceneTreeTimer = get_tree().create_timer(delay)
-	step_timer.timeout.connect(_spawn_ambient_footprint.bind(footprint_position, walk_angle + FOOTPRINT_ROTATION_OFFSET, right_foot))
+    var direction: Vector2 = Vector2.from_angle(walk_angle)
+    var perpendicular: Vector2 = Vector2(-direction.y, direction.x)
+    var foot_sign: float = 1.0 if right_foot else -1.0
+    var footprint_position: Vector2 = step_origin + (perpendicular * WALKER_FOOT_OFFSET * foot_sign)
+    var step_timer: SceneTreeTimer = get_tree().create_timer(delay)
+    step_timer.timeout.connect(_spawn_ambient_footprint.bind(footprint_position, walk_angle + FOOTPRINT_ROTATION_OFFSET, right_foot))
 
 
 func _schedule_walker_release(delay: float) -> void:
-	get_tree().create_timer(delay).timeout.connect(_release_walker)
+    get_tree().create_timer(delay).timeout.connect(_release_walker)
 
 
 func _release_walker() -> void:
-	_active_walkers = maxi(_active_walkers - 1, 0)
+    _active_walkers = maxi(_active_walkers - 1, 0)
 
 
 func _spawn_ambient_footprint(spawn_position: Vector2, spawn_rotation: float, right_foot: bool) -> void:
-	var footprint: Footprint = _take_footprint_from_pool()
-	footprint.setup(right_foot, randf_range(AMBIENT_MIN_OPACITY, AMBIENT_MAX_OPACITY))
-	_place_footprint(footprint, spawn_position, spawn_rotation, AMBIENT_FOOTPRINT_SCALE, AMBIENT_LAYER_Z)
-	ambient_footprints_layer.add_child(footprint)
-	_schedule_footprint_fade(footprint)
+    var footprint: Footprint = _take_footprint_from_pool()
+    footprint.setup(right_foot, randf_range(AMBIENT_MIN_OPACITY, AMBIENT_MAX_OPACITY))
+    _place_footprint(footprint, spawn_position, spawn_rotation, AMBIENT_FOOTPRINT_SCALE, AMBIENT_LAYER_Z)
+    ambient_footprints_layer.add_child(footprint)
+    _schedule_footprint_fade(footprint)
 
 
 ## Keeps the footprint visible for a while so more of them pile up, then fades it back into the pool.
 func _schedule_footprint_fade(footprint: Footprint) -> void:
-	var visible_time: float = randf_range(AMBIENT_MIN_VISIBLE_TIME, AMBIENT_MAX_VISIBLE_TIME)
-	var fade: Callable = footprint.fade_out.bind(AMBIENT_FADE_DURATION, _return_footprint_to_pool.bind(footprint))
-	get_tree().create_timer(visible_time).timeout.connect(fade)
+    var visible_time: float = randf_range(AMBIENT_MIN_VISIBLE_TIME, AMBIENT_MAX_VISIBLE_TIME)
+    var fade: Callable = footprint.fade_out.bind(AMBIENT_FADE_DURATION, _return_footprint_to_pool.bind(footprint))
+    get_tree().create_timer(visible_time).timeout.connect(fade)
